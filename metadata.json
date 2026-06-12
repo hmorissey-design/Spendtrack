@@ -1,0 +1,6 @@
+{
+  "name": "Spendtrack",
+  "description": "An offline-first personal finance tracker styled as an Android app layout with private localized budgeting, discretionary expense logs, and custom banner ad slots.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

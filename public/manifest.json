@@ -1,0 +1,25 @@
+{
+  "short_name": "Spendtrack",
+  "name": "Spendtrack - Monthly Budget & Expenses",
+  "description": "Premium visual budget tracker and finance companion app.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "id": "spendtrack-budget-app"
+}
