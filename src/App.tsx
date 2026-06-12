@@ -242,7 +242,7 @@ export default function App() {
     const link = document.createElement("a");
     link.setAttribute("href", url);
     const dateStr = new Date().toISOString().substring(0, 10);
-    link.setAttribute("download", `spendtrack_expenses_${dateStr}.csv`);
+    link.setAttribute("download", `expensetrack_expenses_${dateStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -515,7 +515,7 @@ export default function App() {
     doc.text("SYSTEM SIGNED", 145, y + 14);
 
     const fileDate = new Date().toISOString().substring(0, 10);
-    doc.save(`spendtrack_report_${fileDate}.pdf`);
+    doc.save(`expensetrack_report_${fileDate}.pdf`);
   };
 
   const handleUpdateBudget = (limit: number, limits: Record<string, number>) => {
@@ -752,14 +752,14 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
-                src="/src/assets/images/spendtrack_logo_1781194450412.jpg" 
-                alt="SpendTrack Logo" 
+                src="/src/assets/images/expensetrack_logo_1781299964788.jpg" 
+                alt="ExpenseTrack Logo" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Spend<span className="text-emerald-400">Track</span></h1>
+              <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Expense<span className="text-emerald-400">Track</span></h1>
             </div>
           </div>
 
@@ -1600,7 +1600,7 @@ export default function App() {
 
                 {/* Introductory section */}
                 <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
-                  SpendTrack is a simple, private expense tracker that stores all information right on your phone or computer. None of your data ever leaves this device, ensuring complete privacy!
+                  ExpenseTrack is a simple, private expense tracker that stores all information right on your phone or computer. None of your data ever leaves this device, ensuring complete privacy!
                 </p>
 
                 {/* Screens */}

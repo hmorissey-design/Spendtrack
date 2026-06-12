@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spendtrack-cache-v1';
+const CACHE_NAME = 'expensetrack-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

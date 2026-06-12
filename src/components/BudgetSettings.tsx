@@ -29,7 +29,7 @@ import dashSplash from '../assets/images/dash_splash_screen_1781266721070.jpg';
 import chartsSplash from '../assets/images/charts_splash_screen_1781266737895.jpg';
 import budgetSplash from '../assets/images/budget_splash_screen_1781266751979.jpg';
 import pdfReportSplash from '../assets/images/pdf_report_splash_1781266766634.jpg';
-import appLogo from '../assets/images/spendtrack_logo_1781194450412.jpg';
+import appLogo from '../assets/images/expensetrack_logo_1781299964788.jpg';
 import { LocalDb } from '../utils/db';
 import { User } from 'firebase/auth';
 import { 
@@ -842,7 +842,7 @@ export function BudgetSettings({
           <Cloud size={14} className="text-yellow-500 animate-pulse" /> Google Drive Cloud Backup
         </h3>
         <p className="text-[11px] text-gray-400 leading-normal">
-          Securely save your Spendtrack database to your personal Google Drive storage. This is very helpful if you are switching to a new phone. This data is private and locked to your account.
+          Securely save your ExpenseTrack database to your personal Google Drive storage. This is very helpful if you are switching to a new phone. This data is private and locked to your account.
         </p>
 
         {cloudSuccess && (
@@ -1110,9 +1110,9 @@ function RenderActiveDashboardLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ST</span>
+            <span className="text-[10px] font-bold text-emerald-400">ET</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">SpendTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Dashboard
@@ -1288,9 +1288,9 @@ function RenderAnalyticsTrendsLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ST</span>
+            <span className="text-[10px] font-bold text-emerald-400">ET</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">SpendTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Analytics
@@ -1389,9 +1389,9 @@ function RenderBudgetsCurrencyLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ST</span>
+            <span className="text-[10px] font-bold text-emerald-400">ET</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">SpendTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Settings
@@ -1488,8 +1488,8 @@ function RenderFinancePDFReportLive({
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-slate-300 pb-4">
         <div>
           <div className="flex items-center gap-1.5 mb-1 bg-[#0F766E]/10 p-1 px-2.5 rounded-lg w-fit">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] flex items-center justify-center font-bold text-[8px] text-white">S</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#0F766E]">SpendTrack Statement</span>
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] flex items-center justify-center font-bold text-[8px] text-white">E</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#0F766E]">ExpenseTrack Statement</span>
           </div>
           <h2 className="text-lg font-extrabold text-slate-900 tracking-tight leading-snug">Business Expense Ledger</h2>
         </div>

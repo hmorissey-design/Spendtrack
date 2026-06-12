@@ -68,7 +68,7 @@ export const getCachedToken = (): string | null => {
 };
 
 // GOOGLE DRIVE BACKUP & RESTORE METHODS
-const BACKUP_FILENAME = 'spendtrack_backup.json';
+const BACKUP_FILENAME = 'expensetrack_backup.json';
 
 export interface DriveFileInfo {
   id: string;

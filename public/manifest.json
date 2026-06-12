@@ -1,6 +1,6 @@
 {
-  "short_name": "Spendtrack",
-  "name": "Spendtrack - Monthly Budget & Expenses",
+  "short_name": "ExpenseTrack",
+  "name": "ExpenseTrack - Monthly Budget & Expenses",
   "description": "Premium visual budget tracker and finance companion app.",
   "icons": [
     {
@@ -21,5 +21,5 @@
   "theme_color": "#0a0a0a",
   "display": "standalone",
   "orientation": "portrait",
-  "id": "spendtrack-budget-app"
+  "id": "expensetrack-budget-app"
 }
