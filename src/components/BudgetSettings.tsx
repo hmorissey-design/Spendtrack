@@ -25,10 +25,10 @@ import {
   Cell
 } from 'recharts';
 
-import dashSplash from '../assets/images/dash_splash_screen_1781266721070.jpg';
-import chartsSplash from '../assets/images/charts_splash_screen_1781266737895.jpg';
-import budgetSplash from '../assets/images/budget_splash_screen_1781266751979.jpg';
-import pdfReportSplash from '../assets/images/pdf_report_splash_1781266766634.jpg';
+import dashSplash from '../assets/images/expensetrack_dash_splash_1781301585056.jpg';
+import chartsSplash from '../assets/images/expensetrack_charts_splash_1781301595864.jpg';
+import budgetSplash from '../assets/images/expensetrack_budget_splash_1781301607200.jpg';
+import pdfReportSplash from '../assets/images/expensetrack_pdf_splash_1781301617685.jpg';
 import appLogo from '../assets/images/expensetrack_logo_1781299964788.jpg';
 import { LocalDb } from '../utils/db';
 import { User } from 'firebase/auth';
@@ -997,6 +997,8 @@ export function BudgetSettings({
           )}
         </div>
       </div>
+
+
 
       {/* Database Purge Options */}
       <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-4">
