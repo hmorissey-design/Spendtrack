@@ -655,6 +655,7 @@ export default function App() {
   // Recharts custom label for category breakdowns
   const categoryPieData = useMemo(() => {
     return categoryStats.map(s => ({
+      id: s.id,
       name: s.label,
       value: Math.round(s.total * 100) / 100,
       color: s.color.includes('rose') ? '#f43f5e' :
@@ -914,7 +915,7 @@ export default function App() {
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
                 <div className="flex items-center justify-between mb-3.5">
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans">Spending to date</h3>
-                  <span className="text-[9px] text-emerald-400 font-bold font-mono">Month-to-date spent</span>
+                  <span className="text-[9px] text-gray-400 font-bold font-mono">Tap bar to view ledger</span>
                 </div>
 
                 {categoryStats.length === 0 ? (
@@ -929,22 +930,30 @@ export default function App() {
                       const remaining = catLimit - stat.total;
                       const share = catLimit > 0 ? Math.round((stat.total / catLimit) * 100) : 100;
                       return (
-                        <div key={stat.id} className="space-y-1.55">
+                        <div 
+                          key={stat.id} 
+                          className="space-y-1.5 cursor-pointer hover:bg-white/5 p-2 -m-2 rounded-xl transition-all duration-150 relative group"
+                          onClick={() => {
+                            setFilterCategory(stat.id);
+                            setActiveTab('history');
+                          }}
+                          title={`Click to view all ${stat.label} transactions`}
+                        >
                           <div className="flex items-start justify-between text-xs">
                             <div className="min-w-0">
-                              <span className="font-semibold text-gray-200 block truncate">{stat.label}</span>
+                              <span className="font-semibold text-gray-200 block truncate group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                               <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(0)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(0)} over limit`}
                               </span>
                             </div>
                             <div className="text-right">
                               <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(0)}</span></span>
-                              <span className="text-[10px] text-gray-500 font-bold block">({share}%)</span>
+                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-emerald-400 font-sans transition-colors">({share}%) →</span>
                             </div>
                           </div>
                           <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
                             <div 
-                              className={`h-full rounded-full transition-all ${
+                              className={`h-full rounded-full transition-all group-hover:brightness-110 ${
                                 share >= 100 ? 'bg-rose-500' :
                                 share >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
                               }`} 
@@ -1419,7 +1428,15 @@ export default function App() {
                             dataKey="value"
                           >
                             {categoryPieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color} 
+                                className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
+                                onClick={() => {
+                                  setFilterCategory(entry.id);
+                                  setActiveTab('history');
+                                }}
+                              />
                             ))}
                           </Pie>
                           <Tooltip formatter={(value: any) => [`${currencySymbol}${value}`, 'Amount']} />
@@ -1431,11 +1448,20 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="col-span-7 space-y-1.55">
+                    <div className="col-span-7 space-y-1.5 shrink-0">
+                      <span className="text-[8px] text-gray-400 font-bold tracking-wider uppercase block mb-1">Click category to inspect:</span>
                       {categoryStats.slice(0, 5).map((stat) => (
-                        <div key={stat.id} className="flex items-center justify-between text-[10px]">
+                        <div 
+                          key={stat.id} 
+                          className="flex items-center justify-between text-[10px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
+                          onClick={() => {
+                            setFilterCategory(stat.id);
+                            setActiveTab('history');
+                          }}
+                          title={`Click to view all ${stat.label} transactions`}
+                        >
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{
                               backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
                                               stat.color.includes('emerald') ? '#10b981' :
                                               stat.color.includes('blue') ? '#3b82f6' :
@@ -1443,9 +1469,9 @@ export default function App() {
                                               stat.color.includes('purple') ? '#8b5cf6' :
                                               stat.color.includes('slate') ? '#64748b' : '#a855f7'
                             }} />
-                            <span className="text-gray-400 truncate font-medium">{stat.label}</span>
+                            <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                           </div>
-                          <span className="font-mono font-bold text-white shrink-0">{currencySymbol}{stat.total.toFixed(0)}</span>
+                          <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
                         </div>
                       ))}
                     </div>

@@ -20,6 +20,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat_bars', name: 'Bars', icon: 'Beer', color: 'bg-amber-100 text-amber-900', textColor: 'text-amber-700', isDefault: true, limit: 0 },
   { id: 'cat_restaurants', name: 'Restaurants', icon: 'Utensils', color: 'bg-rose-100 text-rose-800', textColor: 'text-rose-600', isDefault: true, limit: 0 },
   { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-100 text-purple-800', textColor: 'text-purple-600', isDefault: true, limit: 0 },
+  { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-100 text-indigo-800', textColor: 'text-indigo-600', isDefault: true, limit: 0 },
 ];
 
 export const INITIAL_BUDGET = 1000; // $1,000 starting layout (user customizable)
@@ -114,6 +115,21 @@ export const LocalDb = {
         limit: 0
       };
       parsed = [uncategorizedCat, ...parsed];
+      modified = true;
+    }
+
+    // Auto-migrate to guarantee "Business Expense" exists (so users' existing installs get updated smoothly)
+    if (Array.isArray(parsed) && !parsed.some(c => c.id === 'cat_business_expense')) {
+      const businessCat = DEFAULT_CATEGORIES.find(d => d.id === 'cat_business_expense') || {
+        id: 'cat_business_expense',
+        name: 'Business Expense',
+        icon: 'Briefcase',
+        color: 'bg-indigo-100 text-indigo-800',
+        textColor: 'text-indigo-600',
+        isDefault: true,
+        limit: 0
+      };
+      parsed = [...parsed, businessCat];
       modified = true;
     }
     
