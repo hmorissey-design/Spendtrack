@@ -4,7 +4,16 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { 
+  getAuth, 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult, 
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  User, 
+  signOut 
+} from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -24,17 +33,41 @@ export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
+  // Check if there is a cached token in localStorage first to keep user connected across reloads
+  const storedToken = localStorage.getItem('expensetrack_drive_token');
+  if (storedToken) {
+    cachedAccessToken = storedToken;
+  }
+
+  // Handle redirect result on application reload/load
+  getRedirectResult(auth)
+    .then((result) => {
+      if (result) {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential?.accessToken) {
+          cachedAccessToken = credential.accessToken;
+          localStorage.setItem('expensetrack_drive_token', cachedAccessToken);
+          if (auth.currentUser && onAuthSuccess) {
+            onAuthSuccess(auth.currentUser, cachedAccessToken);
+          }
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Error handling Google redirect result:', error);
+    });
+
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       if (cachedAccessToken) {
         if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
       } else {
-        // Since Firebase token persists but OAuth access token might be in-memory only,
-        // we might need to prompt login or we'll recover on the next interaction.
+        // Firebase auth persists, but Google Drive scope token is missing and not cached
         if (onAuthFailure) onAuthFailure();
       }
     } else {
       cachedAccessToken = null;
+      localStorage.removeItem('expensetrack_drive_token');
       if (onAuthFailure) onAuthFailure();
     }
   });
@@ -43,16 +76,39 @@ export const initAuth = (
 export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
     isSigningIn = true;
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (!credential?.accessToken) {
-      throw new Error('Failed to retrieve access token from Google sign in');
+    
+    // Check if running as an installed standalone PWA or on a mobile device
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         (window.navigator as any).standalone || 
+                         document.referrer.includes('android-app://');
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isStandalone || isMobile) {
+      console.log('Mobile or Standalone PWA environment detected. Using signInWithRedirect.');
+      await signInWithRedirect(auth, provider);
+      // Page will redirect, return null for now. Result is caught on reload in initAuth.
+      return null;
+    } else {
+      console.log('Desktop browser flow detected. Using signInWithPopup.');
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (!credential?.accessToken) {
+        throw new Error('Failed to retrieve access token from Google sign in');
+      }
+      cachedAccessToken = credential.accessToken;
+      localStorage.setItem('expensetrack_drive_token', cachedAccessToken);
+      return { user: result.user, accessToken: cachedAccessToken };
     }
-    cachedAccessToken = credential.accessToken;
-    return { user: result.user, accessToken: cachedAccessToken };
   } catch (error) {
-    console.error('Google sign in error:', error);
-    throw error;
+    console.warn('Google sign-in with popup failed, attempting fallback to redirect:', error);
+    try {
+      await signInWithRedirect(auth, provider);
+      return null;
+    } catch (redirectError) {
+      console.error('Redirect signup fallback failed:', redirectError);
+      throw error;
+    }
   } finally {
     isSigningIn = false;
   }
@@ -61,6 +117,7 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 export const logoutGoogleCheck = async () => {
   await signOut(auth);
   cachedAccessToken = null;
+  localStorage.removeItem('expensetrack_drive_token');
 };
 
 export const getCachedToken = (): string | null => {
@@ -92,6 +149,10 @@ export async function findBackupFile(accessToken: string): Promise<DriveFileInfo
 
   if (!response.ok) {
     const errorDetails = await response.text();
+    if (response.status === 401) {
+      localStorage.removeItem('expensetrack_drive_token');
+      throw new Error('Google connection expired. Please reconnect in settings to refresh authorization.');
+    }
     throw new Error(`Failed to list space files: ${response.statusText} (${errorDetails})`);
   }
 
@@ -123,6 +184,10 @@ export async function saveBackupToDrive(accessToken: string, fileContent: string
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (response.status === 401) {
+        localStorage.removeItem('expensetrack_drive_token');
+        throw new Error('Google connection expired. Please reconnect in settings to refresh authorization.');
+      }
       throw new Error(`Failed to update backup file: ${response.statusText} (${errorText})`);
     }
 
@@ -164,6 +229,10 @@ export async function saveBackupToDrive(accessToken: string, fileContent: string
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (response.status === 401) {
+        localStorage.removeItem('expensetrack_drive_token');
+        throw new Error('Google connection expired. Please reconnect in settings to refresh authorization.');
+      }
       throw new Error(`Failed to create backup file: ${response.statusText} (${errorText})`);
     }
 
@@ -187,6 +256,10 @@ export async function downloadBackupFromDrive(accessToken: string, fileId: strin
 
   if (!response.ok) {
     const errorText = await response.text();
+    if (response.status === 401) {
+      localStorage.removeItem('expensetrack_drive_token');
+      throw new Error('Google connection expired. Please reconnect in settings to refresh authorization.');
+    }
     throw new Error(`Failed to download backup content: ${response.statusText} (${errorText})`);
   }
 
