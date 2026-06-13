@@ -31,7 +31,8 @@ let cachedAccessToken: string | null = null;
 
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
-  onAuthFailure?: () => void
+  onAuthFailure?: () => void,
+  onAuthError?: (error: any) => void
 ) => {
   // Check if there is a cached token in localStorage first to keep user connected across reloads
   const storedToken = localStorage.getItem('expensetrack_drive_token');
@@ -47,14 +48,18 @@ export const initAuth = (
         if (credential?.accessToken) {
           cachedAccessToken = credential.accessToken;
           localStorage.setItem('expensetrack_drive_token', cachedAccessToken);
-          if (auth.currentUser && onAuthSuccess) {
-            onAuthSuccess(auth.currentUser, cachedAccessToken);
+          const currentUser = result.user || auth.currentUser;
+          if (currentUser && onAuthSuccess) {
+            onAuthSuccess(currentUser, cachedAccessToken);
           }
         }
       }
     })
     .catch((error) => {
       console.error('Error handling Google redirect result:', error);
+      if (onAuthError) {
+        onAuthError(error);
+      }
     });
 
   return onAuthStateChanged(auth, async (user: User | null) => {

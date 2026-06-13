@@ -41,6 +41,7 @@ import {
   downloadBackupFromDrive,
   DriveFileInfo
 } from '../utils/drive';
+import firebaseConfig from '../../firebase-applet-config.json';
 
 interface BudgetSettingsProps {
   categories: Category[];
@@ -114,7 +115,7 @@ export function BudgetSettings({
   const [driveLoading, setDriveLoading] = useState<boolean>(false);
   const [cloudBackupInfo, setCloudBackupInfo] = useState<DriveFileInfo | null>(null);
   const [cloudSuccess, setCloudSuccess] = useState<string | null>(null);
-  const [cloudError, setCloudError] = useState<string | null>(null);
+  const [cloudError, setCloudError] = useState<React.ReactNode | null>(null);
   const [confirmCloudBackup, setConfirmCloudBackup] = useState<boolean>(false);
   const [confirmCloudRestore, setConfirmCloudRestore] = useState<boolean>(false);
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
@@ -237,6 +238,51 @@ export function BudgetSettings({
     };
   }, [driveToken]);
 
+  const getFriendlyErrorMessage = (err: any): React.ReactNode => {
+    const msg = err?.message || err?.code || String(err);
+    if (msg.includes('unauthorized-domain') || msg.includes('auth/unauthorized-domain') || msg.includes('unauthorized_client')) {
+      const currentHost = window.location.hostname;
+      const firebaseConsoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/settings`;
+      return (
+        <div className="space-y-2 text-left">
+          <p className="font-bold text-rose-400">Firebase domain authorized error!</p>
+          <p className="text-gray-300 text-[11px]">
+            Google Sign-in is blocked because this URL (<span className="text-emerald-400 font-mono font-semibold">{currentHost}</span>) hasn't been added to your Firebase project's authorized domains list.
+          </p>
+          <div className="bg-black/50 p-3 rounded-lg border border-rose-500/10 text-[11px] space-y-1.5 text-gray-300">
+            <p className="font-semibold text-emerald-400">Quick 1-Minute Fix:</p>
+            <ol className="list-decimal pl-4 space-y-1 text-gray-300">
+              <li>
+                Open the{' '}
+                <a 
+                  href={firebaseConsoleUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-emerald-400 font-semibold hover:underline inline-flex items-center gap-1"
+                >
+                  Firebase Console Settings <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                </a>
+              </li>
+              <li>Scroll down to the <span className="font-semibold text-gray-200">Authorized domains</span> section, then click <span className="font-semibold text-gray-200">Add domain</span>.</li>
+              <li>
+                Type <span className="text-emerald-400 font-mono font-semibold">{currentHost}</span> and click <span className="font-semibold text-gray-200">Add</span>.</li>
+            </ol>
+          </div>
+        </div>
+      );
+    }
+    
+    if (msg.includes('popup-closed-by-user')) {
+      return "Sign-in popup closed before completion. Please try again.";
+    }
+
+    if (msg.includes('popup-blocked')) {
+      return "Popup was blocked by your browser. Please check your browser's address bar to allow popups, or open the link directly in a browser tab.";
+    }
+
+    return `Google login failed: ${msg}. Please try again.`;
+  };
+
   // Try to restore user session on mount
   useEffect(() => {
     const unsubscribe = initAuth(
@@ -247,6 +293,9 @@ export function BudgetSettings({
       () => {
         setGoogleUser(null);
         setDriveToken(null);
+      },
+      (err) => {
+        setCloudError(getFriendlyErrorMessage(err));
       }
     );
     return () => unsubscribe();
@@ -266,7 +315,7 @@ export function BudgetSettings({
       }
     } catch (err: any) {
       console.error("Sign in failed", err);
-      setCloudError("Google login failed. Please try again.");
+      setCloudError(getFriendlyErrorMessage(err));
     } finally {
       setDriveLoading(false);
     }
