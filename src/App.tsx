@@ -40,6 +40,7 @@ import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings } from './components/BudgetSettings';
+import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
 // Recharts components imports
 import {
@@ -752,7 +753,7 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
-                src="/src/assets/images/expensetrack_logo_1781299964788.jpg" 
+                src={appLogo} 
                 alt="ExpenseTrack Logo" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
