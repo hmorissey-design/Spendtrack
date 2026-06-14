@@ -141,28 +141,6 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
     return list;
   };
 
-  const handleMoveCategory = (catId: string, direction: 'left' | 'right') => {
-    const ordered = getOrderedCategories();
-    const index = ordered.findIndex(c => c.id === catId);
-    if (index === -1) return;
-
-    const newIndex = direction === 'left' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= ordered.length) return;
-
-    // Swap elements
-    const temp = ordered[index];
-    ordered[index] = ordered[newIndex];
-    ordered[newIndex] = temp;
-
-    const newOrder = ordered.map(c => c.id);
-    setCategoryOrder(newOrder);
-    try {
-      localStorage.setItem('personal_finance_app_category_order', JSON.stringify(newOrder));
-    } catch (e) {
-      // ignore
-    }
-  };
-
   // Drag & Drop Handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -379,24 +357,9 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                 <span className="text-[10px] truncate w-full tracking-tight select-none pointer-events-none">{cat.name}</span>
 
                 {isReordering && (
-                  <div className="flex items-center gap-1 mt-1.5 z-10 w-full justify-center">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveCategory(cat.id, 'left')}
-                      className="p-1 px-1.5 bg-black/70 hover:bg-black text-[9px] font-bold text-gray-300 hover:text-emerald-400 rounded-md border border-white/5 active:scale-90"
-                      title="Move Left"
-                    >
-                      ◀
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveCategory(cat.id, 'right')}
-                      className="p-1 px-1.5 bg-black/70 hover:bg-black text-[9px] font-bold text-gray-300 hover:text-emerald-400 rounded-md border border-white/5 active:scale-90"
-                      title="Move Right"
-                    >
-                      ▶
-                    </button>
-                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded mt-1.5 pointer-events-none select-none animate-pulse">
+                    Drag ☰
+                  </span>
                 )}
               </div>
             ))}
