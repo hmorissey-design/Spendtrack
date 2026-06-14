@@ -1753,6 +1753,27 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Legal & Privacy Section */}
+                <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 font-sans">
+                  <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald-400" /> Privacy & Data Deletion</span>
+                    <a 
+                      href="/privacy-policy.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[10px] font-medium"
+                    >
+                      Read Policy ↗
+                    </a>
+                  </p>
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    ExpenseTrack is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
+                    All transactions reside <strong>strictly on your device</strong>. 
+                    You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
+                    If you created backups in Google Drive, those files are securely held inside your personal cloud storage where you can delete them at your own discretion.
+                  </p>
+                </div>
+
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">
                   <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">SPENDTRACK PRIVATE LEDGER SYSTEM</p>
