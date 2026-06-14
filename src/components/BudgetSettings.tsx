@@ -107,7 +107,10 @@ export function BudgetSettings({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
-  const [backupJson, setBackupJson] = useState<string>('');
+  const [deviceRestoreConfirm, setDeviceRestoreConfirm] = useState<boolean>(false);
+  const [deviceRestoreContent, setDeviceRestoreContent] = useState<string | null>(null);
+  const [deviceRestoreFilename, setDeviceRestoreFilename] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Google Drive Cloud Backup States
   const [googleUser, setGoogleUser] = useState<User | null>(null);
@@ -514,39 +517,116 @@ export function BudgetSettings({
 
   const handleExport = () => {
     const dataStr = LocalDb.exportDatabase();
-    setBackupJson(dataStr);
     
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `budget_backup_${new Date().toISOString().substring(0,10)}.json`;
+    // Save to localStorage internal backup slot for 1-click restore
+    localStorage.setItem('expensetrack_device_backup', dataStr);
+    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `ExpenseTrack_backup_${new Date().toISOString().substring(0, 10)}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
     
-    setSuccessMsg('Local backup JSON exported successfully!');
-    setTimeout(() => setSuccessMsg(null), 3000);
+    setSuccessMsg('ExpenseTrack backup saved and downloaded successfully!');
+    setTimeout(() => setSuccessMsg(null), 3500);
   };
 
-  const handleImport = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!backupJson.trim()) {
-      setErrorMsg('Please paste a valid budget backup JSON structure.');
+  const handleDeviceRestoreClick = () => {
+    setErrorMsg(null);
+    const storedBackup = localStorage.getItem('expensetrack_device_backup');
+    if (!storedBackup) {
+      setErrorMsg('No auto-saved backup found in this browser\'s cache.');
+      setTimeout(() => setErrorMsg(null), 5000);
       return;
     }
 
-    const success = LocalDb.importDatabase(backupJson);
+    try {
+      const parsed = JSON.parse(storedBackup);
+      if (Array.isArray(parsed.expenses) && Array.isArray(parsed.categories)) {
+        setDeviceRestoreContent(storedBackup);
+        
+        let formattedDate = 'Unknown date';
+        if (parsed.exportedAt) {
+          formattedDate = new Date(parsed.exportedAt).toLocaleString();
+        } else {
+          formattedDate = new Date().toLocaleString();
+        }
+        
+        setDeviceRestoreFilename(`Auto-Saved Cache (${formattedDate})`);
+        setDeviceRestoreConfirm(true);
+      } else {
+        setErrorMsg('The stored backup data appears to be corrupted or invalid.');
+        setTimeout(() => setErrorMsg(null), 4000);
+      }
+    } catch (err) {
+      setErrorMsg('Failed to read status of stored backup.');
+      setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
+
+  const handleDeviceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setErrorMsg(null);
+    setDeviceRestoreFilename(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      try {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed.expenses) && Array.isArray(parsed.categories)) {
+          setDeviceRestoreContent(content);
+          setDeviceRestoreConfirm(true);
+        } else {
+          setErrorMsg('The selected JSON file does not appear to be a valid ExpenseTrack backup.');
+          setDeviceRestoreContent(null);
+          setDeviceRestoreConfirm(false);
+          setTimeout(() => setErrorMsg(null), 5000);
+        }
+      } catch (err) {
+        setErrorMsg('The selected file is not a valid JSON document.');
+        setDeviceRestoreContent(null);
+        setDeviceRestoreConfirm(false);
+        setTimeout(() => setErrorMsg(null), 5000);
+      }
+    };
+    reader.onerror = () => {
+      setErrorMsg('Failed to read the selected backup file.');
+      setDeviceRestoreContent(null);
+      setDeviceRestoreConfirm(false);
+      setTimeout(() => setErrorMsg(null), 5000);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleDeviceRestoreConfirmExecute = () => {
+    if (!deviceRestoreContent) return;
+
+    const success = LocalDb.importDatabase(deviceRestoreContent);
     if (success) {
-      setSuccessMsg('Your private finance database has been restored from backup file!');
+      setSuccessMsg('Your private database has been restored successfully!');
       setErrorMsg(null);
-      setBackupJson('');
+      setDeviceRestoreContent(null);
+      setDeviceRestoreConfirm(false);
       setTimeout(() => {
         setSuccessMsg(null);
         window.location.reload();
       }, 1500);
     } else {
-      setErrorMsg('Failed to raw-import JSON. Please ensure headers are intact.');
+      setErrorMsg('Failed to restore database from backup file.');
+      setTimeout(() => setErrorMsg(null), 3000);
     }
+  };
+
+  const cancelDeviceRestore = () => {
+    setDeviceRestoreContent(null);
+    setDeviceRestoreConfirm(false);
+    setDeviceRestoreFilename('');
   };
 
   const triggerReset = () => {
@@ -849,38 +929,54 @@ export function BudgetSettings({
         <p className="text-[11px] text-gray-400 leading-normal">
           Save a backup copy of your records to your device, or restore a previously saved file. All records remain privately saved on your device.
         </p>
-        <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2">
+        <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
           <button
             onClick={handleExport}
-            className="py-1.5 px-2 bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/20 rounded-lg text-[10px] font-bold text-emerald-400 tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="py-2 px-2.5 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-xl text-[10px] font-extrabold text-emerald-400 tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
           >
-            <Download size={11} /> Backup to device only
+            <Download size={12} /> Backup to Device
           </button>
           
           <button
-            onClick={() => setBackupJson(backupJson ? '' : '{\n  "expenses": [],\n  "categories": []\n}')}
-            className="py-1.5 px-2 bg-[#1C1C1C] hover:bg-[#252525] border border-white/5 rounded-lg text-[10px] font-bold text-slate-350 tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+            className="py-2 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] border border-white/5 rounded-xl text-[10px] font-extrabold text-slate-300 tracking-widest uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-98"
           >
-            <Upload size={11} /> Restore Backup
+            <Upload size={12} /> Restore from Device
           </button>
         </div>
 
-        {backupJson && (
-          <div className="mt-3.5 space-y-2 animate-in fade-in slide-in-from-top-1">
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400">Import Paste Area</label>
-            <textarea
-              rows={4}
-              value={backupJson}
-              onChange={(e) => setBackupJson(e.target.value)}
-              placeholder="Paste backup json string here..."
-              className="w-full p-2 bg-black border border-white/10 rounded font-mono text-[9px] text-emerald-400 focus:outline-hidden"
-            />
-            <button
-              onClick={handleImport}
-              className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold cursor-pointer transition-colors border-0"
-            >
-              Verify & Complete Restoration
-            </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          accept=".json" 
+          onChange={handleDeviceFileSelect} 
+          className="hidden" 
+        />
+
+        {deviceRestoreConfirm && (
+          <div className="mt-3.5 p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-1 text-left">
+            <span className="block text-[11px] font-bold text-emerald-400">
+              Target Restoration: <span className="font-mono text-slate-300 font-normal">{deviceRestoreFilename}</span>
+            </span>
+            <p className="text-[10px] text-gray-400 leading-normal">
+              Are you sure you want to restore? This will replace all current expenses and categories on this browser with the data from this previous backup.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDeviceRestoreConfirmExecute}
+                className="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg cursor-pointer transition-all border-0"
+              >
+                Yes, Overwrite & Restore
+              </button>
+              <button
+                type="button"
+                onClick={cancelDeviceRestore}
+                className="py-1 px-2.5 bg-white/10 hover:bg-white/15 text-slate-300 text-[10px] font-bold rounded-lg cursor-pointer transition-all border-0"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -891,7 +987,7 @@ export function BudgetSettings({
           <Cloud size={14} className="text-yellow-500 animate-pulse" /> Google Drive Cloud Backup
         </h3>
         <p className="text-[11px] text-gray-400 leading-normal">
-          Securely save your ExpenseTrack database to your personal Google Drive storage. This is very helpful if you are switching to a new phone. This data is private and locked to your account.
+          Securely save your ExpenseTrack database to your personal Google Drive storage. <span className="text-yellow-500/90 font-medium">This is the safest option to ensure you never lose your records if your phone is lost or damaged beyond repair</span>, or when switching to a new device. This data is private and locked to your account.
         </p>
 
         {cloudSuccess && (
