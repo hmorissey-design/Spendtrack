@@ -52,6 +52,10 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   });
   const [isReordering, setIsReordering] = useState<boolean>(false);
 
+  // Drag and Drop reordering states
+  const [draggedCatId, setDraggedCatId] = useState<string | null>(null);
+  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
+
   // Autofocus input ref
   const amountInputRef = useRef<HTMLInputElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -157,6 +161,58 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
     } catch (e) {
       // ignore
     }
+  };
+
+  // Drag & Drop Handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    setDraggedCatId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (id !== draggedCatId) {
+      setDragOverCatId(id);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, id: string) => {
+    if (dragOverCatId === id) {
+      setDragOverCatId(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedCatId;
+    if (sourceId && sourceId !== targetId) {
+      const ordered = getOrderedCategories();
+      const sourceIdx = ordered.findIndex(c => c.id === sourceId);
+      const targetIdx = ordered.findIndex(c => c.id === targetId);
+
+      if (sourceIdx !== -1 && targetIdx !== -1) {
+        const itemToMove = ordered[sourceIdx];
+        const newOrdered = [...ordered];
+        newOrdered.splice(sourceIdx, 1);
+        newOrdered.splice(targetIdx, 0, itemToMove);
+
+        const newOrder = newOrdered.map(c => c.id);
+        setCategoryOrder(newOrder);
+        try {
+          localStorage.setItem('personal_finance_app_category_order', JSON.stringify(newOrder));
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+    setDraggedCatId(null);
+    setDragOverCatId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedCatId(null);
+    setDragOverCatId(null);
   };
 
   // Suggested quick additions for convenience
@@ -267,7 +323,12 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
         {/* Category Picker with Interactive Reordering */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans">Budget Category</label>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans">Budget Category</label>
+              <span className="text-[8px] text-gray-500 block font-sans lowercase tracking-wide">
+                Tip: Drag & drop cards to reorder
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => setIsReordering(!isReordering)}
@@ -285,15 +346,25 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             {orderedCategories.map((cat) => (
               <div
                 key={cat.id}
-                className={`p-2 flex flex-col items-center justify-center rounded-xl border text-center transition-all relative ${
-                  isReordering
-                    ? 'border-dashed border-emerald-500/40 bg-black/40'
-                    : selectedCategory === cat.id
-                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 shadow-xs font-bold ring-1 ring-emerald-500/10'
-                      : 'border-white/5 hover:border-white/10 text-gray-400 bg-black/20 hover:bg-black/35'
+                draggable={true}
+                onDragStart={(e) => handleDragStart(e, cat.id)}
+                onDragOver={(e) => handleDragOver(e, cat.id)}
+                onDragLeave={(e) => handleDragLeave(e, cat.id)}
+                onDrop={(e) => handleDrop(e, cat.id)}
+                onDragEnd={handleDragEnd}
+                className={`p-2 flex flex-col items-center justify-center rounded-xl border text-center transition-all relative cursor-grab active:cursor-grabbing select-none ${
+                  draggedCatId === cat.id
+                    ? 'opacity-40 scale-95 border-dashed border-emerald-500/40 bg-black/10'
+                    : dragOverCatId === cat.id
+                      ? 'border-emerald-400 bg-emerald-500/15 scale-105 shadow-md shadow-emerald-500/10 ring-2 ring-emerald-500/20'
+                      : isReordering
+                        ? 'border-dashed border-emerald-550/40 bg-black/40 hover:border-emerald-500/60'
+                        : selectedCategory === cat.id
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 shadow-xs font-bold ring-1 ring-emerald-500/10'
+                          : 'border-white/5 hover:border-white/10 text-gray-400 bg-black/20 hover:bg-black/35'
                 }`}
               >
-                {!isReordering ? (
+                {!isReordering && !draggedCatId ? (
                   <button
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
@@ -302,10 +373,10 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                   />
                 ) : null}
 
-                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-bold tracking-wider ${cat.color} select-none`}>
+                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-bold tracking-wider ${cat.color} select-none pointer-events-none`}>
                   {cat.name.substring(0, 2).toUpperCase()}
                 </div>
-                <span className="text-[10px] truncate w-full tracking-tight select-none">{cat.name}</span>
+                <span className="text-[10px] truncate w-full tracking-tight select-none pointer-events-none">{cat.name}</span>
 
                 {isReordering && (
                   <div className="flex items-center gap-1 mt-1.5 z-10 w-full justify-center">

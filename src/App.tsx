@@ -873,7 +873,7 @@ export default function App() {
                         <span className="text-xs font-bold text-gray-300 font-mono">{currencySymbol}{totals.limit.toLocaleString()}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-gray-405 uppercase tracking-tight block">Available Cap</span>
+                        <span className="text-[9px] font-bold text-gray-405 uppercase tracking-tight block">Budget Remaining</span>
                         <span className={`text-xs font-extrabold font-mono ${totals.remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {currencySymbol}{totals.remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
