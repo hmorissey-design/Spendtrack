@@ -1758,7 +1758,7 @@ export default function App() {
                   <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center justify-between">
                     <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald-400" /> Privacy & Data Deletion</span>
                     <a 
-                      href="/privacy-policy.html" 
+                      href="privacy-policy.html" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[10px] font-medium"
