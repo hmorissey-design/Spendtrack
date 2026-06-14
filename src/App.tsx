@@ -264,12 +264,12 @@ export default function App() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
-    doc.text("S", 16.5, 19.5);
+    doc.text("E", 16.5, 19.5);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(15, 118, 110);
-    doc.text("SPENDTRACK STATEMENT", 25, 19);
+    doc.text("EXPENSE TRACK STATEMENT", 25, 19);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
@@ -1776,7 +1776,7 @@ export default function App() {
 
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">
-                  <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">SPENDTRACK PRIVATE LEDGER SYSTEM</p>
+                  <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">EXPENSE TRACK PRIVATE LEDGER SYSTEM</p>
                 </div>
               </div>
             </div>
