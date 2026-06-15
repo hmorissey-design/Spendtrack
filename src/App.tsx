@@ -40,6 +40,7 @@ import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings } from './components/BudgetSettings';
+import { VoiceAssistant } from './components/VoiceAssistant';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
 // Recharts components imports
@@ -84,6 +85,49 @@ export default function App() {
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
     return LocalDb.getCurrencySymbol();
   });
+
+  const [logoClicks, setLogoClicks] = useState<number>(0);
+  const [isDevMode, setIsDevMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('expensetrack_developer_mode') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [devModeNotification, setDevModeNotification] = useState<string | null>(null);
+
+  const handleLogoClick = () => {
+    setLogoClicks(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        const nextDevMode = !isDevMode;
+        try {
+          localStorage.setItem('expensetrack_developer_mode', nextDevMode ? 'true' : 'false');
+        } catch (e) {}
+        setIsDevMode(nextDevMode);
+        setDevModeNotification(nextDevMode ? "🛠️ Developer settings unlocked!" : "🔒 Developer settings locked.");
+        setTimeout(() => setDevModeNotification(null), 3000);
+        return 0; // reset
+      }
+      return next;
+    });
+  };
+
+  const [enableVoiceAssistant, setEnableVoiceAssistant] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('expensetrack_enable_voice_assistant') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleToggleVoiceAssistant = (enabled: boolean) => {
+    try {
+      localStorage.setItem('expensetrack_enable_voice_assistant', enabled ? 'true' : 'false');
+    } catch (e) {}
+    setEnableVoiceAssistant(enabled);
+  };
 
   const handleCurrencyChange = (newSymbol: string) => {
     LocalDb.setCurrencySymbol(newSymbol);
@@ -766,8 +810,8 @@ export default function App() {
     <AndroidFrame currentTime="01:15" onRefreshDatabase={handleResetDatabase}>
       <div className="flex-1 flex flex-col h-full overflow-hidden select-none" id="android_app_root">
         {/* App Title & Top Header */}
-        <div className="bg-[#0A0A0A] text-white pt-5 pb-4 px-4 flex items-center justify-between shrink-0 border-b border-white/5">
-          <div className="flex items-center gap-2.5">
+        <div className="bg-[#0A0A0A] text-white pt-5 pb-4 px-4 flex items-center justify-between shrink-0 border-b border-white/5 relative">
+          <div className="flex items-center gap-2.5 cursor-pointer select-none active:opacity-85" onClick={handleLogoClick}>
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
                 src={appLogo} 
@@ -780,6 +824,13 @@ export default function App() {
               <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Expense<span className="text-emerald-400">Track</span></h1>
             </div>
           </div>
+
+          {/* Toast developer mode notifications */}
+          {devModeNotification && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-black/90 border border-emerald-500/30 text-emerald-400 rounded-full text-[10px] font-mono font-bold z-40 shadow-xl tracking-wider animate-in fade-in slide-in-from-top-1 duration-200">
+              {devModeNotification}
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-full text-gray-300">
@@ -1571,6 +1622,9 @@ export default function App() {
                 defaultCategoryId={defaultCategoryId}
                 currencySymbol={currencySymbol}
                 onCurrencyChanged={handleCurrencyChange}
+                enableVoiceAssistant={enableVoiceAssistant}
+                onToggleVoiceAssistant={handleToggleVoiceAssistant}
+                isDevMode={isDevMode}
               />
             </div>
           )}
@@ -1811,6 +1865,15 @@ export default function App() {
               <Plus size={22} className="stroke-[3]" />
             </button>
           </div>
+        )}
+
+        {/* Dynamic Conversational Google Assistant voice panel */}
+        {enableVoiceAssistant && (
+          <VoiceAssistant
+            categories={categories}
+            onAddExpense={handleAddExpense}
+            currencySymbol={currencySymbol}
+          />
         )}
 
         {/* Modern Bottom Android Navigation Tab bar */}

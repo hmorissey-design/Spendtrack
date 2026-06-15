@@ -9,7 +9,8 @@ import {
   DollarSign, Save, Download, Upload, AlertTriangle, CheckCircle, Shield,
   Plus, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
-  Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp
+  Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
+  Mic, MicOff
 } from 'lucide-react';
 
 import {
@@ -54,6 +55,9 @@ interface BudgetSettingsProps {
   defaultCategoryId: string;
   currencySymbol: string;
   onCurrencyChanged: (symbol: string) => void;
+  enableVoiceAssistant?: boolean;
+  onToggleVoiceAssistant?: (enabled: boolean) => void;
+  isDevMode?: boolean;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -102,7 +106,10 @@ export function BudgetSettings({
   onCategoryDeleted,
   defaultCategoryId,
   currencySymbol,
-  onCurrencyChanged
+  onCurrencyChanged,
+  enableVoiceAssistant = false,
+  onToggleVoiceAssistant,
+  isDevMode = false
 }: BudgetSettingsProps) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -920,6 +927,50 @@ export function BudgetSettings({
           ))}
         </div>
       </div>
+
+      {/* Voice Assistant Developer Settings Card */}
+      {isDevMode && (
+        <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 font-mono">
+              <Mic size={14} className="text-emerald-400" /> Voice Assistant (BETA)
+            </h3>
+            <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-bold uppercase tracking-wider font-mono">
+              Advanced
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-400 leading-normal mb-4">
+            Toggle the active conversational smart voice-processing engine. 
+            When enabled, you can talk naturally to log entries quickly (e.g., <span className="text-emerald-400 italic font-medium font-mono">"Coffee 4 dollars yesterday"</span>).
+          </p>
+          
+          <div className="bg-black/25 border border-white/5 rounded-xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-lg border transition-all ${enableVoiceAssistant ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-400' : 'bg-black/40 border-white/5 text-gray-500'}`}>
+                {enableVoiceAssistant ? <Mic size={16} /> : <MicOff size={16} />}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-100">Voice Activation</p>
+                <p className="text-[10px] text-gray-500 leading-tight select-none">
+                  {enableVoiceAssistant ? 'Active and processing on device' : 'Completely disabled & offline'}
+                </p>
+              </div>
+            </div>
+            
+            <button
+              type="button"
+              onClick={() => onToggleVoiceAssistant && onToggleVoiceAssistant(!enableVoiceAssistant)}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                enableVoiceAssistant 
+                  ? 'bg-emerald-600/30 border-emerald-500/40 text-emerald-400 font-extrabold shadow-sm' 
+                  : 'bg-zinc-800 border-white/10 hover:border-white/20 text-gray-300'
+              }`}
+            >
+              {enableVoiceAssistant ? 'Enabled' : 'Disabled'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Localized Architecture Notice */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
