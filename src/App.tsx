@@ -71,6 +71,20 @@ export default function App() {
     }
   }, []);
 
+  // Detect session state to distinguish launching fresh (closed state) vs accidental page refresh
+  const isSessionActive = useMemo(() => {
+    try {
+      const active = sessionStorage.getItem('expensetrack_session_active');
+      if (!active) {
+        sessionStorage.setItem('expensetrack_session_active', 'true');
+        return false; // This is a fresh app boot from a closed state
+      }
+      return true; // The app was already open and is being refreshed
+    } catch (e) {
+      return false;
+    }
+  }, []);
+
   // Initialize states
   const [activeTab, setActiveTab] = useState<ActiveTab>(isFirstLaunch ? 'help' : 'dashboard');
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -79,7 +93,7 @@ export default function App() {
     return new Date().toISOString().substring(0, 7); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
-  const [showAddForm, setShowAddForm] = useState(!isFirstLaunch);
+  const [showAddForm, setShowAddForm] = useState(!isFirstLaunch && !isSessionActive);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [defaultCategoryId, setDefaultCategoryIdState] = useState<string>('');
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
