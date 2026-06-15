@@ -235,15 +235,15 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
         <h3 className="text-base font-bold text-white flex items-center gap-1.5 uppercase tracking-wider font-sans">
           <Sparkles size={18} className="text-emerald-500 animate-pulse" />
-          {expenseToEdit ? 'Edit Expense Log' : 'Log Discretionary Expense'}
+          {expenseToEdit ? 'Edit Expense Log' : 'Add Expense'}
         </h3>
         {onClose && (
           <button 
             type="button" 
             onClick={onClose}
-            className="p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-full cursor-pointer transition-colors"
+            className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs rounded-lg cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-wider"
           >
-            <X size={16} />
+            Cancel
           </button>
         )}
       </div>

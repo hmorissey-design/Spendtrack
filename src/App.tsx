@@ -61,15 +61,24 @@ import {
 } from 'recharts';
 
 export default function App() {
+  // Check if opened before
+  const isFirstLaunch = useMemo(() => {
+    try {
+      return !localStorage.getItem('expensetrack_first_open');
+    } catch (e) {
+      return false;
+    }
+  }, []);
+
   // Initialize states
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(isFirstLaunch ? 'help' : 'dashboard');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     return new Date().toISOString().substring(0, 7); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(!isFirstLaunch);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [defaultCategoryId, setDefaultCategoryIdState] = useState<string>('');
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
@@ -174,6 +183,13 @@ export default function App() {
   // Run on initial mount and when month changes
   useEffect(() => {
     loadDatabaseState(selectedMonth);
+    try {
+      if (!localStorage.getItem('expensetrack_first_open')) {
+        localStorage.setItem('expensetrack_first_open', 'true');
+      }
+    } catch (e) {
+      console.warn('LocalStorage not available:', e);
+    }
   }, [selectedMonth]);
 
   // Action Handlers

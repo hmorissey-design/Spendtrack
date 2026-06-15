@@ -64,12 +64,14 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
   if (isRealMobileAndTablet || dismissSimulator) {
     return (
-      <div className="w-full min-h-screen bg-[#0A0A0A] text-slate-200 select-none pb-safe relative">
-        {children}
+      <div className="w-full h-screen flex flex-col bg-[#0A0A0A] text-slate-200 select-none pb-safe relative overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
+          {children}
+        </div>
         {dismissSimulator && (
           <button 
             onClick={() => setDismissSimulator(false)}
-            className="fixed bottom-4 right-4 bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg z-50 text-xs flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity"
+            className="fixed bottom-16 right-4 bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg z-50 text-xs flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity"
             title="Restore Simulator Frame"
           >
             <Smartphone size={16} />
@@ -147,7 +149,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
       }`}>
         {isMobileMode ? (
           /* Actual High-fidelity Android Smartphone Bezels */
-          <div className="w-full aspect-[9/19.5] bg-[#020202] rounded-[48px] p-3 shadow-2xl border-4 border-zinc-800 ring-10 ring-black flex flex-col relative overflow-hidden">
+          <div className="h-[76vh] max-h-[820px] min-h-[500px] aspect-[9/19.5] w-auto bg-[#020202] rounded-[48px] p-3 shadow-2xl border-4 border-zinc-800 ring-10 ring-black flex flex-col relative overflow-hidden">
             {/* Camera Pin Hole Notch */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-black rounded-full border border-neutral-900 z-50 flex items-center justify-center">
               <div className="w-1.5 h-1.5 bg-blue-950 rounded-full opacity-60"></div>
@@ -189,7 +191,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
           </div>
         ) : (
           /* Normal Desktop Web View Layout Card */
-          <div className="w-full bg-[#0A0A0A] rounded-2xl shadow-2xl border border-white/5 overflow-hidden flex flex-col min-h-[760px]">
+          <div className="w-full bg-[#0A0A0A] rounded-2xl shadow-2xl border border-white/5 overflow-hidden flex flex-col h-[76vh] max-h-[820px] min-h-[500px]">
             {/* Simulated Desktop Header Bar */}
             <div className="bg-[#111111] text-white px-4 py-2 text-xs font-mono flex items-center justify-between border-b border-white/5">
               <div className="flex items-center gap-2">
