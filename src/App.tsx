@@ -39,6 +39,7 @@ import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
+import { QuickAddWidget } from './components/QuickAddWidget';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
@@ -86,14 +87,14 @@ export default function App() {
   }, []);
 
   // Initialize states
-  const [activeTab, setActiveTab] = useState<ActiveTab>(isFirstLaunch ? 'help' : 'dashboard');
+  const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     return new Date().toISOString().substring(0, 7); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
-  const [showAddForm, setShowAddForm] = useState(!isFirstLaunch && !isSessionActive);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [defaultCategoryId, setDefaultCategoryIdState] = useState<string>('');
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
@@ -974,6 +975,13 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Quick Add Inline Widget */}
+              <QuickAddWidget 
+                categories={categories} 
+                onSubmit={handleAddExpense} 
+                currencySymbol={currencySymbol} 
+              />
 
               {/* High-quality Quick Add Trigger and Quick Insights */}
               <div className="grid grid-cols-2 gap-3">

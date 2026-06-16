@@ -949,8 +949,8 @@ export function BudgetSettings({
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
         <div className="flex items-center justify-between gap-2.5 mb-2">
           <div>
-            <h3 className="text-xs font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 font-mono">
-              <DollarSign size={14} /> Currency Symbol Settings
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
+              <DollarSign size={14} className="text-emerald-500" /> Active Currency Symbol
             </h3>
             <p className="text-[10px] text-gray-500 mt-0.5 font-sans">Configure currency notation used across components.</p>
           </div>
@@ -965,7 +965,7 @@ export function BudgetSettings({
           onClick={() => setShowCurrencyManager(true)}
           className="w-full py-3 px-4 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-extrabold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm"
         >
-          <Sparkles size={13} className="animate-pulse" /> Change Currency Symbol
+          <Sparkles size={13} className="text-emerald-500 animate-pulse" /> Change Currency Symbol
         </button>
       </div>
 
@@ -1074,8 +1074,8 @@ export function BudgetSettings({
 
       {/* Localized Architecture Notice */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
-        <h3 className="text-xs font-extrabold uppercase tracking-widest mb-2 text-emerald-400 flex items-center gap-1.5 font-sans">
-          <Shield size={14} /> Backup or Restore from Your Device
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 font-sans">
+          <Shield size={14} className="text-emerald-500" /> Backup or Restore from Your Device
         </h3>
         <p className="text-[11px] text-gray-400 leading-normal">
           All records remain privately saved on your device only
@@ -1083,16 +1083,16 @@ export function BudgetSettings({
         <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
           <button
             onClick={handleExport}
-            className="py-2 px-2.5 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-xl text-[10px] font-extrabold text-emerald-400 tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
+            className="py-2 px-2.5 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
           >
-            <Download size={12} /> Backup to Device
+            <Download size={12} className="text-emerald-500" /> Backup to Device
           </button>
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="py-2 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] border border-white/5 rounded-xl text-[10px] font-extrabold text-slate-300 tracking-widest uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-98"
+            className="py-2 px-2.5 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
           >
-            <Upload size={12} /> Restore from Device
+            <Upload size={12} className="text-emerald-500" /> Restore from Device
           </button>
         </div>
 
