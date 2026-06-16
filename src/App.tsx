@@ -39,7 +39,7 @@ import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
-import { BudgetSettings } from './components/BudgetSettings';
+import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
@@ -891,26 +891,28 @@ export default function App() {
           )}
 
           {/* Universal Month Switcher Bar */}
-          <div className="bg-[#111111] p-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
-            <button
-              onClick={handlePrevMonth}
-              className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
-              title="Previous Month"
-            >
-              ◀ Prev
-            </button>
-            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-[#eeeeee]">
-              <Calendar size={13} className="text-emerald-500 animate-pulse" />
-              <span>{totals.monthName}</span>
+          {activeTab !== 'budget_plan' && (
+            <div className="bg-[#111111] p-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
+              <button
+                onClick={handlePrevMonth}
+                className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
+                title="Previous Month"
+              >
+                ◀ Prev
+              </button>
+              <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-[#eeeeee]">
+                <Calendar size={13} className="text-emerald-500 animate-pulse" />
+                <span>{totals.monthName}</span>
+              </div>
+              <button
+                onClick={handleNextMonth}
+                className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
+                title="Next Month"
+              >
+                Next ▶
+              </button>
             </div>
-            <button
-              onClick={handleNextMonth}
-              className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
-              title="Next Month"
-            >
-              Next ▶
-            </button>
-          </div>
+          )}
 
           {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'dashboard' && (
@@ -1430,11 +1432,11 @@ export default function App() {
                       return (
                         <div key={exp.id} className="py-3 flex items-center justify-between group">
                           <div className="flex items-center gap-2 min-w-0">
-                            {/* Simple Category Initials icon */}
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[10px] shrink-0 bg-[#0A0A0A] border ${
-                              isBusiness ? 'border-indigo-500/30 text-indigo-400 bg-indigo-500/5' : 'border-white/5 text-gray-300'
+                            {/* Category Icon with Custom Colors */}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              cat?.color ? cat.color : 'bg-slate-100/15 text-slate-400 border border-slate-500/10'
                             }`}>
-                              {(cat?.name || 'Uncategorized').substring(0, 2).toUpperCase()}
+                              {renderCategoryIcon(cat?.icon || 'Tag', 14)}
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-gray-200 truncate leading-tight flex items-center gap-1.5 flex-wrap">
@@ -1791,7 +1793,7 @@ export default function App() {
                     </p>
                     <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Set Monthly Limit:</strong> Enter the maximum amount of money you want to budget for the month.</li>
-                      <li><strong className="text-gray-300">Preferred Defaults:</strong> On installation, new transactions are categorized as <strong className="text-emerald-400 font-bold">Uncategorized</strong> by default. However, you can change this! Edit any category in Settings and select "Default Category" to make it your preferred default for all future purchases.</li>
+                      <li><strong className="text-gray-300">Transaction Defaults:</strong> New transactions are automatically categorized as <strong className="text-emerald-400 font-bold">Uncategorized</strong> by default for maximum speed.</li>
                       <li><strong className="text-gray-300">Ordering Category Icons:</strong> You can move your most frequently used category icons to the very beginning of the list directly within the transaction Add or Edit screens. This keeps your favorite categories at your fingertips for super-quick selection whenever you add or edit a purchase.</li>
                       <li><strong className="text-gray-300">Currency Symbol:</strong> Switch between symbols like $, €, £, ¥, or ₹.</li>
                     </ul>

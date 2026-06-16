@@ -423,6 +423,8 @@ export function BudgetSettings({
   };
 
   // Form States for CRUD Category
+  const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
+  const [showCurrencyManager, setShowCurrencyManager] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: string, name: string } | null>(null);
   const [formName, setFormName] = useState<string>('');
@@ -651,282 +653,380 @@ export function BudgetSettings({
           <div>
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
               <DollarSign size={15} className="text-emerald-500" />
-              Category Budgets
+              Categories & Budgets
             </h3>
-            <p className="text-[10px] text-gray-500 italic mt-0.5">Sum of all tags defines your dynamic master limit.</p>
           </div>
           <div className="text-right">
-            <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Total Limit</span>
-            <span className="text-lg font-bold font-mono text-emerald-400">{currencySymbol}{totalCalculatedLimit.toLocaleString()}</span>
+            <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Total Budget</span>
+            <span className="text-sm font-bold font-mono text-emerald-400">{currencySymbol}{currentBudget.limitAmount.toLocaleString()}</span>
           </div>
         </div>
 
-        {successMsg && (
-          <div className="mb-3 p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg flex items-center gap-1.5 font-sans">
+        <button
+          type="button"
+          onClick={() => setShowCategoryManager(true)}
+          className="w-full py-3 px-4 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-extrabold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm"
+        >
+          <Sparkles size={13} className="animate-pulse" /> Edit Categories or Budgets or Add New Categories
+        </button>
+
+        {successMsg && !showCategoryManager && (
+          <div className="mt-3 p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg flex items-center gap-1.5 font-sans">
             <CheckCircle size={14} className="text-emerald-400" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {errorMsg && (
-          <div className="mb-3 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg">
+        {errorMsg && !showCategoryManager && (
+          <div className="mt-3 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg">
             <span>⚠️ {errorMsg}</span>
           </div>
         )}
+      </div>
 
-        {/* Modal-like overlay for Editing/Adding Category - Elegant Full Screen Backdrop */}
-        {editingCategory && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
-            <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="full_screen_category_builder">
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                  {editingCategory === 'new' ? 'Add New Category' : `Edit Category: ${editingCategory.name}`}
+      {/* Main Categories & Budgets Dialogue Box Manager Overlay */}
+      {showCategoryManager && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-40 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
+          <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="dialogue_categories_budgets_manager">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div>
+                <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                  <DollarSign size={16} className="text-emerald-400" /> Categories & Budgets
                 </h4>
-                <button 
-                  onClick={() => setEditingCategory(null)} 
-                  className="text-gray-400 hover:text-white p-1.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10 border-0 transition-colors"
-                >
-                  <X size={18} />
-                </button>
               </div>
+              <button 
+                onClick={() => setShowCategoryManager(false)} 
+                className="text-gray-400 hover:text-white p-1.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10 border-0 transition-colors"
+                title="Close manager"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-              <form onSubmit={handleSaveCategoryForm} className="space-y-5 text-xs">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Category Label</label>
-                  <input 
-                    type="text" 
-                    value={formName}
-                    disabled={editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized'}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Subscriptions, Gym, Pet Food"
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
-                    required
-                    autoFocus
-                  />
+            {successMsg && (
+              <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg flex items-center gap-1.5 font-sans">
+                <CheckCircle size={14} className="text-emerald-400" />
+                <span>{successMsg}</span>
+              </div>
+            )}
 
-                  <div className="flex items-center gap-2 mt-3.5 select-none">
-                    <input 
-                      type="checkbox" 
-                      id="category_is_default"
-                      checked={formIsDefault}
-                      disabled={editingCategory !== 'new' && editingCategory.id === defaultCategoryId}
-                      onChange={(e) => setFormIsDefault(e.target.checked)}
-                      className="rounded border-white/20 bg-[#0A0A0A] text-emerald-500 focus:ring-1 focus:ring-emerald-500 w-4 h-4 cursor-pointer disabled:opacity-50"
-                    />
-                    <label htmlFor="category_is_default" className="text-[10px] text-gray-400 font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 flex items-center gap-1">
-                      {editingCategory !== 'new' && editingCategory.id === defaultCategoryId 
-                        ? 'Active Default Category' 
-                        : 'Set as Default Category for new logs'}
-                    </label>
-                  </div>
-                </div>
+            {errorMsg && (
+              <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg">
+                <span>⚠️ {errorMsg}</span>
+              </div>
+            )}
 
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Monthly Budget Allocation</label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-extrabold">{currencySymbol}</span>
-                    <input 
-                      type="number" 
-                      min="0"
-                      value={formLimit}
-                      onChange={(e) => setFormLimit(e.target.value)}
-                      className="w-full pl-8 pr-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A]"
-                      required
-                    />
-                  </div>
-                </div>
+            <div className="flex items-center justify-between bg-black/25 p-3 rounded-xl border border-white/5 font-sans">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Monthly Budget</span>
+              <span className="text-base font-extrabold font-mono text-emerald-400">{currencySymbol}{currentBudget.limitAmount.toLocaleString()}</span>
+            </div>
 
-                {/* Icon selector preset grid */}
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Pick Icon Preset</label>
-                  <div className="grid grid-cols-8 gap-2 p-3 bg-black/45 rounded-xl border border-white/5 justify-items-center">
-                    {ICON_PRESETS.map(iconName => (
-                      <button
-                        key={iconName}
-                        type="button"
-                        onClick={() => setFormIcon(iconName)}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                          formIcon === iconName 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-sm shadow-emerald-950/20' 
-                            : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border-white/5'
-                        }`}
-                        title={iconName}
-                      >
-                        {renderCategoryIcon(iconName, 18)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            {/* Master action to spawn a new creator form inline placed at the top */}
+            {!editingCategory && (
+              <button
+                onClick={handleOpenCreateNew}
+                className="w-full py-2.5 bg-emerald-950/20 hover:bg-emerald-950/40 border border-dashed border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center"
+              >
+                <Plus size={14} className="stroke-[2.5]" /> Add New Category
+              </button>
+            )}
 
-                {/* Color preset grid selector */}
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Preset Theme Color</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {COLOR_PRESETS.map(preset => (
-                      <button
-                        key={preset.value}
-                        type="button"
-                        onClick={() => setFormColor(preset.value)}
-                        className={`py-2 px-3 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
-                          formColor === preset.value
-                            ? 'bg-white/15 text-white border-white/40 ring-1 ring-white/10'
-                            : 'bg-black/30 text-gray-400 border-white/5 opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: preset.hex }} />
-                        <span>{preset.value.toUpperCase()}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingCategory(null)}
-                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-all border border-white/5 cursor-pointer"
+            {/* Categories scrollable deck list */}
+            <div className="space-y-2 max-h-[280px] overflow-y-auto pr-0.5">
+              {categories.filter(c => c.id !== 'cat_business_expense').map((cat) => {
+                const displayLimit = cat.limit || 0;
+                return (
+                  <div 
+                    key={cat.id} 
+                    className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-white/10 flex items-center justify-between gap-2.5 transition-all"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer"
-                  >
-                    {editingCategory === 'new' ? 'Add' : 'Save'}
-                  </button>
-                </div>
-              </form>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        cat.color.includes('/') ? cat.color : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      }`}>
+                        {renderCategoryIcon(cat.icon, 16)}
+                      </div>
+                      <div className="min-w-0 text-xs">
+                        <span className="font-bold text-gray-200 block truncate">{cat.name}</span>
+                        <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
+                          Limit: <span className="text-xs font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleOpenEdit(cat)}
+                        className="p-1.5 bg-[#1C1C1C] hover:bg-[#252525] hover:text-emerald-400 text-gray-400 rounded-lg cursor-pointer border border-white/5 transition-colors"
+                        title="Edit category label or budget limit"
+                      >
+                        <Edit size={12} />
+                      </button>
+                      {cat.id !== 'cat_uncategorized' ? (
+                        <button
+                          onClick={() => handleDeleteClick(cat.id, cat.name)}
+                          className="p-1.5 bg-[#1C1C1C]/60 hover:bg-rose-950/30 hover:text-rose-400 text-gray-500 rounded-lg cursor-pointer border border-white/5 transition-colors"
+                          title="Delete category"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      ) : (
+                        <span 
+                          className="p-1.5 bg-[#1C1C1C]/30 text-gray-600 rounded-lg border border-white/5 cursor-not-allowed opacity-40 select-none"
+                          title="System default category. Cannot be deleted."
+                        >
+                          <Trash2 size={12} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setShowCategoryManager(false)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-emerald-950/20 text-center"
+              >
+                Done
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Custom Confirmation Modal for Deleting Category */}
-        {categoryToDelete && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-in fade-in duration-250">
-            <div className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
-              <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto">
-                <Trash2 size={24} />
+      {/* Modal-like overlay for Editing/Adding Category - Elegant Full Screen Backdrop */}
+      {editingCategory && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
+          <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="full_screen_category_builder">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                {editingCategory === 'new' ? 'Add New Category' : `Edit Category: ${editingCategory.name}`}
+              </h4>
+              <button 
+                onClick={() => setEditingCategory(null)} 
+                className="text-gray-400 hover:text-white p-1.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10 border-0 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategoryForm} className="space-y-5 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Category Label</label>
+                <input 
+                  type="text" 
+                  value={formName}
+                  disabled={editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized'}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. Subscriptions, Gym, Pet Food"
+                  className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                  autoFocus
+                />
               </div>
-              
-              <div className="space-y-1">
-                <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                  Delete Category?
-                </h4>
-                <p className="text-[11px] text-gray-400 leading-normal">
-                  Are you sure you want to delete <strong className="text-white">"{categoryToDelete.name}"</strong>? 
-                  Any expenses currently tagged under this category will automatically become uncategorized.
-                </p>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Monthly Budget Allocation</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-extrabold">{currencySymbol}</span>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={formLimit}
+                    onChange={(e) => setFormLimit(e.target.value)}
+                    className="w-full pl-8 pr-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Icon selector preset grid */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Pick Icon Preset</label>
+                <div className="grid grid-cols-8 gap-2 p-3 bg-black/45 rounded-xl border border-white/5 justify-items-center">
+                  {ICON_PRESETS.map(iconName => (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => setFormIcon(iconName)}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                        formIcon === iconName 
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-sm shadow-emerald-950/20' 
+                          : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border-white/5'
+                      }`}
+                      title={iconName}
+                    >
+                      {renderCategoryIcon(iconName, 18)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color preset grid selector */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Preset Theme Color</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {COLOR_PRESETS.map(preset => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => setFormColor(preset.value)}
+                      className={`py-2 px-3 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                        formColor === preset.value
+                          ? 'bg-white/15 text-white border-white/40 ring-1 ring-white/10'
+                          : 'bg-black/30 text-gray-400 border-white/5 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: preset.hex }} />
+                      <span>{preset.value.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setCategoryToDelete(null)}
-                  className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-all border border-white/5 cursor-pointer"
+                  onClick={() => setEditingCategory(null)}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-all border border-white/5 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  onClick={handleConfirmDelete}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-rose-950/20"
+                  type="submit"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer"
                 >
-                  Delete
+                  {editingCategory === 'new' ? 'Add' : 'Save'}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Modal for Deleting Category */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-in fade-in duration-250">
+          <div className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+              <Trash2 size={24} />
+            </div>
+            
+            <div className="space-y-1">
+              <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                Delete Category?
+              </h4>
+              <p className="text-[11px] text-gray-400 leading-normal">
+                Are you sure you want to delete <strong className="text-white">"{categoryToDelete.name}"</strong>? 
+                Any expenses currently tagged under this category will automatically become uncategorized.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setCategoryToDelete(null)}
+                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-all border border-white/5 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-rose-950/20"
+              >
+                Delete
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Categories scrollable deck list */}
-        <div className="space-y-2 max-h-[360px] overflow-y-auto pr-0.5">
-          {categories.filter(c => c.id !== 'cat_business_expense').map((cat) => {
-            const displayLimit = cat.limit || 0;
-            return (
-              <div 
-                key={cat.id} 
-                className="p-3 bg-black/20 rounded-xl border border-white/5 hover:border-white/10 flex items-center justify-between gap-2.5 transition-all"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    cat.color.includes('/') ? cat.color : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  }`}>
-                    {renderCategoryIcon(cat.icon, 16)}
-                  </div>
-                  <div className="min-w-0 text-xs">
-                    <span className="font-bold text-gray-200 block truncate">{cat.name}</span>
-                    <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
-                      Limit: <span className="text-sm font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => handleOpenEdit(cat)}
-                    className="p-1.5 bg-[#1C1C1C] hover:bg-[#252525] hover:text-emerald-400 text-gray-400 rounded-lg cursor-pointer border border-white/5 transition-colors"
-                    title="Edit category label or budget limit"
-                  >
-                    <Edit size={12} />
-                  </button>
-                  {cat.id !== 'cat_uncategorized' ? (
-                    <button
-                      onClick={() => handleDeleteClick(cat.id, cat.name)}
-                      className="p-1.5 bg-[#1C1C1C]/60 hover:bg-rose-950/30 hover:text-rose-400 text-gray-500 rounded-lg cursor-pointer border border-white/5 transition-colors"
-                      title="Delete category"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  ) : (
-                    <span 
-                      className="p-1.5 bg-[#1C1C1C]/30 text-gray-600 rounded-lg border border-white/5 cursor-not-allowed opacity-40 select-none"
-                      title="System default category. Cannot be deleted."
-                    >
-                      <Trash2 size={12} />
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
         </div>
-
-        {/* Master action to spawn a new creator form inline */}
-        {!editingCategory && (
-          <button
-            onClick={handleOpenCreateNew}
-            className="w-full mt-4 py-2 bg-emerald-950/20 hover:bg-emerald-950/40 border border-dashed border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Plus size={14} className="stroke-[2.5]" /> Add New Category
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Currency Customization Preference Card */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
-        <h3 className="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-emerald-400 flex items-center gap-1.5 font-mono">
-          <DollarSign size={14} /> Currency Symbol Selector
-        </h3>
-        <p className="text-[11px] text-gray-400 leading-normal mb-3">
-          Select your local currency symbol to customize budget targets, transaction lists, and chart metrics across the application.
-        </p>
-        <div className="grid grid-cols-5 gap-1.5">
-          {['$', '€', '£', '¥', '₹', '₪', '₩', 'Fr', 'A$', 'C$'].map((symbol) => (
-            <button
-              key={symbol}
-              type="button"
-              onClick={() => onCurrencyChanged(symbol)}
-              className={`py-2 text-center font-mono font-bold text-xs rounded-xl transition-all border cursor-pointer active:scale-95 ${
-                currencySymbol === symbol
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-extrabold shadow-xs'
-                  : 'bg-black/20 border-white/5 hover:border-white/10 hover:bg-black/30 text-gray-400'
-              }`}
-            >
-              {symbol}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-2.5 mb-2">
+          <div>
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 font-mono">
+              <DollarSign size={14} /> Currency Symbol Settings
+            </h3>
+            <p className="text-[10px] text-gray-500 mt-0.5 font-sans">Configure currency notation used across components.</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Active Icon</span>
+            <span className="text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">{currencySymbol}</span>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCurrencyManager(true)}
+          className="w-full py-3 px-4 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-extrabold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm"
+        >
+          <Sparkles size={13} className="animate-pulse" /> Change Currency Symbol
+        </button>
       </div>
+
+      {/* Main Currency Settings Dialogue Box Manager Overlay */}
+      {showCurrencyManager && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-40 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
+          <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="dialogue_currency_manager">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div>
+                <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                  <DollarSign size={16} className="text-emerald-400" /> Currency Settings
+                </h4>
+                <p className="text-[10px] text-gray-400 mt-0.5 font-sans">Select your local symbol for budgeting and lists</p>
+              </div>
+              <button 
+                onClick={() => setShowCurrencyManager(false)} 
+                className="text-gray-400 hover:text-white p-1.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10 border-0 transition-colors"
+                title="Close currency setting"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between bg-black/25 p-3 rounded-xl border border-white/5 font-sans">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Active Symbol</span>
+              <span className="text-base font-extrabold font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">{currencySymbol}</span>
+            </div>
+
+            <p className="text-[11px] text-gray-400 leading-normal font-sans">
+              Select your local currency symbol to customize budget targets, transaction lists, and chart metrics across the application.
+            </p>
+
+            <div className="grid grid-cols-5 gap-2">
+              {['$', '€', '£', '¥', '₹', '₪', '₩', 'Fr', 'A$', 'C$'].map((symbol) => (
+                <button
+                  key={symbol}
+                  type="button"
+                  onClick={() => onCurrencyChanged(symbol)}
+                  className={`py-3 text-center font-mono font-bold text-xs rounded-xl transition-all border cursor-pointer active:scale-95 ${
+                    currencySymbol === symbol
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-extrabold shadow-sm shadow-emerald-950/20'
+                      : 'bg-black/20 border-white/5 hover:border-white/10 hover:bg-black/30 text-gray-400'
+                  }`}
+                >
+                  {symbol}
+                </button>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setShowCurrencyManager(false)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-emerald-950/20 text-center"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Voice Assistant Developer Settings Card */}
       {isDevMode && (
@@ -975,10 +1075,10 @@ export function BudgetSettings({
       {/* Localized Architecture Notice */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
         <h3 className="text-xs font-extrabold uppercase tracking-widest mb-2 text-emerald-400 flex items-center gap-1.5 font-sans">
-          <Shield size={14} /> Export & Import Backup
+          <Shield size={14} /> Backup or Restore from Your Device
         </h3>
         <p className="text-[11px] text-gray-400 leading-normal">
-          Save a backup copy of your records to your device, or restore a previously saved file. All records remain privately saved on your device.
+          All records remain privately saved on your device only
         </p>
         <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
           <button

@@ -21,8 +21,8 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   const [selectedCategory, setSelectedCategory] = useState<string>(
     expenseToEdit 
       ? expenseToEdit.category 
-      : (defaultCategoryId && categories.some(c => c.id === defaultCategoryId)
-          ? defaultCategoryId
+      : (categories.some(c => c.id === 'cat_uncategorized')
+          ? 'cat_uncategorized'
           : (categories[0]?.id || ''))
   );
   const [note, setNote] = useState<string>(expenseToEdit ? expenseToEdit.note : '');
