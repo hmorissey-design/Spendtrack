@@ -29,6 +29,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   const [date, setDate] = useState<string>(expenseToEdit ? expenseToEdit.date : new Date().toISOString().substring(0, 10)); // Today's date YYYY-MM-DD
   const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>(expenseToEdit ? expenseToEdit.paymentMethod : 'card');
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [showBusinessPopup, setShowBusinessPopup] = useState<boolean>(false);
 
   // Custom Calendar Popover States
   const [showCalendar, setShowCalendar] = useState<boolean>(false);
@@ -58,6 +59,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
 
   // Autofocus input ref
   const amountInputRef = useRef<HTMLInputElement>(null);
+  const noteInputRef = useRef<HTMLInputElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
   // Sync calendar's year and month whenever the popover is opened
@@ -194,8 +196,6 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   };
 
   // Suggested quick additions for convenience
-  const PRESETS = [5, 10, 20, 50, 100];
-
   const handlePresetClick = (val: number) => {
     const current = parseFloat(amount) || 0;
     setAmount((current + val).toString());
@@ -210,6 +210,20 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
     }
     if (!selectedCategory) {
       setErrorCode('Please select a categorization tag.');
+      return;
+    }
+
+    // Business Expenses require a description/note validation
+    const catObj = categories.find(c => c.id === selectedCategory);
+    const isBusinessCat = catObj && (
+      catObj.id === 'cat_business_expense' ||
+      catObj.name.toLowerCase() === 'business expense' ||
+      catObj.name.toLowerCase() === 'business expenses' ||
+      catObj.name.toLowerCase().includes('business')
+    );
+
+    if (isBusinessCat && !note.trim()) {
+      setShowBusinessPopup(true);
       return;
     }
 
@@ -231,7 +245,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   const orderedCategories = getOrderedCategories();
 
   return (
-    <div className="bg-[#111111] text-white rounded-t-2xl md:rounded-2xl p-5 border border-white/5 shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto" id="expense_entry_sheet">
+    <div className="relative bg-[#111111] text-white rounded-t-2xl md:rounded-2xl p-5 border border-white/5 shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto" id="expense_entry_sheet">
       <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
         <h3 className="text-base font-bold text-white flex items-center gap-1.5 uppercase tracking-wider font-sans">
           <Sparkles size={18} className="text-emerald-500 animate-pulse" />
@@ -258,7 +272,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
         {/* Amount Entry - BIGGER AND MORE NOTICEABLE */}
         <div>
           <div className="relative rounded-2xl bg-black/45 border border-white/5 p-4 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/50 focus-within:bg-black/80 transition-all flex flex-col items-center justify-center">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-sans">Enter Amount Spend</span>
+            <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1.5 font-sans">AMOUNT</span>
             <div className="flex items-center justify-center w-full min-w-0">
               <span className="text-4xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
               <input
@@ -275,34 +289,13 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
               />
             </div>
           </div>
-
-          {/* Preset Buttons for Frictionless Entry */}
-          <div className="flex flex-wrap gap-1.5 mt-2.5 justify-center">
-            {PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => handlePresetClick(p)}
-                className="px-3 py-1 bg-[#1A1A1A] hover:bg-[#242424] text-gray-300 text-xs font-semibold rounded-full cursor-pointer active:scale-95 transition-all"
-              >
-                +{p}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setAmount('')}
-              className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-full cursor-pointer active:scale-95 transition-all"
-            >
-              Clear
-            </button>
-          </div>
         </div>
 
         {/* Category Picker with Interactive Reordering */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans">Budget Category</label>
+              <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest font-sans">BUDGET CATEGORY</label>
               <span className="text-[8px] text-gray-500 block font-sans lowercase tracking-wide">
                 Tip: Drag & drop cards to reorder
               </span>
@@ -320,7 +313,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto pr-1">
             {orderedCategories.map((cat) => (
               <div
                 key={cat.id}
@@ -368,16 +361,17 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
 
         {/* Note / Memo */}
         <div>
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Merchant / Notes</label>
+          <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1.5">DESCRIPTION</label>
           <div className="relative">
             <span className="absolute left-3 top-3.5 text-gray-500">
-              <MessageSquare size={14} />
+               <MessageSquare size={14} />
             </span>
             <input
               type="text"
               placeholder="e.g. Starbucks, Target, Uber ride..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              ref={noteInputRef}
               className="w-full pl-8.5 pr-4 py-2.5 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden transition-all"
             />
           </div>
@@ -386,7 +380,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
         {/* Two-Column Date & Payment Method */}
         <div className="grid grid-cols-2 gap-3">
           <div className="relative" ref={calendarRef}>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Date</label>
+            <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1">DATE</label>
             <div className="relative">
               <input
                 type="text"
@@ -554,6 +548,35 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       <div className="mt-4 pt-4 border-t border-white/5">
         <AdMobBanner />
       </div>
+
+      {/* Custom Popup Modal for Business Expense Validation */}
+      {showBusinessPopup && (
+        <div className="absolute inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 rounded-2xl animate-in fade-in duration-200">
+          <div className="bg-[#1A1A1A] border border-rose-500/35 rounded-xl p-5 max-w-xs w-full shadow-2xl text-center flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400 text-xl font-bold mb-3 animate-bounce">
+              ⚠️
+            </div>
+            <h4 className="text-sm font-extrabold uppercase tracking-wider text-rose-400 mb-2">
+              Description Required
+            </h4>
+            <p className="text-xs text-gray-300 leading-relaxed mb-5">
+              Business Expenses require a description outlining reason for Expense and/or location
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowBusinessPopup(false);
+                setTimeout(() => {
+                  noteInputRef.current?.focus();
+                }, 80);
+              }}
+              className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0"
+            >
+              Enter Description
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
