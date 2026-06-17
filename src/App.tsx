@@ -822,7 +822,10 @@ export default function App() {
   }, [totals.percent, selectedMonth]);
 
   return (
-    <AndroidFrame currentTime="01:15" onRefreshDatabase={handleResetDatabase}>
+    <AndroidFrame 
+      currentTime="01:15" 
+      onRefreshDatabase={handleResetDatabase}
+    >
       <div className="flex-1 flex flex-col h-full overflow-hidden select-none" id="android_app_root">
         {/* App Title & Top Header */}
         <div className="bg-[#0A0A0A] text-white pt-5 pb-4 px-4 flex items-center justify-between shrink-0 border-b border-white/5 relative">
@@ -975,13 +978,6 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              {/* Quick Add Inline Widget */}
-              <QuickAddWidget 
-                categories={categories} 
-                onSubmit={handleAddExpense} 
-                currencySymbol={currencySymbol} 
-              />
 
               {/* High-quality Quick Add Trigger and Quick Insights */}
               <div className="grid grid-cols-2 gap-3">
@@ -1507,7 +1503,7 @@ export default function App() {
                 ) : (
                   <div className="grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-5 h-[130px] w-full text-[9px] relative flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <RePieChart>
                           <Pie
                             data={categoryPieData}
@@ -1585,7 +1581,7 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="h-[180px] w-full text-[10px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
                         <XAxis dataKey="day" stroke="#555555" tickLine={false} />
@@ -1614,7 +1610,7 @@ export default function App() {
                   <div className="text-center py-10 bg-black/40 border border-[#242424] rounded-xl text-gray-500 text-xs">No entries to display.</div>
                 ) : (
                   <div className="h-[120px] w-full text-[9px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <BarChart data={trendChartData.slice(-14)} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
                         <XAxis dataKey="day" stroke="#555555" tickLine={false} />

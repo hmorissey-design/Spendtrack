@@ -1607,7 +1607,7 @@ function RenderAnalyticsTrendsLive({
           Cumulative Spending
         </h4>
         <div className="h-32 w-full text-slate-100 font-mono text-[8px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <LineChart data={trendData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
               <XAxis dataKey="label" stroke="#64748b" tickSize={4} />
@@ -1637,7 +1637,7 @@ function RenderAnalyticsTrendsLive({
         </h4>
         <div className="grid grid-cols-12 gap-3 items-center">
           <div className="col-span-4 h-24 relative">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <RePieChart>
                 <Pie
                   data={pieData}

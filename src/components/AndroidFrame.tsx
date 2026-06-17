@@ -64,7 +64,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
   if (isRealMobileAndTablet || dismissSimulator) {
     return (
-      <div className="w-full h-screen flex flex-col bg-[#0A0A0A] text-slate-200 select-none pb-safe relative overflow-hidden">
+      <div className="w-full h-screen flex flex-col bg-[#0A0A0A] text-slate-200 select-none pb-safe relative overflow-hidden animate-in fade-in duration-300">
         <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
           {children}
         </div>
@@ -181,7 +181,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
               </div>
               {/* Home Indicator Button */}
               <div className="flex-1 text-center shrink-0 flex justify-center">
-                <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-600 cursor-pointer hover:border-white transition-colors"></span>
+                <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-600 transition-colors"></span>
               </div>
               {/* Multitasking Button */}
               <div className="flex-1 text-center shrink-0 flex justify-center">
