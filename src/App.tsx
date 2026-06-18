@@ -41,7 +41,6 @@ import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
 import { QuickAddWidget } from './components/QuickAddWidget';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
-import { VoiceAssistant } from './components/VoiceAssistant';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
 // Recharts components imports
@@ -130,20 +129,7 @@ export default function App() {
     });
   };
 
-  const [enableVoiceAssistant, setEnableVoiceAssistant] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('expensetrack_enable_voice_assistant') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
 
-  const handleToggleVoiceAssistant = (enabled: boolean) => {
-    try {
-      localStorage.setItem('expensetrack_enable_voice_assistant', enabled ? 'true' : 'false');
-    } catch (e) {}
-    setEnableVoiceAssistant(enabled);
-  };
 
   const handleCurrencyChange = (newSymbol: string) => {
     LocalDb.setCurrencySymbol(newSymbol);
@@ -958,7 +944,7 @@ export default function App() {
           )}
 
           {/* Universal Month Switcher Bar */}
-          {activeTab !== 'budget_plan' && (
+          {activeTab !== 'budget_plan' && activeTab !== 'help' && activeTab !== 'dev_hub' && (
             <div className="bg-[#111111] p-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
               <button
                 onClick={handlePrevMonth}
@@ -1705,8 +1691,6 @@ export default function App() {
                 defaultCategoryId={defaultCategoryId}
                 currencySymbol={currencySymbol}
                 onCurrencyChanged={handleCurrencyChange}
-                enableVoiceAssistant={enableVoiceAssistant}
-                onToggleVoiceAssistant={handleToggleVoiceAssistant}
                 isDevMode={isDevMode}
               />
             </div>
@@ -1759,6 +1743,7 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+           {/* TAB 6: HELP GUIDE */}
               </div>
             </div>
           )}
@@ -1774,136 +1759,103 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-[#eeeeee] leading-tight text-sm">User Help & Guide</h3>
-                    <p className="text-[10px] text-gray-500">Learn how to easily manage your budget and track expenses</p>
+                    <p className="text-[10px] text-gray-500">Comprehensive directives organized by application screens</p>
                   </div>
                 </div>
 
                 {/* Introductory section */}
                 <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
-                  ExpenseTrack is a simple, private expense tracker that stores all information right on your phone or computer. None of your data ever leaves this device, ensuring complete privacy!
+                  Welcome to <strong>ExpenseTrack</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
                 </p>
 
                 {/* Screens */}
                 <div className="space-y-4 font-sans">
-                  <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-[#10b981]">📱 Main Screens Explained</h4>
                   
-                  {/* Dashboard Screen */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-bold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                      <LayoutDashboard size={13} className="text-[#10b981]" />
-                      1. The Dashboard
+                  {/* Dashboard Screen Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
+                      <LayoutDashboard size={13} className="shrink-0" />
+                      1. Dashboard
                     </p>
                     <p className="text-[10px] text-gray-400 leading-relaxed">
-                      Your home screen that gives you an overview of how you are doing this month:
+                      Your central page for tracking budgets, checking spends pacing, and taking quick actions.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Monthly Budget Card:</strong> Shows how much you have spent out of your set monthly limit. Green bars mean you are safely under budget, yellow warnings indicate you are close, and red alerts mean you have gone over.</li>
-                      <li><strong className="text-gray-300">Category Bars:</strong> Displays the total spent in sections like food, bills, or travel.</li>
-                      <li><strong className="text-gray-300">Business Expenses Option:</strong> Any expense categorized as <span className="text-emerald-400 font-bold">Business</span> does not count against your personal spending total. We assume you will be reimbursed for these! This makes it easy to track work expenses right inside the same app without mixing up your personal budget numbers.</li>
-                      <li><strong className="text-gray-300">Quick Shortcuts:</strong> Buttons to quickly view historical insights or add new categories.</li>
+                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                      <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
+                      <li><strong className="text-gray-300">Discretionary Limits:</strong> Compares total spent against the combined targets of your active categories.</li>
+                      <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the days passed, a caution message will guide you.</li>
+                      <li><strong className="text-gray-300">Category Bars:</strong> Displays individual category totals. Click any bar to instantly switch to the History tab filtered for that specific category.</li>
+                      <li><strong className="text-gray-300">Excluding Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing clean personal finance ledger isolation.</li>
                     </ul>
                   </div>
 
-                  {/* History Screen */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-bold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                      <History size={13} className="text-[#10b981]" />
-                      2. Transaction History
+                  {/* History Screen Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
+                      <History size={13} className="shrink-0" />
+                      2. History
                     </p>
                     <p className="text-[10px] text-gray-400 leading-relaxed">
-                      This screen shows a list of all your recorded purchases and lets you filter through them:
+                      Review, manage, search, and export your entire chronological expense ledger.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Searching & Filtering:</strong> Type in words to find a specific item. Use the Category and Payment dropdowns to filter down.</li>
-                      <li><strong className="text-gray-300">Selecting Date Ranges:</strong> Tap on the <strong className="text-gray-300 font-bold">Start Date</strong> and <strong className="text-gray-300 font-bold">End Date</strong> fields to open custom calendars and filter your transaction list between two dates.</li>
+                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                      <li><strong className="text-gray-300">Modifying Records:</strong> Tap the <strong>pencil (Edit) icon</strong> to update any transaction, or tap the <strong>trash (Delete) icon</strong> to erase history.</li>
+                      <li><strong className="text-gray-300">Multi-Channel Filter Bar:</strong> Search transaction notes instantly. Refine your list by choosing dynamic categories or payment channels (Cash, Card, Digital Wallet, Other).</li>
+                      <li><strong className="text-gray-300">Custom Date Range Calendars:</strong> Tap the <em>Start Date</em> or <em>End Date</em> fields to open clean calendar picker dropdowns. Filter your list between custom days across different months. Tap outside or click ✕ to dismiss calendars.</li>
+                      <li><strong className="text-gray-300">Excel / CSV Spreadsheet Export:</strong> Click the <strong>CSV</strong> button to download your filtered transactions directly to open in Excel, Numbers, or Google Sheets.</li>
+                      <li><strong className="text-gray-300">Audit-Ready PDF Statements:</strong> Click the <strong>PDF</strong> button to compile your ledger into an official, signed statement report containing professional summaries and verified stamps.</li>
                     </ul>
                   </div>
 
-                  {/* Sharing & Reports */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-bold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                      <FileSpreadsheet size={13} className="text-[#10b981]" />
-                      📄 Exporting & Sharing Reports
+                  {/* Analytics Screen Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
+                      <PieChart size={13} className="shrink-0" />
+                      3. Analytics
                     </p>
                     <p className="text-[10px] text-gray-400 leading-relaxed">
-                      Need to submit your work expenses for reimbursement, or discuss your budget with a partner or accountant?
+                      Visual dashboards analyzing your monthly monetary trends and spend characteristics.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Create PDF Reports:</strong> Tap the <strong className="text-emerald-400 font-bold">Export PDF Report</strong> button in History. It builds an official audit-ready document of your selected transactions, complete with total sums, system signatures, and item descriptions.</li>
-                      <li><strong className="text-gray-300">Download CSV spreadsheet:</strong> Tap the <strong className="text-emerald-400 font-bold">Download CSV</strong> button to save all filtered records as a grid file. You can easily open this file in spreadsheet apps like Excel or Google Sheets.</li>
+                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                      <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
+                      <li><strong className="text-gray-300">Spending Progress Pacing:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
+                      <li><strong className="text-gray-300">Daily Expenditure Spikes:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
                     </ul>
                   </div>
 
-                  {/* Analytics Screen */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-bold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                      <PieChart size={13} className="text-[#10b981]" />
-                      3. Analytics & Charts
+                  {/* Settings Screen Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
+                      <Sliders size={13} className="shrink-0" />
+                      4. Settings
                     </p>
                     <p className="text-[10px] text-gray-400 leading-relaxed">
-                      Visual insights on where your money goes:
+                      Fine-tune budgeting metrics, currency selections, and database preferences.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Category Spending Circle:</strong> A colorful interactive breakdown showing exactly which categories cost you the most percentage-wise.</li>
-                      <li><strong className="text-gray-300">Daily Spending Curve:</strong> A daily line chart showing how your total spending accumulated over the course of the month.</li>
+                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                      <li><strong className="text-gray-300">Target Monthly Limits:</strong> Adjust your target threshold. The system computes comprehensive targets dynamically from your individual categories.</li>
+                      <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
+                      <li><strong className="text-gray-300">Log Defaults & Icon Reordering:</strong> Select default categories for speedy transaction entries. Organize custom icons and drag/move frequently utilized categories to the top for quick-access logging.</li>
+                      <li><strong className="text-gray-300">Currency Profiles:</strong> Dynamically switch main currency layouts across the system (e.g., $, €, £, ¥, ₹).</li>
+                      <li><strong className="text-gray-300">Reset Data:</strong> Delete all local states to return the database to a fresh, empty install.</li>
                     </ul>
                   </div>
 
-                  {/* Settings Screen */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-bold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                      <Sliders size={13} className="text-[#10b981]" />
-                      4. Budget Settings
+                  {/* Help Screen Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
+                      <HelpCircle size={13} className="shrink-0" />
+                      5. Help
                     </p>
                     <p className="text-[10px] text-gray-400 leading-relaxed">
-                      Customize how the app works for you:
+                      You are reading this now! This screen outlines everything you need to operate ExpenseTrack.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Set Monthly Limit:</strong> Enter the maximum amount of money you want to budget for the month.</li>
-                      <li><strong className="text-gray-300">Transaction Defaults:</strong> New transactions are automatically categorized as <strong className="text-emerald-400 font-bold">Uncategorized</strong> by default for maximum speed.</li>
-                      <li><strong className="text-gray-300">Ordering Category Icons:</strong> You can move your most frequently used category icons to the very beginning of the list directly within the transaction Add or Edit screens. This keeps your favorite categories at your fingertips for super-quick selection whenever you add or edit a purchase.</li>
-                      <li><strong className="text-gray-300">Currency Symbol:</strong> Switch between symbols like $, €, £, ¥, or ₹.</li>
+                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5 font-sans">
+                      <li><strong className="text-gray-300">Menu Navigation:</strong> Move seamlessly between screens using the bottom navigation menu bar.</li>
+                      <li><strong className="text-gray-350">Hiding Context-Aware Swappers:</strong> Notice that monthly picker and date swappers are automatically hidden on non-monthly specific screens (such as <em>Settings</em>, <em>Help</em>, and <em>Developer Hub</em>) to maximize screen space.</li>
                     </ul>
                   </div>
-                </div>
 
-                {/* Fields & Icons guide */}
-                <div className="space-y-3 font-sans pt-1">
-                  <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-[#10b981]">💡 Important Icons & Fields</h4>
-                  
-                  <div className="grid grid-cols-1 gap-2.5 text-[10px] text-gray-400 text-left">
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-[#10b981] text-xs font-bold font-mono shrink-0">📅 Date</span>
-                      <div>
-                        <p className="font-bold text-gray-300 leading-tight">Transaction Date Field</p>
-                        <p className="leading-relaxed mt-0.5">This is the day the purchase was made. You can tap the small calendar icon next to it to pick a date from a clean calendar picker popup interface.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2.5 border-t border-white/5 pt-2">
-                      <span className="text-[#10b981] text-xs font-bold font-mono shrink-0">💵 Method</span>
-                      <div>
-                        <p className="font-bold text-gray-300 leading-tight">Payment Methods</p>
-                        <p className="leading-relaxed mt-0.5">Choose how you paid for each transaction: Cash, Card, Digital Wallet (like Google/Apple Pay), or other payment methods.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2.5 border-t border-white/5 pt-2">
-                      <span className="text-[#10b981] text-xs font-bold shrink-0">✕ / ✕ Close</span>
-                      <div>
-                        <p className="font-bold text-gray-300 leading-tight">Closing Popups & Calendars</p>
-                        <p className="leading-relaxed mt-0.5">To exit a calendar or close a popup form, you can tap anywhere outside of it, or tap the small "✕" button in the corner to dismiss it.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2.5 border-t border-white/5 pt-2">
-                      <span className="text-[#10b981] text-xs font-bold shrink-0">✎ Edit / 🗑 Trash</span>
-                      <div>
-                        <p className="font-bold text-gray-300 leading-tight">Managing Records</p>
-                        <p className="leading-relaxed mt-0.5">In the History screen, tap the pencil icon to modify details of an existing purchase, or tap the trash icon to permanently remove it from your device.</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Legal & Privacy Section */}
@@ -1950,14 +1902,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Dynamic Conversational Google Assistant voice panel */}
-        {enableVoiceAssistant && (
-          <VoiceAssistant
-            categories={categories}
-            onAddExpense={handleAddExpense}
-            currencySymbol={currencySymbol}
-          />
-        )}
+
 
         {/* Modern Bottom Android Navigation Tab bar */}
         <div className="bg-[#0A0A0A] border-t border-white/5 px-4 py-2.5 shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
