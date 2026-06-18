@@ -96,6 +96,7 @@ export default function App() {
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
   const [defaultCategoryId, setDefaultCategoryIdState] = useState<string>('');
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
     return LocalDb.getCurrencySymbol();
@@ -287,6 +288,7 @@ export default function App() {
   const handleDeleteExpense = (id: string) => {
     LocalDb.deleteExpense(id);
     loadDatabaseState(selectedMonth);
+    setExpenseToDelete(null);
   };
 
   const handleExportToCSV = () => {
@@ -894,6 +896,67 @@ export default function App() {
             </div>
           )}
 
+          {/* Delete Transaction Confirmation Modal */}
+          {expenseToDelete && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end md:items-center justify-center z-50 p-0 md:p-4 overflow-y-auto transition-all">
+              <div className="w-full max-w-sm my-auto animate-in slide-in-from-bottom duration-250 bg-[#111111] border border-white/5 rounded-2xl p-5 shadow-2xl relative">
+                
+                {/* Danger Header Icon */}
+                <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                  <Trash2 size={22} className="animate-pulse" />
+                </div>
+
+                <h3 className="text-sm font-bold text-white text-center uppercase tracking-wider mb-2">
+                  Delete Transaction?
+                </h3>
+                
+                <p className="text-xs text-gray-400 text-center mb-5 leading-relaxed">
+                  Are you sure you want to permanently delete this transaction? This action cannot be undone.
+                </p>
+
+                {/* Transaction info summary card */}
+                <div className="bg-[#0A0A0A]/80 border border-white/5 rounded-xl p-3.5 mb-5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      categories.find(c => c.id === expenseToDelete.category)?.color || 'bg-slate-100/15 text-slate-400 border border-slate-500/10'
+                    }`}>
+                      {renderCategoryIcon(categories.find(c => c.id === expenseToDelete.category)?.icon || 'Tag', 14)}
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <p className="text-xs font-bold text-gray-100 truncate">
+                        {expenseToDelete.note || categories.find(c => c.id === expenseToDelete.category)?.name || 'Uncategorized'}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        {expenseToDelete.date} • {expenseToDelete.paymentMethod.replace('_', ' ')}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold font-mono text-rose-450 shrink-0">
+                    -{currencySymbol}{expenseToDelete.amount.toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Two Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpenseToDelete(null)}
+                    className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-xl font-bold text-xs transition-colors border border-white/5 cursor-pointer active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExpense(expenseToDelete.id)}
+                    className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs transition-colors shadow-lg shadow-rose-500/10 cursor-pointer active:scale-95"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Universal Month Switcher Bar */}
           {activeTab !== 'budget_plan' && (
             <div className="bg-[#111111] p-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
@@ -1471,7 +1534,7 @@ export default function App() {
                               <Pencil size={13} />
                             </button>
                             <button
-                              onClick={() => handleDeleteExpense(exp.id)}
+                              onClick={() => setExpenseToDelete(exp)}
                               className="p-1 hover:bg-rose-500/15 text-gray-500 hover:text-rose-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
                               title="Delete this transaction permanently"
                             >
