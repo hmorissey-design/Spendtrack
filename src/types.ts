@@ -29,4 +29,23 @@ export interface MonthlyBudget {
   categoryLimits?: Record<string, number>; // Optional category-specific limits
 }
 
-export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help';
+export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub';
+
+export interface AccentTheme {
+  id: string;
+  name: string;
+  colors: {
+    50: string;
+    100: string;
+    200: string;
+    300: string;
+    400: string;
+    500: string;
+    600: string;
+    700: string;
+    800: string;
+    900: string;
+    950: string;
+  };
+}
+

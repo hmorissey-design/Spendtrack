@@ -1,9 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
+:root {
+  /* Default Emerald values */
+  --accent-50: #f0fdf4;
+  --accent-100: #d1fae5;
+  --accent-200: #a7f3d0;
+  --accent-300: #6ee7b7;
+  --accent-400: #34d399;
+  --accent-500: #10b981;
+  --accent-600: #059669;
+  --accent-700: #047857;
+  --accent-800: #065f46;
+  --accent-900: #064e3b;
+  --accent-950: #022c22;
+}
+
 @theme {
   --font-serif: "Playfair Display", Georgia, serif;
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Dynamically map Tailwind emerald utility colors to custom CSS variables! */
+  --color-emerald-50: var(--accent-50);
+  --color-emerald-100: var(--accent-100);
+  --color-emerald-200: var(--accent-200);
+  --color-emerald-300: var(--accent-300);
+  --color-emerald-400: var(--accent-400);
+  --color-emerald-500: var(--accent-500);
+  --color-emerald-600: var(--accent-600);
+  --color-emerald-700: var(--accent-700);
+  --color-emerald-800: var(--accent-800);
+  --color-emerald-900: var(--accent-900);
+  --color-emerald-950: var(--accent-950);
 }
 

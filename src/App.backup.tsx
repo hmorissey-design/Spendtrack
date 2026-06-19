@@ -36,7 +36,6 @@ import { jsPDF } from 'jspdf';
 
 import { ActiveTab, Expense, Category, MonthlyBudget } from './types';
 import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
-import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
@@ -88,13 +87,6 @@ export default function App() {
 
   // Initialize states
   const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
-  const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
-
-  // Apply accent theme dynamically
-  useEffect(() => {
-    applyAccentTheme(accentThemeId);
-  }, [accentThemeId]);
-
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -1649,7 +1641,7 @@ export default function App() {
                           labelFormatter={(label) => `Day ${label} of month`}
                         />
                         <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 8 }} />
-                        <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2.5} dot={{ r: 1 }} activeDot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="cumulativeSpend" stroke="#10b981" strokeWidth={2.5} dot={{ r: 1 }} activeDot={{ r: 4 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -1676,7 +1668,7 @@ export default function App() {
                           contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                           formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
                         />
-                        <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="dailySpend" fill="#10b981" radius={[3, 3, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1700,8 +1692,6 @@ export default function App() {
                 currencySymbol={currencySymbol}
                 onCurrencyChanged={handleCurrencyChange}
                 isDevMode={isDevMode}
-                activeThemeId={accentThemeId}
-                onThemeChanged={setAccentThemeId}
               />
             </div>
           )}
