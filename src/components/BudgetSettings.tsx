@@ -189,7 +189,12 @@ export function BudgetSettings({
     setLocalExpenses(LocalDb.getExpenses());
   }, [previewAsset]);
 
-  const currentMonthPrefixVal = useMemo(() => new Date().toISOString().substring(0, 7), []);
+  const currentMonthPrefixVal = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }, []);
   const monthNameVal = useMemo(() => new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }), []);
 
   const {
@@ -532,7 +537,12 @@ export function BudgetSettings({
     localStorage.setItem('expensetrack_device_backup', dataStr);
     
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `ExpenseTrack_backup_${new Date().toISOString().substring(0, 10)}.json`;
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const fileDateStr = `${year}-${month}-${day}`;
+    const exportFileDefaultName = `ExpenseTrack_backup_${fileDateStr}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -1828,11 +1838,6 @@ function RenderFinancePDFReportLive({
           </div>
           <h2 className="text-lg font-extrabold text-slate-900 tracking-tight leading-snug">Business Expense Ledger</h2>
         </div>
-
-        <div className="bg-emerald-100/80 text-emerald-800 text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded border border-emerald-250 flex items-center gap-1 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Audit-Ready Standard</span>
-        </div>
       </div>
 
       {/* Document Information Grid */}
@@ -1896,10 +1901,7 @@ function RenderFinancePDFReportLive({
       <div className="flex justify-between items-center bg-slate-100/50 border border-slate-200/50 rounded-xl p-3 text-[9px] text-slate-500 mt-2">
         <div />
         <div className="text-right flex flex-col items-end shrink-0 leading-tight">
-          <span className="text-[7px] font-bold text-slate-450 uppercase tracking-widest block font-mono">Accounting Check</span>
-          <span className="font-serif italic font-bold text-slate-900 block mt-1 text-xs">Ledger Verified</span>
-          <span className="w-16 h-px bg-slate-350 my-1 block" />
-          <span className="text-[7px] text-slate-400 font-mono uppercase tracking-wide">System Signed</span>
+          <span className="w-20 h-px bg-slate-350 my-2 block" />
         </div>
       </div>
     </div>

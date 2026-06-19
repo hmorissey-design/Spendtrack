@@ -40,7 +40,6 @@ import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
-import { QuickAddWidget } from './components/QuickAddWidget';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
@@ -61,6 +60,21 @@ import {
   Pie,
   Cell
 } from 'recharts';
+
+const getLocalMonthString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function App() {
   // Check if opened before
@@ -98,7 +112,7 @@ export default function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    return new Date().toISOString().substring(0, 7); // e.g. "YYYY-MM"
+    return getLocalMonthString(); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
   const [showAddForm, setShowAddForm] = useState(false);
@@ -162,6 +176,14 @@ export default function App() {
 
   const startDateCalendarRef = useRef<HTMLDivElement | null>(null);
   const endDateCalendarRef = useRef<HTMLDivElement | null>(null);
+  const mainScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll to top of main viewport container on tab screen transition
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   // Click Outside to close custom start calendar drop down
   useEffect(() => {
@@ -346,16 +368,6 @@ export default function App() {
     doc.setFontSize(18);
     doc.setTextColor(15, 23, 42); // slate-900
     doc.text("Business Expense Ledger", 14, 31);
-
-    // Audit-Ready Pill Status Header
-    doc.setFillColor(209, 250, 229); // emerald-100
-    doc.setDrawColor(167, 243, 208); // emerald-200
-    doc.roundedRect(153, 14, 43, 7, 1, 1, "FD");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(6, 95, 70); // emerald-800
-    doc.text("AUDIT-READY STANDARD", 156, 18.5);
 
     // Underline divider
     doc.setDrawColor(203, 213, 225); // slate-300
@@ -567,24 +579,10 @@ export default function App() {
     doc.setDrawColor(241, 245, 249); // slate-100
     doc.roundedRect(14, y, 182, 16, 1, 1, "FD");
 
-    // Right side Verified check
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("ACCOUNTING CHECK", 145, y + 4);
-
-    doc.setFont("times", "italic");
-    doc.setFontSize(10);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Ledger Verified", 145, y + 9);
-
+    // Right side blank signature line with no text
     doc.setDrawColor(203, 213, 225);
-    doc.line(145, y + 11, 185, y + 11);
-
-    doc.setFont("courier", "normal");
-    doc.setFontSize(6.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text("SYSTEM SIGNED", 145, y + 14);
+    doc.setLineWidth(0.5);
+    doc.line(145, y + 10, 185, y + 10);
 
     const fileDate = new Date().toISOString().substring(0, 10);
     doc.save(`expensetrack_report_${fileDate}.pdf`);
@@ -697,8 +695,25 @@ export default function App() {
 
     // Bucket expenses into dailySpend
     totals.currentMonthExpenses.forEach(e => {
-      const dayPart = parseInt(e.date.split('-')[2]);
-      if (dayPart >= 1 && dayPart <= daysInMonth) {
+      if (!e.date) return;
+      const parts = e.date.split('-');
+      let dayPart = NaN;
+      if (parts.length >= 3) {
+        dayPart = parseInt(parts[2], 10);
+      } else {
+        // Fallback: try slash splitting or standard JS Date parsing
+        const slashParts = e.date.split('/');
+        if (slashParts.length >= 3) {
+          dayPart = parseInt(slashParts[2], 10);
+        } else {
+          const parsedDate = new Date(e.date);
+          if (!isNaN(parsedDate.getTime())) {
+            dayPart = parsedDate.getUTCDate();
+          }
+        }
+      }
+
+      if (!isNaN(dayPart) && dayPart >= 1 && dayPart <= daysInMonth) {
         days[dayPart - 1].dailySpend += e.amount;
       }
     });
@@ -715,7 +730,7 @@ export default function App() {
     });
 
     // Filter out future days ONLY if the selectedMonth is the current live actual month
-    const todayStr = new Date().toISOString().substring(0, 7);
+    const todayStr = getLocalMonthString();
     if (selectedMonth === todayStr) {
       const todayDay = new Date().getDate();
       return finalData.filter(d => d.day <= todayDay);
@@ -859,7 +874,7 @@ export default function App() {
         </div>
 
         {/* Primary Screen Scrollable Frame */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 bg-[#0A0A0A] space-y-3">
+        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-3 bg-[#0A0A0A] space-y-3">
           
           {/* Quick-add floating trigger sheet */}
           {showAddForm && (

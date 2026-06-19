@@ -16,6 +16,14 @@ interface ExpenseFormProps {
   expenseToEdit?: Expense;
 }
 
+const getLocalYYYYMMDD = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, expenseToEdit }: ExpenseFormProps) {
   const [amount, setAmount] = useState<string>(expenseToEdit ? expenseToEdit.amount.toString() : '');
   const [selectedCategory, setSelectedCategory] = useState<string>(
@@ -26,7 +34,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           : (categories[0]?.id || ''))
   );
   const [note, setNote] = useState<string>(expenseToEdit ? expenseToEdit.note : '');
-  const [date, setDate] = useState<string>(expenseToEdit ? expenseToEdit.date : new Date().toISOString().substring(0, 10)); // Today's date YYYY-MM-DD
+  const [date, setDate] = useState<string>(expenseToEdit ? expenseToEdit.date : getLocalYYYYMMDD()); // Today's date YYYY-MM-DD
   const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>(expenseToEdit ? expenseToEdit.paymentMethod : 'card');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [showBusinessPopup, setShowBusinessPopup] = useState<boolean>(false);

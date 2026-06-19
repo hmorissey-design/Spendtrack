@@ -5,6 +5,13 @@
 
 import { Expense, Category, MonthlyBudget } from '../types';
 
+const getLocalMonthString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
 const STORAGE_KEYS = {
   EXPENSES: 'personal_finance_app_expenses',
   CATEGORIES: 'personal_finance_app_categories',
@@ -36,7 +43,7 @@ export const LocalDb = {
       localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
       
-      const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+      const currentMonth = getLocalMonthString(); // "YYYY-MM"
       const budget: MonthlyBudget = {
         month: currentMonth,
         limitAmount: INITIAL_BUDGET,
@@ -153,7 +160,7 @@ export const LocalDb = {
   getCategories(month?: string): Category[] {
     this.initialize();
     const raw = this.getCategoriesOnly();
-    const activeMonth = month || new Date().toISOString().substring(0, 7);
+    const activeMonth = month || getLocalMonthString();
     
     return raw.map(cat => {
       const limitVal = this.getLimitForCategoryForMonth(cat.id, activeMonth);

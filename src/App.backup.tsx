@@ -39,7 +39,6 @@ import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
-import { QuickAddWidget } from './components/QuickAddWidget';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
