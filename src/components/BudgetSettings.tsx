@@ -644,26 +644,21 @@ export function BudgetSettings({
     <div className="space-y-5 p-1" id="budget_settings_ui">
       {/* Category Limits Planner */}
       <div className="bg-[#111111] rounded-xl p-4 border border-white/5 shadow-2xs text-white animate-in fade-in duration-200">
-        <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-              <DollarSign size={15} className="text-emerald-500" />
-              Categories & Budgets
-            </h3>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => setShowCategoryManager(true)}
+              className="w-full py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+            >
+              <Sparkles size={12} className="animate-pulse shrink-0" /> Add/Edit Categories or Budgets
+            </button>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Total Budget</span>
-            <span className="text-sm font-bold font-mono text-emerald-400">{currencySymbol}{currentBudget.limitAmount.toLocaleString()}</span>
+            <span className="text-xs font-bold font-mono text-emerald-400">{currencySymbol}{currentBudget.limitAmount.toLocaleString()}</span>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setShowCategoryManager(true)}
-          className="w-full py-3 px-4 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-extrabold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm"
-        >
-          <Sparkles size={13} className="animate-pulse" /> Edit Categories or Budgets or Add New Categories
-        </button>
 
         {successMsg && !showCategoryManager && (
           <div className="mt-3 p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg flex items-center gap-1.5 font-sans">
@@ -942,26 +937,21 @@ export function BudgetSettings({
 
       {/* Currency Customization Preference Card */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
-        <div className="flex items-center justify-between gap-2.5 mb-2">
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-              <DollarSign size={14} className="text-emerald-500" /> Active Currency Symbol
-            </h3>
-            <p className="text-[10px] text-gray-500 mt-0.5 font-sans">Configure currency notation used across components.</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => setShowCurrencyManager(true)}
+              className="w-full py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+            >
+              <Sparkles size={12} className="text-emerald-500 animate-pulse shrink-0" /> Change Currency Symbol
+            </button>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Active Icon</span>
-            <span className="text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">{currencySymbol}</span>
+            <span className="text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 inline-block">{currencySymbol}</span>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setShowCurrencyManager(true)}
-          className="w-full py-3 px-4 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-extrabold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm"
-        >
-          <Sparkles size={13} className="text-emerald-500 animate-pulse" /> Change Currency Symbol
-        </button>
       </div>
 
       {/* Main Currency Settings Dialogue Box Manager Overlay */}
@@ -1252,10 +1242,10 @@ export function BudgetSettings({
       {/* Database Purge Options */}
       <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-4">
         <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-          <AlertTriangle size={15} /> Dangerous Zone
+          <AlertTriangle size={15} /> DANGER ! CAUTION
         </h4>
         <p className="text-[11px] text-gray-400 mt-1 leading-normal">
-          Purge all records. This simulates the initial, completely empty database state a user gets immediately after installing from the Google Play Store.
+          Delete ALL records. This will remove all records and set app to a new start.
         </p>
 
         <div className="mt-3.5">
