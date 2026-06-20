@@ -106,14 +106,14 @@ export const ACCENT_THEMES: AccentTheme[] = [
 ];
 
 export function getLoadedAccentThemeId(): string {
-  if (typeof window === 'undefined') return 'emerald';
+  if (typeof window === 'undefined') return 'blue';
   const saved = localStorage.getItem('expensetrack_accent_theme');
-  return saved && ACCENT_THEMES.some(t => t.id === saved) ? saved : 'emerald';
+  return saved && ACCENT_THEMES.some(t => t.id === saved) ? saved : 'blue';
 }
 
 export function applyAccentTheme(themeId: string): void {
   if (typeof window === 'undefined') return;
-  const theme = ACCENT_THEMES.find(t => t.id === themeId) || ACCENT_THEMES[0];
+  const theme = ACCENT_THEMES.find(t => t.id === themeId) || ACCENT_THEMES.find(t => t.id === 'blue') || ACCENT_THEMES[0];
   const root = document.documentElement;
   
   // Apply all color values as Tailwind-consumed variables

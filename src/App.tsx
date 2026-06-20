@@ -1857,8 +1857,8 @@ export default function App() {
                       Create or Edit categories, budgets and other preferences.
                     </p>
                     <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5 font-sans">
-                      <li><strong className="text-gray-300">Set category Budgets if you desire:</strong> The App will let you know how much of the individual category budgets, and your total monthly budget if remaining.</li>
                       <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
+                      <li><strong className="text-gray-300">Change Colour Theme:</strong> Choose your preferred colour.</li>
                       <li><strong className="text-gray-300">Currency Symbols:</strong> Select the currency symbol you wish to use if not the default $ (e.g., $, €, £, ¥, ₹).</li>
                       <li><strong className="text-gray-300">BACKUP and RESTORE to your device only</strong></li>
                       <li><strong className="text-gray-300">GOOGLE DRIVE BACKUP</strong> if you wish to save your data in your own personal Drive.</li>
