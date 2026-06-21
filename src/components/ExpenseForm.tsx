@@ -24,6 +24,18 @@ const getLocalYYYYMMDD = () => {
   return `${year}-${month}-${day}`;
 };
 
+const getDarkTextColor = (colorStr: string) => {
+  const s = colorStr.toLowerCase();
+  if (s.includes('emerald')) return 'text-emerald-800';
+  if (s.includes('rose')) return 'text-rose-800';
+  if (s.includes('purple')) return 'text-purple-800';
+  if (s.includes('amber')) return 'text-amber-800';
+  if (s.includes('blue')) return 'text-blue-800';
+  if (s.includes('slate')) return 'text-slate-800';
+  if (s.includes('indigo')) return 'text-indigo-800';
+  return 'text-slate-800';
+};
+
 export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, expenseToEdit }: ExpenseFormProps) {
   const [amount, setAmount] = useState<string>(expenseToEdit ? expenseToEdit.amount.toString() : '');
   const [selectedCategory, setSelectedCategory] = useState<string>(
@@ -352,10 +364,10 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                   />
                 ) : null}
 
-                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-bold tracking-wider ${cat.color} select-none pointer-events-none`}>
+                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-black tracking-wider bg-white ${getDarkTextColor(cat.color)} select-none pointer-events-none shadow-xs border border-white/5`}>
                   {cat.name.substring(0, 2).toUpperCase()}
                 </div>
-                <span className="text-[10px] truncate w-full tracking-tight select-none pointer-events-none">{cat.name}</span>
+                <span className={`text-[10.5px] font-semibold truncate w-full tracking-tight select-none pointer-events-none transition-colors ${selectedCategory === cat.id ? 'text-white font-extrabold' : 'text-gray-200'}`}>{cat.name}</span>
 
                 {isReordering && (
                   <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded mt-1.5 pointer-events-none select-none animate-pulse">
