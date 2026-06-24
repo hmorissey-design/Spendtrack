@@ -1641,7 +1641,7 @@ export default function App() {
               {/* Line Chart showing progression pacing against limit */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-1.5 font-sans">
-                  Spending Progress Pacing
+                  Cumulative Spending this Month
                 </h2>
                 <p className="text-[10px] text-gray-450 mb-3 leading-tight">
                   Visual trend comparing cumulative discretionary spending (solid line) against total limits (horizontal marker).
@@ -1656,8 +1656,8 @@ export default function App() {
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
-                        <XAxis dataKey="day" stroke="#555555" tickLine={false} />
-                        <YAxis stroke="#555555" tickLine={false} />
+                        <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                        <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
                         <Tooltip 
                           contentStyle={{ fontSize: '10px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                           formatter={(value: any) => [`${currencySymbol}${value}`, 'Cumulative Spent']}
@@ -1674,7 +1674,7 @@ export default function App() {
               {/* Bar Chart: Daily Individual Transactions */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-1 font-sans">
-                  Daily Expenditure Spikes
+                  Daily Spending
                 </h3>
                 <p className="text-[9px] text-gray-400 mb-3 font-sans">Individual daily spending amounts.</p>
 
@@ -1685,8 +1685,8 @@ export default function App() {
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <BarChart data={trendChartData.slice(-14)} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
-                        <XAxis dataKey="day" stroke="#555555" tickLine={false} />
-                        <YAxis stroke="#555555" tickLine={false} />
+                        <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                        <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
                         <Tooltip 
                           contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                           formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
@@ -1842,8 +1842,8 @@ export default function App() {
                     </p>
                     <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
                       <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
-                      <li><strong className="text-gray-300">Spending Progress Pacing:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
-                      <li><strong className="text-gray-300">Daily Expenditure Spikes:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
+                      <li><strong className="text-gray-300">Cumulative Spending this Month:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
+                      <li><strong className="text-gray-300">Daily Spending:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
                     </ul>
                   </div>
 
