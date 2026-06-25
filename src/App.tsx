@@ -30,7 +30,10 @@ import {
   FileSpreadsheet,
   FileText,
   Download,
-  HelpCircle
+  HelpCircle,
+  MessageSquare,
+  AlertTriangle,
+  Menu
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -122,6 +125,69 @@ export default function App() {
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
     return LocalDb.getCurrencySymbol();
   });
+
+  // Feedback & Support states
+  const [showGlobalMenu, setShowGlobalMenu] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'enhancement'>('bug');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackSteps, setFeedbackSteps] = useState('');
+  const [feedbackExpected, setFeedbackExpected] = useState('');
+
+  const handleOpenFeedback = (type: 'bug' | 'enhancement') => {
+    setFeedbackType(type);
+    setFeedbackTitle('');
+    setFeedbackDescription('');
+    setFeedbackSteps('');
+    setFeedbackExpected('');
+    setShowFeedbackModal(true);
+  };
+
+  const handleSendFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackTitle.trim() || !feedbackDescription.trim()) return;
+
+    const email = 'firstpayyourself@gmail.com';
+    const subject = feedbackType === 'bug' 
+      ? `[ExpenseTrack Bug Report] ${feedbackTitle}`
+      : `[ExpenseTrack Feature Suggestion] ${feedbackTitle}`;
+
+    const diagnosticInfo = `
+-----------------------------------------
+DIAGNOSTIC SYSTEM METADATA:
+Device/User Agent: ${navigator.userAgent}
+Screen Resolution: ${window.screen.width}x${window.screen.height}
+App Version: 1.0.0 (Closed Beta Track)
+Date: ${new Date().toLocaleString()}
+-----------------------------------------
+`;
+
+    let body = `Hello Developer,\n\n`;
+    if (feedbackType === 'bug') {
+      body += `BUG DESCRIPTION:\n${feedbackDescription}\n\n`;
+      if (feedbackSteps.trim()) {
+        body += `STEPS TO REPRODUCE:\n${feedbackSteps}\n\n`;
+      }
+      if (feedbackExpected.trim()) {
+        body += `EXPECTED RESULT vs ACTUAL RESULT:\n${feedbackExpected}\n\n`;
+      }
+    } else {
+      body += `SUGGESTED ENHANCEMENT / ENHANCEMENT DETAILS:\n${feedbackDescription}\n\n`;
+    }
+    body += diagnosticInfo;
+
+    // Open user's email client
+    const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+
+    // Reset fields & close
+    setFeedbackTitle('');
+    setFeedbackDescription('');
+    setFeedbackSteps('');
+    setFeedbackExpected('');
+    setShowFeedbackModal(false);
+  };
 
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [isDevMode, setIsDevMode] = useState<boolean>(() => {
@@ -861,10 +927,143 @@ export default function App() {
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-full text-gray-300">
-              {currencySymbol} {totals.remaining >= 0 ? `${totals.remaining.toFixed(0)} Left` : `${Math.abs(totals.remaining).toFixed(0)} Over`}
-            </span>
+          <div className="flex items-center gap-2 relative z-50">
+            {/* Click backdrop overlay to close the dropdown easily */}
+            {showGlobalMenu && (
+              <div 
+                className="fixed inset-0 z-40 bg-transparent" 
+                onClick={() => setShowGlobalMenu(false)}
+              />
+            )}
+
+            <button
+              onClick={() => setShowGlobalMenu(prev => !prev)}
+              className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center relative z-50 active:scale-95 border-0 bg-transparent ${
+                showGlobalMenu 
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
+              title="Open Navigation Menu"
+            >
+              <Menu size={18} className="stroke-[2.5]" />
+            </button>
+
+            {/* Floating Dropdown Menu Container */}
+            {showGlobalMenu && (
+              <div className="absolute top-full right-0 mt-2.5 w-56 bg-[#111111] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-2.5 py-1.5 border-b border-white/5 mb-1.5 flex items-center justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest font-mono">Navigation Menu</span>
+                  <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/5 text-gray-400">
+                    Beta v1.0
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  {/* Dashboard link */}
+                  <button
+                    onClick={() => { setActiveTab('dashboard'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'dashboard'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <LayoutDashboard size={14} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Dashboard</span>
+                  </button>
+
+                  {/* History link */}
+                  <button
+                    onClick={() => { setActiveTab('history'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'history'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <History size={14} className={activeTab === 'history' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Expense History</span>
+                  </button>
+
+                  {/* Analytics link */}
+                  <button
+                    onClick={() => { setActiveTab('analytics'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'analytics'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <PieChart size={14} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Trends & Analytics</span>
+                  </button>
+
+                  {/* Settings link */}
+                  <button
+                    onClick={() => { setActiveTab('budget_plan'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'budget_plan'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Sliders size={14} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Budget Settings</span>
+                  </button>
+
+                  {/* Help & Guide link */}
+                  <button
+                    onClick={() => { setActiveTab('help'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'help'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <HelpCircle size={14} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Help & Guide</span>
+                  </button>
+
+                  {isDevMode && (
+                    <button
+                      onClick={() => { setActiveTab('dev_hub'); setShowGlobalMenu(false); }}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                        activeTab === 'dev_hub'
+                          ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Code size={14} className={activeTab === 'dev_hub' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                      <span>Developer Settings</span>
+                    </button>
+                  )}
+
+                  <div className="border-t border-white/5 my-1.5"></div>
+
+                  <div className="px-2.5 py-1 mb-1">
+                    <span className="text-[8px] font-extrabold text-gray-500 uppercase tracking-widest font-mono">Feedback & Support</span>
+                  </div>
+
+                  {/* Report Bug inside dropdown */}
+                  <button
+                    onClick={() => { handleOpenFeedback('bug'); setShowGlobalMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <AlertTriangle size={14} className="stroke-[2]" />
+                    <span>Report Bug</span>
+                  </button>
+
+                  {/* Suggest Feature inside dropdown */}
+                  <button
+                    onClick={() => { handleOpenFeedback('enhancement'); setShowGlobalMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <Sparkles size={14} className="stroke-[2]" />
+                    <span>Suggest Feature</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -962,6 +1161,165 @@ export default function App() {
                     Delete
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bug / Feedback Modal */}
+          {showFeedbackModal && (
+            <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+              <div className="w-full max-w-md bg-[#111111] border border-white/5 rounded-2xl p-5 shadow-2xl relative animate-in zoom-in-95 duration-200">
+                <button
+                  type="button"
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-500 hover:text-gray-300 rounded-lg cursor-pointer border-0 bg-transparent"
+                >
+                  <X size={16} />
+                </button>
+
+                {/* Header Icon & Title */}
+                <div className="flex items-center gap-3 border-b border-white/5 pb-3.5 mb-4 font-sans">
+                  <div className={`p-2 rounded-xl border ${
+                    feedbackType === 'bug'
+                      ? 'bg-rose-950/20 border-rose-500/20 text-rose-400'
+                      : 'bg-emerald-950/20 border-emerald-500/20 text-emerald-400'
+                  }`}>
+                    {feedbackType === 'bug' ? <AlertTriangle size={18} /> : <Sparkles size={18} />}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-[#eeeeee] text-sm leading-tight">
+                      {feedbackType === 'bug' ? 'Report a Bug' : 'Suggest Enhancement'}
+                    </h3>
+                    <p className="text-[10px] text-gray-400 font-sans mt-0.5">
+                      Submissions open directly in your mail app to firstpayyourself@gmail.com
+                    </p>
+                  </div>
+                </div>
+
+                {/* Switcher inside modal */}
+                <div className="grid grid-cols-2 gap-1 bg-[#0A0A0A] p-1 border border-white/5 rounded-xl mb-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackType('bug');
+                    }}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg cursor-pointer transition-all border-0 bg-transparent ${
+                      feedbackType === 'bug'
+                        ? 'bg-rose-550/15 text-rose-400 border border-rose-500/10'
+                        : 'text-gray-500 hover:text-gray-400'
+                    }`}
+                  >
+                    Bug Report
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackType('enhancement');
+                    }}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg cursor-pointer transition-all border-0 bg-transparent ${
+                      feedbackType === 'enhancement'
+                        ? 'bg-emerald-550/15 text-emerald-400 border border-emerald-500/10'
+                        : 'text-gray-500 hover:text-gray-400'
+                    }`}
+                  >
+                    Feature Suggestion
+                  </button>
+                </div>
+
+                <form onSubmit={handleSendFeedback} className="space-y-3 font-sans">
+                  {/* Title */}
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                      Subject Title
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={feedbackType === 'bug' ? "e.g., Category selector freezes on scroll" : "e.g., Add custom currency symbol filters"}
+                      value={feedbackTitle}
+                      onChange={(e) => setFeedbackTitle(e.target.value)}
+                      className="w-full bg-[#161616] border border-white/5 rounded-xl p-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/30 transition-all font-sans"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                      {feedbackType === 'bug' ? "Bug Description" : "Enhancement Idea"}
+                    </label>
+                    <textarea
+                      required
+                      rows={feedbackType === 'bug' ? 2 : 4}
+                      placeholder={feedbackType === 'bug' ? "Please explain what happened..." : "Detail your suggestions or how this would benefit you..."}
+                      value={feedbackDescription}
+                      onChange={(e) => setFeedbackDescription(e.target.value)}
+                      className="w-full bg-[#161616] border border-white/5 rounded-xl p-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/30 transition-all resize-none font-sans"
+                    />
+                  </div>
+
+                  {/* Conditional Bug Report inputs */}
+                  {feedbackType === 'bug' && (
+                    <>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                          Steps to Reproduce (Optional)
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="FOR EXAMPLE:&#10;1. Go to History tab&#10;2. Select Date range&#10;3. App crashes"
+                          value={feedbackSteps}
+                          onChange={(e) => setFeedbackSteps(e.target.value)}
+                          className="w-full bg-[#161616] border border-white/5 rounded-xl p-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/30 transition-all resize-none font-sans"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                          Expected vs Actual (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Expected list filter, got blank screen instead"
+                          value={feedbackExpected}
+                          onChange={(e) => setFeedbackExpected(e.target.value)}
+                          className="w-full bg-[#161616] border border-white/5 rounded-xl p-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/30 transition-all font-sans"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Device Info Container preview */}
+                  <div className="p-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between text-[8px] text-gray-450 uppercase tracking-wider font-mono font-bold">
+                      <span>💻 Diagnostics metadata</span>
+                      <span className="text-emerald-400">Included Automatically</span>
+                    </div>
+                    <div className="text-[7.5px] font-mono text-gray-500 leading-normal max-h-16 overflow-y-auto whitespace-pre-wrap select-all">
+                      Device: {navigator.userAgent.substring(0, 70)}...&#10;Resolution: {window.screen.width}x{window.screen.height}
+                    </div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowFeedbackModal(false)}
+                      className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-xl font-bold text-xs transition-all cursor-pointer border border-white/5 active:scale-95 text-center font-sans bg-transparent"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className={`flex-1 py-2.5 px-4 font-bold text-xs text-white rounded-xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 border-0 font-sans ${
+                        feedbackType === 'bug'
+                          ? 'bg-rose-600 hover:bg-rose-500 shadow-md shadow-rose-600/10'
+                          : 'bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/10'
+                      }`}
+                    >
+                      <Download size={13} className="rotate-180 shrink-0" />
+                      Send Draft
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
@@ -1515,7 +1873,7 @@ export default function App() {
                               {renderCategoryIcon(cat?.icon || 'Tag', 14)}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-gray-200 truncate leading-tight flex items-center gap-1.5 flex-wrap">
+                              <p className="text-xs font-bold text-white truncate leading-tight flex items-center gap-1.5 flex-wrap">
                                 <span>{exp.note || cat?.name || 'Uncategorized'}</span>
                                 {isBusiness && (
                                   <span className="px-1 py-0.5 text-[7px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase font-mono tracking-wider leading-none shrink-0">
@@ -1523,7 +1881,7 @@ export default function App() {
                                   </span>
                                 )}
                               </p>
-                              <span className="text-[9px] text-gray-500 font-mono">
+                              <span className="text-[9px] text-gray-350 font-medium font-mono">
                                 {exp.date} • {exp.paymentMethod.replace('_', ' ')}
                               </span>
                             </div>
@@ -1531,20 +1889,20 @@ export default function App() {
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={`text-xs font-bold font-mono block mr-1 ${
-                              isBusiness ? 'text-indigo-400 font-semibold' : 'text-rose-455'
+                              isBusiness ? 'text-indigo-400 font-semibold' : 'text-rose-400'
                             }`}>
                               -{currencySymbol}{exp.amount.toFixed(2)}
                             </span>
                             <button
                               onClick={() => setEditingExpense(exp)}
-                              className="p-1 hover:bg-emerald-550/15 text-gray-500 hover:text-emerald-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
+                              className="p-1 hover:bg-emerald-550/15 text-gray-400 hover:text-emerald-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
                               title="Edit this transaction"
                             >
                               <Pencil size={13} />
                             </button>
                             <button
                               onClick={() => setExpenseToDelete(exp)}
-                              className="p-1 hover:bg-rose-500/15 text-gray-500 hover:text-rose-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
+                              className="p-1 hover:bg-rose-500/15 text-gray-400 hover:text-rose-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
                               title="Delete this transaction permanently"
                             >
                               <Trash2 size={13} />
@@ -1915,6 +2273,33 @@ export default function App() {
                     You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
                     If you created backups in Google Drive, those files are securely held inside your personal cloud storage where you can delete them at your own discretion.
                   </p>
+                </div>
+
+                {/* Feedback & Support Section */}
+                <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 font-sans">
+                  <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
+                    <MessageSquare size={13} className="text-emerald-400" />
+                    <span>Feedback & Support</span>
+                  </p>
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    Help us improve ExpenseTrack! Let us know if you find a bug or have an enhancement suggestion. Form drafts an email directly to the developer.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => handleOpenFeedback('bug')}
+                      className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
+                    >
+                      <AlertTriangle size={11} />
+                      Report Bug
+                    </button>
+                    <button
+                      onClick={() => handleOpenFeedback('enhancement')}
+                      className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
+                    >
+                      <Sparkles size={11} />
+                      Suggest Feature
+                    </button>
+                  </div>
                 </div>
 
                 {/* Summary signature */}
