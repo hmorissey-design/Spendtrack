@@ -1893,6 +1893,12 @@ function RenderFinancePDFReportLive({
                 </tr>
               );
             })}
+            <tr className="bg-slate-50 border-t border-slate-300 font-bold text-[10px]">
+              <td className="p-2.5 pl-3 text-slate-900 uppercase tracking-wider font-extrabold" colSpan={2}>Total Expenses</td>
+              <td className="p-2.5"></td>
+              <td className="p-2.5"></td>
+              <td className="p-2.5 pr-3 text-right font-mono text-slate-900 font-extrabold">{currencySymbol}{totalSpentReport.toFixed(2)}</td>
+            </tr>
           </tbody>
         </table>
       </div>

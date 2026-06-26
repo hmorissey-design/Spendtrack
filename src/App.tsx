@@ -33,7 +33,8 @@ import {
   HelpCircle,
   MessageSquare,
   AlertTriangle,
-  Menu
+  Menu,
+  Star
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -134,6 +135,13 @@ export default function App() {
   const [feedbackDescription, setFeedbackDescription] = useState('');
   const [feedbackSteps, setFeedbackSteps] = useState('');
   const [feedbackExpected, setFeedbackExpected] = useState('');
+
+  // Google Play Store In-App Review States
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [reviewRating, setReviewRating] = useState<number>(0);
+  const [reviewComment, setReviewComment] = useState<string>('');
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState<string>('');
+  const [reviewFirstLaunchTime, setReviewFirstLaunchTime] = useState<number>(0);
 
   const handleOpenFeedback = (type: 'bug' | 'enhancement') => {
     setFeedbackType(type);
@@ -322,6 +330,45 @@ Date: ${new Date().toLocaleString()}
     setCurrencySymbol(LocalDb.getCurrencySymbol());
   };
 
+  // Initialize launch time and automated review prompt checks on mount
+  useEffect(() => {
+    try {
+      // 1. First Launch Time Tracking
+      let firstLaunch = localStorage.getItem('expensetrack_first_launch_time');
+      const now = Date.now();
+      if (!firstLaunch) {
+        firstLaunch = String(now);
+        localStorage.setItem('expensetrack_first_launch_time', firstLaunch);
+      }
+      const firstLaunchNum = Number(firstLaunch);
+      setReviewFirstLaunchTime(firstLaunchNum);
+
+      // 2. Automated trigger conditions check:
+      // - Must not have submitted a review yet
+      // - Must be at least 10 days since first open (10 * 24 * 60 * 60 * 1000 ms)
+      // - Must be at least 60 days since last prompt (60 * 24 * 60 * 60 * 1000 ms)
+      const isSubmitted = localStorage.getItem('expensetrack_review_submitted') === 'true';
+      if (!isSubmitted) {
+        const tenDaysInMs = 10 * 24 * 60 * 60 * 1000;
+        const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+        const lastPrompt = Number(localStorage.getItem('expensetrack_last_review_prompt_time') || '0');
+
+        const hasBeenTenDays = (now - firstLaunchNum) >= tenDaysInMs;
+        const hasBeenSixtyDaysSinceLastPrompt = (now - lastPrompt) >= sixtyDaysInMs;
+
+        if (hasBeenTenDays && hasBeenSixtyDaysSinceLastPrompt) {
+          // Trigger the prompt automatically!
+          setShowReviewPrompt(true);
+          localStorage.setItem('expensetrack_last_review_prompt_time', String(now));
+          const promptCount = Number(localStorage.getItem('expensetrack_prompt_count') || '0') + 1;
+          localStorage.setItem('expensetrack_prompt_count', String(promptCount));
+        }
+      }
+    } catch (e) {
+      console.warn('LocalStorage error on review initialization:', e);
+    }
+  }, []);
+
   // Run on initial mount and when month changes
   useEffect(() => {
     loadDatabaseState(selectedMonth);
@@ -379,7 +426,7 @@ Date: ${new Date().toLocaleString()}
       return;
     }
 
-    const headers = ["Date", "Note", "Category", "Payment Method", "Amount (USD)"];
+    const headers = ["Date", "Note", "Category", "Payment Method", "Amount"];
     const rows = filteredExpenses.map(exp => {
       const cat = categories.find(c => c.id === exp.category);
       const categoryName = cat ? cat.name : "Uncategorized";
@@ -392,6 +439,11 @@ Date: ${new Date().toLocaleString()}
         exp.amount
       ];
     });
+
+    // Add total row at the bottom of CSV
+    const totalAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    rows.push(["", "", "", "", ""]);
+    rows.push(["Total", "", "", "", `${currencySymbol}${totalAmount.toFixed(2)}`]);
 
     const csvContent = [headers, ...rows]
       .map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
@@ -633,6 +685,33 @@ Date: ${new Date().toLocaleString()}
 
       y += 7.5;
     });
+
+    // Add a Total row to the end of the PDF table
+    if (y > 265) {
+      doc.addPage();
+      y = 25;
+    }
+    
+    // Draw table bottom border line
+    doc.setDrawColor(15, 118, 110); // primary teal color
+    doc.setLineWidth(0.5);
+    doc.line(14, y - 2, 196, y - 2);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.text("TOTAL EXPENSES", 16, y + 3);
+
+    const totalAmtText = `${currencySymbol}${totalSpent.toFixed(2)}`;
+    doc.setFont("courier", "bold");
+    doc.setFontSize(9);
+    doc.text(totalAmtText, 172, y + 3);
+
+    // Double underline under the total
+    doc.line(14, y + 7, 196, y + 7);
+    doc.line(14, y + 8, 196, y + 8);
+    
+    y += 12;
 
     // 4. Audit Footer Box & Check Signature
     if (y > 245) {
@@ -1008,7 +1087,7 @@ Date: ${new Date().toLocaleString()}
                     }`}
                   >
                     <Sliders size={14} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-                    <span>Budget Settings</span>
+                    <span>Settings</span>
                   </button>
 
                   {/* Help & Guide link */}
@@ -1320,6 +1399,140 @@ Date: ${new Date().toLocaleString()}
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Simulated Google Play Store In-App Review Dialogue */}
+          {showReviewPrompt && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-250">
+              {/* Backing dismiss overlay */}
+              <div 
+                className="absolute inset-0 bg-transparent cursor-pointer" 
+                onClick={() => setShowReviewPrompt(false)}
+              />
+              <div className="w-full sm:max-w-md bg-[#161616] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl shadow-2xl relative z-10 animate-in slide-in-from-bottom duration-250">
+                <div className="p-5 sm:p-6 space-y-4">
+                  {/* Top dragging notch for mobile bottom sheets */}
+                  <div className="w-12 h-1 bg-white/15 rounded-full mx-auto sm:hidden mb-2" />
+
+                  {/* Play Store branded badge */}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-[#1d1d1d] border border-white/5 rounded-xl flex items-center justify-center text-emerald-400 font-bold text-xs select-none">
+                      {/* Branded Google Play Triangle Accent */}
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-emerald-400">
+                        <path d="M3,5.27V18.73c0,0.59,0.32,1.1,0.8,1.38L15.43,12L3.8,3.89C3.32,4.17,3,4.68,3,5.27Z"/>
+                        <path d="M19.47,9.66l-4.04,2.34L3.8,20.11c0.16,0.1,0.35,0.16,0.56,0.16c0.31,0,0.61,-0.11,0.85,-0.25l14.26,-8.24c0.59,-0.34,0.59,-1.14,0,-1.48c-0.24,-0.14,-14.26,-8.24,-14.26,-8.24c-0.24,-0.14,-0.54,-0.25,-0.85,-0.25c-0.21,0,-0.4,0.06,-0.56,0.16l11.63,8.11L19.47,9.66Z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-[9px] font-mono uppercase tracking-widest text-gray-500">Google Play Core</h4>
+                      <h3 className="font-bold text-[#ffffff] text-sm">Review ExpenseTrack</h3>
+                    </div>
+                  </div>
+
+                  {!reviewSuccessMessage ? (
+                    <div className="space-y-4">
+                      <p className="text-xs text-gray-300 leading-relaxed font-sans">
+                        Enjoying ExpenseTrack? Your feedback helps us make the app even better for everyone. Please take a quick moment to rate us!
+                      </p>
+
+                      {/* Stars Rating Row */}
+                      <div className="flex items-center justify-center gap-2 py-3 bg-black/20 border border-white/5 rounded-xl">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => {
+                              setReviewRating(star);
+                            }}
+                            className="p-1 hover:scale-110 active:scale-95 transition-all border-0 bg-transparent cursor-pointer"
+                          >
+                            <Star
+                              size={32}
+                              className={`transition-all ${
+                                star <= reviewRating
+                                  ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]'
+                                  : 'text-gray-600 hover:text-gray-500'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Conditional feedback text input */}
+                      {reviewRating > 0 && (
+                        <div className="space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                            {reviewRating >= 4 ? 'What do you love most? (Optional)' : 'How can we improve? (Optional)'}
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder={reviewRating >= 4 ? "Add details about your experience..." : "Let us know what we can fix or make better..."}
+                            value={reviewComment}
+                            onChange={(e) => setReviewComment(e.target.value)}
+                            className="w-full bg-[#1e1e1e] border border-white/5 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/30 transition-all resize-none font-sans"
+                          />
+                        </div>
+                      )}
+
+                      {/* Dialog Action Buttons */}
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowReviewPrompt(false)}
+                          className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 font-bold rounded-xl border border-white/5 cursor-pointer text-xs transition-all text-center"
+                        >
+                          Not Now
+                        </button>
+                        <button
+                          type="button"
+                          disabled={reviewRating === 0}
+                          onClick={() => {
+                            try {
+                              localStorage.setItem('expensetrack_review_submitted', 'true');
+                              localStorage.setItem('expensetrack_last_review_prompt_time', String(Date.now()));
+                              
+                              if (reviewRating >= 4) {
+                                setReviewSuccessMessage('Thank you so much! Your wonderful rating has been saved. We are opening your official Closed Testing track download page!');
+                                setTimeout(() => {
+                                  // Open Play Store Link (or mail backup)
+                                  window.open('https://play.google.com/store/apps/details?id=com.firstpayyourself.expensetrack', '_blank');
+                                  setShowReviewPrompt(false);
+                                }, 3000);
+                              } else {
+                                setReviewSuccessMessage('Thank you for your valuable feedback! We have recorded your suggestions to improve our app in the next build.');
+                                setTimeout(() => {
+                                  setShowReviewPrompt(false);
+                                }, 3000);
+                              }
+                            } catch (err) {
+                              console.warn('LocalStorage save failed:', err);
+                              setShowReviewPrompt(false);
+                            }
+                          }}
+                          className={`flex-1 py-2.5 font-extrabold rounded-xl text-xs transition-all border-0 text-center flex items-center justify-center gap-1 cursor-pointer ${
+                            reviewRating === 0
+                              ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                              : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/10'
+                          }`}
+                        >
+                          Submit Review
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5 py-4 text-center animate-in zoom-in-95 duration-200">
+                      <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/25 rounded-full flex items-center justify-center text-emerald-400 mx-auto">
+                        <Star size={24} className="fill-current" />
+                      </div>
+                      <h4 className="font-extrabold text-[#eeeeee] text-sm">Thank You!</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed max-w-sm mx-auto">
+                        {reviewSuccessMessage}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -2123,6 +2336,70 @@ Date: ${new Date().toLocaleString()}
                       <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
                         <span className="text-sm">✓</span> Privacy Policy URL (Required for financial budgeting categories)
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Play Store In-App Review Section */}
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                    <p className="font-bold text-[#38bdf8] text-[11px] mb-1">⭐ 4. Play Store In-App Review Simulator</p>
+                    <p className="text-[10px] text-gray-400 leading-relaxed mb-3">
+                      Automated prompts trigger after <strong>10 days of active use</strong> and cooldown for <strong>2 months (60 days)</strong> before re-asking, completely automatically. Below you can simulate the dialogue instantly or inspect/reset your test state:
+                    </p>
+
+                    <div className="bg-white/3 border border-white/5 rounded-lg p-2 mb-3 grid grid-cols-2 gap-2 text-[10px] font-mono text-gray-400">
+                      <div>
+                        <span className="text-gray-500">First Launch:</span><br/>
+                        <span className="text-[#eeeeee]">
+                          {reviewFirstLaunchTime ? new Date(reviewFirstLaunchTime).toLocaleDateString() : 'Not Set'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Review Status:</span><br/>
+                        <span className={localStorage.getItem('expensetrack_review_submitted') === 'true' ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                          {localStorage.getItem('expensetrack_review_submitted') === 'true' ? 'Submitted' : 'Pending'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Last Prompt:</span><br/>
+                        <span>
+                          {localStorage.getItem('expensetrack_last_review_prompt_time') 
+                            ? new Date(Number(localStorage.getItem('expensetrack_last_review_prompt_time'))).toLocaleDateString() 
+                            : 'Never'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Total Prompts:</span><br/>
+                        <span>{localStorage.getItem('expensetrack_prompt_count') || '0'} times</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReviewRating(0);
+                          setReviewComment('');
+                          setReviewSuccessMessage('');
+                          setShowReviewPrompt(true);
+                        }}
+                        className="flex-1 py-1.5 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-extrabold rounded-lg border border-emerald-500/15 cursor-pointer text-[10px] transition-all text-center"
+                      >
+                        Simulate Review prompt
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          localStorage.removeItem('expensetrack_review_submitted');
+                          localStorage.removeItem('expensetrack_last_review_prompt_time');
+                          localStorage.setItem('expensetrack_prompt_count', '0');
+                          localStorage.setItem('expensetrack_first_launch_time', String(Date.now()));
+                          setReviewFirstLaunchTime(Date.now());
+                          alert('Review simulation states have been successfully reset to Day 1.');
+                        }}
+                        className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-400 font-bold rounded-lg border border-white/5 cursor-pointer text-[10px] transition-all text-center"
+                      >
+                        Reset Stats
+                      </button>
                     </div>
                   </div>
                 </div>
