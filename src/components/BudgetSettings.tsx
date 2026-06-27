@@ -96,6 +96,9 @@ export function renderCategoryIcon(iconName: string, size = 16) {
   }
 }
 
+// Set this flag to true when you want to reactivate Google Drive backup later
+const SHOW_GOOGLE_DRIVE_BACKUP = false;
+
 export function BudgetSettings({ 
   categories, 
   currentBudget, 
@@ -1180,166 +1183,168 @@ export function BudgetSettings({
       </div>
 
       {/* Google Drive Cloud Backup */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-150">
-        <h3 className="text-xs font-extrabold uppercase tracking-widest mb-2 text-yellow-500 flex items-center gap-1.5 font-mono">
-          <Cloud size={14} className="text-yellow-500 animate-pulse" /> Google Drive Cloud Backup
-        </h3>
-        <p className="text-[11px] text-gray-400 leading-normal">
-          Securely save your ExpenseTrack database to your personal Google Drive storage. <span className="text-yellow-500/90 font-medium">This is the safest option to ensure you never lose your records if your phone is lost or damaged beyond repair</span>, or when switching to a new device. This data is private and locked to your account.
-        </p>
+      {SHOW_GOOGLE_DRIVE_BACKUP && (
+        <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-150">
+          <h3 className="text-xs font-extrabold uppercase tracking-widest mb-2 text-yellow-500 flex items-center gap-1.5 font-mono">
+            <Cloud size={14} className="text-yellow-500 animate-pulse" /> Google Drive Cloud Backup
+          </h3>
+          <p className="text-[11px] text-gray-400 leading-normal">
+            Securely save your ExpenseTrack database to your personal Google Drive storage. <span className="text-yellow-500/90 font-medium">This is the safest option to ensure you never lose your records if your phone is lost or damaged beyond repair</span>, or when switching to a new device. This data is private and locked to your account.
+          </p>
 
-        {cloudSuccess && (
-          <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded flex items-center gap-1 font-sans animate-in fade-in">
-            <CheckCircle size={12} className="text-emerald-400" />
-            <span>{cloudSuccess}</span>
-          </div>
-        )}
+          {cloudSuccess && (
+            <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded flex items-center gap-1 font-sans animate-in fade-in">
+              <CheckCircle size={12} className="text-emerald-400" />
+              <span>{cloudSuccess}</span>
+            </div>
+          )}
 
-        {cloudError && (
-          <div className="mt-3 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] rounded flex items-center gap-1 font-sans animate-in fade-in">
-            <AlertTriangle size={12} className="text-rose-400" />
-            <span>{cloudError}</span>
-          </div>
-        )}
+          {cloudError && (
+            <div className="mt-3 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] rounded flex items-center gap-1 font-sans animate-in fade-in">
+              <AlertTriangle size={12} className="text-rose-400" />
+              <span>{cloudError}</span>
+            </div>
+          )}
 
-        <div className="mt-4">
-          {!googleUser || !driveToken ? (
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={driveLoading}
-              className="w-full py-2 bg-white hover:bg-gray-150 text-black border-0 rounded-xl text-xs font-bold font-sans flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <div className="w-4 h-4">
-                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block' }}>
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                  <path fill="none" d="M0 0h48v48H0z"></path>
-                </svg>
-              </div>
-              <span className="font-semibold text-[11px] text-[#1F1F1F]">
-                {driveLoading ? "Connecting..." : "Sign in with Google"}
-              </span>
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <div className="p-2 border border-white/5 bg-black/40 rounded-lg flex items-center justify-between text-[11px]">
-                <div className="truncate pr-2">
-                  <span className="text-gray-500 block text-[9px] uppercase font-mono">Google Account</span>
-                  <span className="font-bold text-gray-300 font-sans block truncate max-w-[150px]">{googleUser.email}</span>
+          <div className="mt-4">
+            {!googleUser || !driveToken ? (
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={driveLoading}
+                className="w-full py-2 bg-white hover:bg-gray-150 text-black border-0 rounded-xl text-xs font-bold font-sans flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <div className="w-4 h-4">
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block' }}>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                    <path fill="none" d="M0 0h48v48H0z"></path>
+                  </svg>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleGoogleSignOut}
-                  className="px-2 py-1 hover:bg-rose-500/10 text-rose-400 border border-white/5 hover:border-rose-500/10 rounded text-[9px] uppercase font-bold transition-all bg-transparent cursor-pointer shrink-0"
-                >
-                  Disconnect
-                </button>
-              </div>
-
-              {cloudBackupInfo ? (
-                <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-[11px] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Cloud Backup File</span>
-                    <span className="font-mono text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1 rounded">Found</span>
+                <span className="font-semibold text-[11px] text-[#1F1F1F]">
+                  {driveLoading ? "Connecting..." : "Sign in with Google"}
+                </span>
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-2 border border-white/5 bg-black/40 rounded-lg flex items-center justify-between text-[11px]">
+                  <div className="truncate pr-2">
+                    <span className="text-gray-500 block text-[9px] uppercase font-mono">Google Account</span>
+                    <span className="font-bold text-gray-300 font-sans block truncate max-w-[150px]">{googleUser.email}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="block mt-0.5 max-w-[200px] truncate">File name: <strong className="text-gray-300">{cloudBackupInfo.name}</strong></span>
-                    <span className="block mt-0.5 text-gray-500 font-mono text-[10px]">
-                      Saved: {cloudBackupInfo.modifiedTime ? new Date(cloudBackupInfo.modifiedTime).toLocaleString() : 'Recently'}
-                    </span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignOut}
+                    className="px-2 py-1 hover:bg-rose-500/10 text-rose-400 border border-white/5 hover:border-rose-500/10 rounded text-[9px] uppercase font-bold transition-all bg-transparent cursor-pointer shrink-0"
+                  >
+                    Disconnect
+                  </button>
                 </div>
-              ) : driveLoading ? (
-                <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-center text-[10px] text-gray-400 font-mono italic animate-pulse">
-                  Querying GDrive for backups...
-                </div>
-              ) : (
-                <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-[10px] text-gray-500 text-center font-bold uppercase tracking-wide">
-                  No backup file exists on your Google Drive
-                </div>
-              )}
 
-              <div className="space-y-2 mt-2">
-                {confirmCloudBackup && (
-                  <div className="p-2.5 bg-yellow-950/20 border border-yellow-500/20 rounded-lg text-xs space-y-2 animate-in fade-in">
-                    <span className="block text-[10px] text-yellow-400 font-bold leading-normal">
-                      Upload local database to Google Drive? This will overwrite your existing cloud backup.
-                    </span>
-                    <div className="flex gap-2">
+                {cloudBackupInfo ? (
+                  <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-[11px] space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Cloud Backup File</span>
+                      <span className="font-mono text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1 rounded">Found</span>
+                    </div>
+                    <div className="text-gray-400">
+                      <span className="block mt-0.5 max-w-[200px] truncate">File name: <strong className="text-gray-300">{cloudBackupInfo.name}</strong></span>
+                      <span className="block mt-0.5 text-gray-500 font-mono text-[10px]">
+                        Saved: {cloudBackupInfo.modifiedTime ? new Date(cloudBackupInfo.modifiedTime).toLocaleString() : 'Recently'}
+                      </span>
+                    </div>
+                  </div>
+                ) : driveLoading ? (
+                  <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-center text-[10px] text-gray-400 font-mono italic animate-pulse">
+                    Querying GDrive for backups...
+                  </div>
+                ) : (
+                  <div className="p-2.5 bg-black/20 border border-white/5 rounded-lg text-[10px] text-gray-500 text-center font-bold uppercase tracking-wide">
+                    No backup file exists on your Google Drive
+                  </div>
+                )}
+
+                <div className="space-y-2 mt-2">
+                  {confirmCloudBackup && (
+                    <div className="p-2.5 bg-yellow-950/20 border border-yellow-500/20 rounded-lg text-xs space-y-2 animate-in fade-in">
+                      <span className="block text-[10px] text-yellow-400 font-bold leading-normal">
+                        Upload local database to Google Drive? This will overwrite your existing cloud backup.
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCloudBackup}
+                          disabled={driveLoading}
+                          className="py-1 px-2.5 bg-yellow-600 hover:bg-yellow-500 text-black text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        >
+                          Yes, Overwrite Backup
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCloudBackup(false)}
+                          className="py-1 px-2.5 bg-white/10 hover:bg-white/20 text-slate-300 text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {confirmCloudRestore && (
+                    <div className="p-2.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-xs space-y-2 animate-in fade-in">
+                      <span className="block text-[10px] text-emerald-400 font-bold leading-normal">
+                        Restore from Google Drive backup? This replaces all current expenses on this browser with the cloud copy.
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCloudRestore}
+                          disabled={driveLoading}
+                          className="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        >
+                          Yes, Restore Now
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCloudRestore(false)}
+                          className="py-1 px-2.5 bg-white/10 hover:bg-white/20 text-slate-300 text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!confirmCloudBackup && !confirmCloudRestore && (
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={handleCloudBackup}
                         disabled={driveLoading}
-                        className="py-1 px-2.5 bg-yellow-600 hover:bg-yellow-500 text-black text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        className="py-1.5 px-2 bg-yellow-950/20 hover:bg-yellow-950/40 border border-yellow-500/20 text-yellow-400 text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
                       >
-                        Yes, Overwrite Backup
+                        <CloudUpload size={12} />
+                        <span>Update Backup</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmCloudBackup(false)}
-                        className="py-1 px-2.5 bg-white/10 hover:bg-white/20 text-slate-300 text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {confirmCloudRestore && (
-                  <div className="p-2.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-xs space-y-2 animate-in fade-in">
-                    <span className="block text-[10px] text-emerald-400 font-bold leading-normal">
-                      Restore from Google Drive backup? This replaces all current expenses on this browser with the cloud copy.
-                    </span>
-                    <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={handleCloudRestore}
-                        disabled={driveLoading}
-                        className="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
+                        disabled={driveLoading || !cloudBackupInfo}
+                        className="py-1.5 px-2 bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
                       >
-                        Yes, Restore Now
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmCloudRestore(false)}
-                        className="py-1 px-2.5 bg-white/10 hover:bg-white/20 text-slate-300 text-[10px] font-bold rounded-md cursor-pointer transition-all border-0"
-                      >
-                        Cancel
+                        <CloudDownload size={12} />
+                        <span>Restore Now</span>
                       </button>
                     </div>
-                  </div>
-                )}
-
-                {!confirmCloudBackup && !confirmCloudRestore && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={handleCloudBackup}
-                      disabled={driveLoading}
-                      className="py-1.5 px-2 bg-yellow-950/20 hover:bg-yellow-950/40 border border-yellow-500/20 text-yellow-400 text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
-                    >
-                      <CloudUpload size={12} />
-                      <span>Update Backup</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCloudRestore}
-                      disabled={driveLoading || !cloudBackupInfo}
-                      className="py-1.5 px-2 bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
-                    >
-                      <CloudDownload size={12} />
-                      <span>Restore Now</span>
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
 
 

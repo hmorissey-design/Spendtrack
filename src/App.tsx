@@ -2495,8 +2495,8 @@ Date: ${new Date().toLocaleString()}
                       <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
                       <li><strong className="text-gray-300">Change Colour Theme:</strong> Choose your preferred colour.</li>
                       <li><strong className="text-gray-300">Currency Symbols:</strong> Select the currency symbol you wish to use if not the default $ (e.g., $, €, £, ¥, ₹).</li>
-                      <li><strong className="text-gray-300">BACKUP and RESTORE to your device only</strong></li>
-                      <li><strong className="text-gray-300">GOOGLE DRIVE BACKUP</strong> if you wish to save your data in your own personal Drive.</li>
+                      <li><strong className="text-gray-300">BACKUP and RESTORE to your device</strong></li>
+                      {/* <li><strong className="text-gray-300">GOOGLE DRIVE BACKUP</strong> if you wish to save your data in your own personal Drive.</li> */}
                       <li><strong className="text-gray-300">Reset Data:</strong> Delete all local states to return the database to a fresh, empty install.</li>
                     </ul>
                   </div>
@@ -2548,7 +2548,6 @@ Date: ${new Date().toLocaleString()}
                     ExpenseTrack is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
                     All transactions reside <strong>strictly on your device</strong>. 
                     You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
-                    If you created backups in Google Drive, those files are securely held inside your personal cloud storage where you can delete them at your own discretion.
                   </p>
                 </div>
 
