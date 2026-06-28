@@ -1585,7 +1585,7 @@ Date: ${new Date().toLocaleString()}
                       
                       <div className="text-center z-10">
                         <span className="text-xl font-bold font-mono text-white">{totals.percent}%</span>
-                        <p className="text-[8px] text-gray-500 font-bold uppercase tracking-wider font-mono">Spent</p>
+                        <p className="text-[8px] text-slate-300 font-bold uppercase tracking-wider font-mono">Spent</p>
                       </div>
                     </div>
                   </div>
@@ -1593,17 +1593,17 @@ Date: ${new Date().toLocaleString()}
                   {/* Quantitative numbers */}
                   <div className="col-span-7 space-y-2">
                     <div>
-                      <span className="text-[10px] font-semibold text-gray-405 block">Spent this month</span>
+                      <span className="text-[10px] font-semibold text-slate-300 block">Spent this month</span>
                       <span className="text-3xl font-extrabold font-mono text-white block mt-0.5">{currencySymbol}{totals.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
 
                     <div className="flex gap-4 border-t border-[#1C1C1C] pt-2">
                       <div>
-                        <span className="text-[9px] font-bold text-gray-405 uppercase tracking-tight block">Budget Limit</span>
+                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tight block">Budget Limit</span>
                         <span className="text-xs font-bold text-gray-300 font-mono">{currencySymbol}{totals.limit.toLocaleString()}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-gray-405 uppercase tracking-tight block">Budget Remaining</span>
+                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tight block">Budget Remaining</span>
                         <span className={`text-xs font-extrabold font-mono ${totals.remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {currencySymbol}{totals.remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
@@ -1754,7 +1754,7 @@ Date: ${new Date().toLocaleString()}
                   {/* Dropdown Filters row */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tag Category</label>
+                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-1">Tag Category</label>
                       <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
@@ -1768,7 +1768,7 @@ Date: ${new Date().toLocaleString()}
                     </div>
 
                     <div>
-                      <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-wider mb-1">Payment Channel</label>
+                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-1">Payment Channel</label>
                       <select
                         value={filterPayment}
                         onChange={(e) => setFilterPayment(e.target.value)}
@@ -1787,7 +1787,7 @@ Date: ${new Date().toLocaleString()}
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <div className="relative">
                       <div className="flex items-center justify-between mb-0.5">
-                        <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-wider">Start Date</label>
+                        <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider">Start Date</label>
                         {filterStartDate && (
                           <button
                             type="button"
@@ -1926,7 +1926,7 @@ Date: ${new Date().toLocaleString()}
 
                     <div className="relative font-sans">
                       <div className="flex items-center justify-between mb-0.5">
-                        <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-wider">End Date</label>
+                        <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider">End Date</label>
                         {filterEndDate && (
                           <button
                             type="button"

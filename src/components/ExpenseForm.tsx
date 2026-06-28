@@ -316,7 +316,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           <div className="flex items-center justify-between mb-1.5">
             <div>
               <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest font-sans">BUDGET CATEGORY</label>
-              <span className="text-[8px] text-gray-500 block font-sans lowercase tracking-wide">
+              <span className="text-[8px] text-slate-350 block font-sans lowercase tracking-wide">
                 Tip: Drag & drop cards to reorder
               </span>
             </div>
@@ -326,7 +326,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
               className={`text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md transition-all cursor-pointer select-none active:scale-95 ${
                 isReordering 
                   ? 'bg-emerald-600 text-white font-black' 
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                  : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
               }`}
             >
               {isReordering ? '✓ Done Arranging' : '⇅ Arrange Icons'}
@@ -352,7 +352,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                         ? 'border-dashed border-emerald-550/40 bg-black/40 hover:border-emerald-500/60'
                         : selectedCategory === cat.id
                           ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 shadow-xs font-bold ring-1 ring-emerald-500/10'
-                          : 'border-white/5 hover:border-white/10 text-gray-400 bg-black/20 hover:bg-black/35'
+                          : 'border-white/5 hover:border-white/10 text-slate-300 bg-black/20 hover:bg-black/35'
                 }`}
               >
                 {!isReordering && !draggedCatId ? (
@@ -383,7 +383,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
         <div>
           <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1.5">DESCRIPTION</label>
           <div className="relative">
-            <span className="absolute left-3 top-3.5 text-gray-500">
+            <span className="absolute left-3 top-3.5 text-slate-300">
                <MessageSquare size={14} />
             </span>
             <input
@@ -415,7 +415,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
               <button
                 type="button"
                 onClick={() => setShowCalendar(!showCalendar)}
-                className="absolute right-2.5 top-2.5 text-gray-400 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
+                className="absolute right-2.5 top-2.5 text-slate-200 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
                 title="Open Calendar drop down"
               >
                 <Calendar size={14} className={showCalendar ? "text-emerald-400 scale-110 transition-all" : "transition-all"} />
@@ -478,7 +478,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                 </div>
 
                 {/* Day headers */}
-                <div className="grid grid-cols-7 text-center text-[8px] font-bold uppercase text-gray-500 mb-1">
+                <div className="grid grid-cols-7 text-center text-[8px] font-bold uppercase text-slate-350 mb-1">
                   <span>S</span>
                   <span>M</span>
                   <span>T</span>
@@ -526,9 +526,9 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Payment Method</label>
+            <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Payment Method</label>
             <div className="relative">
-              <span className="absolute left-2.5 top-2.5 text-gray-500">
+              <span className="absolute left-2.5 top-2.5 text-slate-300">
                 <CreditCard size={13} />
               </span>
               <select

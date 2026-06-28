@@ -824,7 +824,7 @@ export function BudgetSettings({
 
             <form onSubmit={handleSaveCategoryForm} className="space-y-5 text-xs">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Category Label</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-1.5 font-sans">Category Label</label>
                 <input 
                   type="text" 
                   value={formName}
@@ -838,9 +838,9 @@ export function BudgetSettings({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 font-sans">Monthly Budget Allocation</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-1.5 font-sans">Monthly Budget Allocation</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-extrabold">{currencySymbol}</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-extrabold">{currencySymbol}</span>
                   <input 
                     type="number" 
                     min="0"
@@ -854,7 +854,7 @@ export function BudgetSettings({
 
               {/* Icon selector preset grid */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Pick Icon Preset</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans">Pick Icon Preset</label>
                 <div className="grid grid-cols-8 gap-2 p-3 bg-black/45 rounded-xl border border-white/5 justify-items-center">
                   {ICON_PRESETS.map(iconName => (
                     <button
@@ -864,7 +864,7 @@ export function BudgetSettings({
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
                         formIcon === iconName 
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-sm shadow-emerald-950/20' 
-                          : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border-white/5'
+                          : 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border-white/5'
                       }`}
                       title={iconName}
                     >
@@ -876,7 +876,7 @@ export function BudgetSettings({
 
               {/* Color preset grid selector */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Preset Theme Color</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans">Preset Theme Color</label>
                 <div className="grid grid-cols-3 gap-2">
                   {COLOR_PRESETS.map(preset => (
                     <button
@@ -886,7 +886,7 @@ export function BudgetSettings({
                       className={`py-2 px-3 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
                         formColor === preset.value
                           ? 'bg-white/15 text-white border-white/40 ring-1 ring-white/10'
-                          : 'bg-black/30 text-gray-400 border-white/5 opacity-70 hover:opacity-100'
+                          : 'bg-black/30 text-slate-300 border-white/5 opacity-70 hover:opacity-100'
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: preset.hex }} />
@@ -967,7 +967,7 @@ export function BudgetSettings({
             </button>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Active Theme</span>
+            <span className="text-[9px] text-slate-300 block uppercase font-mono font-bold tracking-wider">Active Theme</span>
             <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20 mt-0.5 select-none text-center">
               <span 
                 className="w-2.5 h-2.5 rounded-full shrink-0 shadow-lg border border-white/10" 
@@ -1055,7 +1055,7 @@ export function BudgetSettings({
             </button>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[9px] text-gray-500 block uppercase font-mono font-bold tracking-wider">Active Icon</span>
+            <span className="text-[9px] text-slate-300 block uppercase font-mono font-bold tracking-wider">Active Symbol</span>
             <span className="text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 inline-block">{currencySymbol}</span>
           </div>
         </div>
@@ -1124,25 +1124,25 @@ export function BudgetSettings({
 
       {/* Localized Architecture Notice */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 font-sans">
-          <Shield size={14} className="text-emerald-500" /> Backup or Restore from Your Device
+        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5 font-sans text-center">
+          <Shield size={14} className="text-emerald-500 shrink-0" /> Backup or Restore from Your Device
         </h3>
-        <p className="text-[11px] text-gray-400 leading-normal">
+        <p className="text-[11px] text-slate-300 leading-normal text-center">
           All records remain privately saved on your device only
         </p>
         <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
           <button
             onClick={handleExport}
-            className="py-2 px-2.5 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
+            className="py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
           >
-            <Download size={12} className="text-emerald-500" /> Backup to Device
+            <Download size={12} className="text-emerald-500 shrink-0" /> Backup to Device
           </button>
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="py-2 px-2.5 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
+            className="py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
           >
-            <Upload size={12} className="text-emerald-500" /> Restore from Device
+            <Upload size={12} className="text-emerald-500 shrink-0" /> Restore from Device
           </button>
         </div>
 
