@@ -334,7 +334,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
               <span className="text-4xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
               <input
                 type="text"
-                inputMode="text"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
