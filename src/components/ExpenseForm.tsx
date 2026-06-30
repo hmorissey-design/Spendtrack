@@ -215,15 +215,52 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
     setDragOverCatId(null);
   };
 
-  // Suggested quick additions for convenience
+  // Safe mathematical expression evaluator for arithmetic (+, -, *, /)
+  const evaluateExpression = (expr: string): number | null => {
+    // Strip everything except numbers, decimal point, operators (+, -, *, /), parentheses, and spaces
+    const sanitized = expr.replace(/[^0-9+\-*/().\s]/g, '');
+    if (!sanitized.trim()) return null;
+
+    try {
+      if (/^[0-9+\-*/().\s]+$/.test(sanitized)) {
+        // Safe evaluation via standard Function constructor since input is strictly sanitized
+        const result = new Function(`return (${sanitized})`)();
+        if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+          return result;
+        }
+      }
+    } catch {
+      // Syntax error in equation
+    }
+    return null;
+  };
+
+  // Preset button click remains simple
   const handlePresetClick = (val: number) => {
     const current = parseFloat(amount) || 0;
     setAmount((current + val).toString());
   };
 
+  const handleAmountBlur = () => {
+    if (amount) {
+      const live = evaluateExpression(amount);
+      if (live !== null && /[\+\-\*\/]/.test(amount)) {
+        setAmount(live.toFixed(2));
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedAmount = parseFloat(amount);
+    
+    let resolvedAmountStr = amount;
+    const evaluated = evaluateExpression(amount);
+    if (evaluated !== null && /[\+\-\*\/]/.test(amount)) {
+      resolvedAmountStr = evaluated.toFixed(2);
+      setAmount(resolvedAmountStr);
+    }
+
+    const parsedAmount = parseFloat(resolvedAmountStr);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       setErrorCode('Please enter a valid expense amount greater than $0.');
       return;
@@ -296,17 +333,68 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             <div className="flex items-center justify-center w-full min-w-0">
               <span className="text-4xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
               <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0.01"
+                type="text"
+                inputMode="text"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full max-w-[220px] bg-transparent border-0 text-4xl font-extrabold text-emerald-400 focus:text-white text-center font-mono outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
+                onBlur={handleAmountBlur}
+                className="w-full max-w-[220px] bg-transparent border-0 text-3xl font-extrabold text-emerald-400 focus:text-white text-center font-mono outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
                 required
                 ref={amountInputRef}
               />
+            </div>
+
+            {/* Live calculation helper badge */}
+            {(() => {
+              const liveVal = evaluateExpression(amount);
+              const hasOperators = /[\+\-\*\/]/.test(amount);
+              if (amount && hasOperators && liveVal !== null) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setAmount(liveVal.toFixed(2))}
+                    className="mt-2.5 px-3 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 text-[10.5px] font-mono font-bold rounded-lg transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1"
+                    title="Tap to apply calculated total"
+                  >
+                    <span>Total: ${liveVal.toFixed(2)}</span>
+                    <span className="text-[8px] bg-emerald-500/20 px-1 py-0.5 rounded text-emerald-400">Apply ↵</span>
+                  </button>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Operator shortcuts for fast mobile entry */}
+            <div className="flex items-center justify-center gap-1.5 mt-3.5 select-none w-full border-t border-white/5 pt-3.5">
+              {['+', '-', '*', '/'].map((op) => (
+                <button
+                  key={op}
+                  type="button"
+                  onClick={() => {
+                    const trimmed = amount.trim();
+                    if (/[\+\-\*\/]$/.test(trimmed)) {
+                      setAmount(trimmed.slice(0, -1) + op);
+                    } else {
+                      setAmount(trimmed + (trimmed ? ` ${op} ` : op));
+                    }
+                    amountInputRef.current?.focus();
+                  }}
+                  className="w-10 h-8 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300 font-mono font-black flex items-center justify-center hover:bg-white/10 hover:text-white cursor-pointer select-none active:scale-95 transition-all"
+                >
+                  {op}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setAmount('');
+                  amountInputRef.current?.focus();
+                }}
+                className="px-2.5 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-400 font-bold tracking-wider uppercase flex items-center justify-center hover:bg-rose-500/20 cursor-pointer select-none active:scale-95 transition-all"
+              >
+                Clear
+              </button>
             </div>
           </div>
         </div>
