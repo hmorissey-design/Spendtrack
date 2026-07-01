@@ -4,10 +4,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Info, Copy, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Info, Copy, Check, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AdMobBannerProps {
-  adUnitId?: string;
+  adUnitId?: string; // Standard AdMob Unit ID or AdSense Slot ID
+  isTopAd?: boolean; // Determines which default slot to load if not specified
   className?: string;
   themeColor?: string;
 }
@@ -36,26 +37,59 @@ const SIMULATED_ADS = [
     url: "https://nerdwallet.com"
   },
   {
-    title: "AdMob Test Banner Ad",
-    desc: "Nice work! Your integration works. Test ID: ca-app-pub-3940256099942544/6300978111",
-    cta: "Get Started",
-    badge: "Ad • Google AdMob",
-    url: "https://google.com/admob"
+    title: "SpendTrack PWA Mobile Ads",
+    desc: "AdSense Auto Ads are fully responsive for 100% of mobile phone web screens.",
+    cta: "Learn More",
+    badge: "Ad • Google AdSense",
+    url: "https://google.com/adsense"
   }
 ];
 
-export function AdMobBanner({ adUnitId = 'ca-app-pub-3940256099942544/6300978111', className = '', themeColor = 'blue' }: AdMobBannerProps) {
-  const [currentAdIndex, setCurrentAdIndex] = useState(3); // Start with AdMob Test Banner
+export function AdMobBanner({ adUnitId, isTopAd = false, className = '', themeColor = 'blue' }: AdMobBannerProps) {
+  const [currentAdIndex, setCurrentAdIndex] = useState(3); // Start with AdSense / AdMob Test Banner
   const [copied, setCopied] = useState<string | null>(null);
   const [showIntegrationDocs, setShowIntegrationDocs] = useState(false);
 
+  // Read environment variables for Google AdSense
+  const adsenseClientId = (import.meta.env.VITE_ADSENSE_CLIENT_ID || '').trim();
+  const adsenseSlotId = (adUnitId || (isTopAd ? import.meta.env.VITE_ADSENSE_TOP_SLOT_ID : import.meta.env.VITE_ADSENSE_BOTTOM_SLOT_ID) || '').trim();
+
+  const isLiveAdSenseActive = Boolean(adsenseClientId && adsenseSlotId);
+
   useEffect(() => {
+    // Only cycle ads when simulated
+    if (isLiveAdSenseActive) return;
+
     // Cycle ads every 15 seconds to simulate real ad refreshing banners
     const interval = setInterval(() => {
       setCurrentAdIndex((prev) => (prev + 1) % SIMULATED_ADS.length);
     }, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isLiveAdSenseActive]);
+
+  useEffect(() => {
+    if (isLiveAdSenseActive) {
+      // 1. Check & Inject AdSense global client script in <head> if not already present
+      const scriptId = 'adsense-global-script';
+      let script = document.getElementById(scriptId) as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`;
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        document.head.appendChild(script);
+      }
+
+      // 2. Trigger the adsbygoogle push event for this ad slot
+      try {
+        const adsbygoogle = (window as any).adsbygoogle || [];
+        adsbygoogle.push({});
+      } catch (e) {
+        console.log("AdSense unit initialization queued (will execute once the global script is fully ready).");
+      }
+    }
+  }, [isLiveAdSenseActive, adsenseClientId, adsenseSlotId]);
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -67,7 +101,21 @@ export function AdMobBanner({ adUnitId = 'ca-app-pub-3940256099942544/6300978111
 
   const currentAd = SIMULATED_ADS[currentAdIndex];
 
-  // Integration code templates
+  // AdSense integration code templates
+  const adsenseHtmlTemplate = `<!-- Add this in public/index.html <head> tag -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR-CA-PUB-ID" crossorigin="anonymous"></script>
+
+<!-- Add this inside your component/page container -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="YOUR-CA-PUB-ID"
+     data-ad-slot="YOUR-SLOT-ID"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>`;
+
   const manifestsXml = `<!-- android/app/src/main/AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
@@ -80,29 +128,6 @@ export function AdMobBanner({ adUnitId = 'ca-app-pub-3940256099942544/6300978111
             android:value="ca-app-pub-3940256099942544~3347511713"/>
     </application>
 </manifest>`;
-
-  const kotlinIntegrationCode = `// MainActivity.kt - Android SDK initialization
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.AdSize
-
-class MainActivity : AppCompatActivity() {
-    private lateinit var mAdView: AdView
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main)
-
-        // Initialize Mobile Ads SDK
-        MobileAds.initialize(this) {}
-
-        // Bind and Load standard banner layout
-        mAdView = findViewById(R.id.adView)
-        val adRequest = AdRequest.Builder().build()
-        mAdView.loadAd(adRequest)
-    }
-}`;
 
   const reactNativeCapacitorCode = `// React / React Native integration using capacitor-community/admob
 import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
@@ -129,45 +154,62 @@ export async function showBannerAd() {
       {/* Banner Area */}
       <div className="flex items-center justify-between border-b border-white/5 pb-1.5 mb-1.5 text-[10px] text-gray-500 font-mono">
         <div className="flex items-center gap-1">
-          <span className="px-1.5 py-0.5 bg-white/10 font-bold tracking-wider rounded-inner text-emerald-400 uppercase text-[9px] border border-white/5">GOOGLE ADMOB</span>
-          <span className="text-gray-500 hidden sm:inline">Unit ID: ca-app-pur.../6300978111</span>
+          <span className="px-1.5 py-0.5 bg-white/10 font-bold tracking-wider rounded-inner text-emerald-400 uppercase text-[9px] border border-white/5">
+            {isLiveAdSenseActive ? 'GOOGLE ADSENSE LIVE' : 'AD CONSOLE PLACEHOLDER'}
+          </span>
+          <span className="text-gray-500 hidden sm:inline">
+            {isLiveAdSenseActive ? `Slot: ${adsenseSlotId}` : 'Mocking responsive mobile layout'}
+          </span>
         </div>
         <button 
           onClick={() => setShowIntegrationDocs(!showIntegrationDocs)}
-          className="flex items-center gap-0.5 text-emerald-500 hover:text-emerald-400 transition-colors font-medium font-sans cursor-pointer text-[10px] uppercase tracking-wider"
+          className="flex items-center gap-0.5 text-emerald-500 hover:text-emerald-400 transition-colors font-medium font-sans cursor-pointer text-[10px] uppercase tracking-wider animate-pulse"
         >
           <Info size={11} />
-          {showIntegrationDocs ? 'Hide SDK' : 'View Android SDK Code'}
+          {showIntegrationDocs ? 'Hide Setup' : 'View AdSense & AdMob Guide'}
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] p-2 border border-white/5 rounded-lg relative group min-h-[50px]">
-        {/* Banner Ad Content */}
-        <div className="flex-1 min-w-0 pr-12">
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block px-1 py-0.5 text-[8px] tracking-wider font-extrabold uppercase rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
-              {currentAd.badge}
-            </span>
-            <h4 className="text-xs font-semibold text-gray-200 truncate">{currentAd.title}</h4>
+      {isLiveAdSenseActive ? (
+        /* Real Google AdSense Banner Slot */
+        <div className="bg-black/40 p-1 border border-white/5 rounded-lg flex items-center justify-center min-h-[50px] overflow-hidden">
+          <ins className="adsbygoogle w-full block text-center text-xs text-gray-500"
+               style={{ display: 'block', minWidth: '250px', minHeight: '50px' }}
+               data-ad-client={adsenseClientId}
+               data-ad-slot={adsenseSlotId}
+               data-ad-format="horizontal"
+               data-full-width-responsive="true"></ins>
+        </div>
+      ) : (
+        /* Highly Interactive Mock Ads Slot */
+        <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] p-2 border border-white/5 rounded-lg relative group min-h-[50px]">
+          {/* Banner Ad Content */}
+          <div className="flex-1 min-w-0 pr-12 animate-fade-in">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block px-1 py-0.5 text-[8px] tracking-wider font-extrabold uppercase rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
+                {currentAd.badge}
+              </span>
+              <h4 className="text-xs font-semibold text-gray-200 truncate">{currentAd.title}</h4>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-1 italic">{currentAd.desc}</p>
           </div>
-          <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-1 italic">{currentAd.desc}</p>
-        </div>
 
-        {/* CTA Button */}
-        <div>
-          <button 
-            onClick={() => window.open(currentAd.url, '_blank')}
-            className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-md flex items-center gap-1 border-0 outline-hidden transition-all duration-150 cursor-pointer uppercase tracking-wider"
-          >
-            {currentAd.cta}
-          </button>
-        </div>
+          {/* CTA Button */}
+          <div>
+            <button 
+              onClick={() => window.open(currentAd.url, '_blank')}
+              className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-md flex items-center gap-1 border-0 outline-hidden transition-all duration-150 cursor-pointer uppercase tracking-wider"
+            >
+              {currentAd.cta}
+            </button>
+          </div>
 
-        {/* Floating Google AdMob Symbol */}
-        <div className="absolute right-1.5 top-1 text-[7px] text-gray-600 group-hover:text-emerald-400 pointer-events-none font-bold tracking-wider uppercase transition-colors">
-          Smart Banner
+          {/* Floating Ad Symbol */}
+          <div className="absolute right-1.5 top-1 text-[7px] text-gray-600 group-hover:text-emerald-400 pointer-events-none font-bold tracking-wider uppercase transition-colors">
+            AdSense Preview
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Embedded SDK Panel */}
       {showIntegrationDocs && (
@@ -175,56 +217,40 @@ export async function showBannerAd() {
           <div className="flex items-start gap-2 border-b border-slate-800 pb-2 mb-2">
             <ShieldCheck size={16} className="text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-slate-100">Ready for AdMob Play Store Approval</p>
-              <p className="text-[10px] text-slate-400">Below are the concrete codes included in your bundle setup for compile options:</p>
+              <p className="font-semibold text-slate-100">Ready for Google AdSense & PWA Monetization</p>
+              <p className="text-[10px] text-slate-400">Below are the setup codes and configurations to connect your live AdSense ads:</p>
             </div>
           </div>
 
-          <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mt-1 mb-1 font-mono">1. Platform Setup Guidelines</p>
+          <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mt-1 mb-1 font-mono">1. Easy PWA Setup Guidelines</p>
           <div className="text-[11px] text-slate-300 space-y-1 mb-3">
-            <p>• Make sure to request Google Developer ID access inside Android Console prior to final release.</p>
-            <p>• Replace your AdMob Test Unit ID <code className="bg-slate-800 px-1 rounded text-red-300 select-all font-mono">ca-app-pub-3940256099942544/6300978111</code> with your production unit ID in the components once registered.</p>
+            <p>• Log into your <strong>Google AdSense Console</strong> and get your Publisher ID (e.g. <code className="bg-slate-800 px-1 rounded text-red-300 font-mono">ca-pub-XXXXXXXXXXXXXXXX</code>).</p>
+            <p>• Create two Display Ad Units (Top and Bottom) to get your Ad Slot IDs.</p>
+            <p>• Add these IDs to your environment secrets or `.env` variables to instantly transition from Simulated to Live ads!</p>
           </div>
 
-          {/* Android Manifest Tab */}
           <div className="space-y-3">
+            {/* HTML Setup */}
             <div>
               <div className="flex items-center justify-between text-[10px] text-slate-400 bg-slate-950 px-2 py-1 rounded-t-md font-mono border-b border-slate-800">
-                <span>AndroidManifest.xml Setup</span>
+                <span>Google AdSense HTML & React Setup</span>
                 <button 
-                  onClick={() => handleCopy(manifestsXml, 'manifest')}
+                  onClick={() => handleCopy(adsenseHtmlTemplate, 'adsense')}
                   className="hover:text-white flex items-center gap-1 transition-colors"
                 >
-                  {copied === 'manifest' ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
-                  <span>{copied === 'manifest' ? 'Copied!' : 'Copy'}</span>
+                  {copied === 'adsense' ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+                  <span>{copied === 'adsense' ? 'Copied!' : 'Copy'}</span>
                 </button>
               </div>
-              <pre className="p-2 bg-slate-950 font-mono text-[9px] text-emerald-400 overflow-x-auto rounded-b-md max-h-[120px]">
-                {manifestsXml}
-              </pre>
-            </div>
-
-            {/* Kotlin AdMob Controller */}
-            <div>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 bg-slate-950 px-2 py-1 rounded-t-md font-mono border-b border-slate-800">
-                <span>Native Android Kotlin SDK Loader</span>
-                <button 
-                  onClick={() => handleCopy(kotlinIntegrationCode, 'kotlin')}
-                  className="hover:text-white flex items-center gap-1 transition-colors"
-                >
-                  {copied === 'kotlin' ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
-                  <span>{copied === 'kotlin' ? 'Copied!' : 'Copy'}</span>
-                </button>
-              </div>
-              <pre className="p-2 bg-slate-950 font-mono text-[9px] text-amber-300 overflow-x-auto rounded-b-md max-h-[120px]">
-                {kotlinIntegrationCode}
+              <pre className="p-2 bg-slate-950 font-mono text-[9px] text-emerald-400 overflow-x-auto rounded-b-md max-h-[140px]">
+                {adsenseHtmlTemplate}
               </pre>
             </div>
 
             {/* Hybrid Capacitor Setup */}
             <div>
               <div className="flex items-center justify-between text-[10px] text-slate-400 bg-slate-950 px-2 py-1 rounded-t-md font-mono border-b border-slate-800">
-                <span>Hybrid Web (React/Cordova/Capacitor) Bind</span>
+                <span>Optional Native App Wrap (Capacitor AdMob)</span>
                 <button 
                   onClick={() => handleCopy(reactNativeCapacitorCode, 'hybrid')}
                   className="hover:text-white flex items-center gap-1 transition-colors"
