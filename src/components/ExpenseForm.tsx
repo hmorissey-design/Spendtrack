@@ -250,8 +250,8 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     let resolvedAmountStr = amount;
     const evaluated = evaluateExpression(amount);
@@ -308,15 +308,24 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           <Sparkles size={18} className="text-emerald-500 animate-pulse" />
           {expenseToEdit ? 'Edit Expense Log' : 'Add Expense'}
         </h3>
-        {onClose && (
+        <div className="flex items-center gap-2.5">
           <button 
             type="button" 
-            onClick={onClose}
-            className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs rounded-lg cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-wider"
+            onClick={() => handleSubmit()}
+            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-lg cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-widest shadow-lg shadow-emerald-950/40"
           >
-            Cancel
+            {expenseToEdit ? 'Save' : 'Add'}
           </button>
-        )}
+          {onClose && (
+            <button 
+              type="button" 
+              onClick={onClose}
+              className="px-2.5 py-1 bg-neutral-800/80 hover:bg-red-950/80 hover:text-red-300 hover:border-red-900/50 text-neutral-400 font-bold text-[10px] rounded-md cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-wider border border-white/5"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
 
       {errorCode && (
