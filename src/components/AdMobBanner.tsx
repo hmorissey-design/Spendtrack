@@ -149,67 +149,68 @@ export async function showBannerAd() {
   await AdMob.showBanner(options);
 }`;
 
+  if (isLiveAdSenseActive) {
+    return (
+      <div className={`w-full overflow-hidden flex items-center justify-center min-h-[50px] py-1 ${className}`} id="admob_live_wrapper">
+        <ins className="adsbygoogle w-full block text-center"
+             style={{ display: 'block', minWidth: '250px', minHeight: '50px' }}
+             data-ad-client={adsenseClientId}
+             data-ad-slot={adsenseSlotId}
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+      </div>
+    );
+  }
+
   return (
-    <div className={`w-full overflow-hidden rounded-xl border border-dashed border-white/10 bg-[#111111] p-2 text-white transition-all ${className}`} id="admob_component_wrapper">
+    <div className={`w-full overflow-hidden rounded-xl border border-dashed border-white/10 bg-[#111111] p-1.5 text-white transition-all ${className}`} id="admob_component_wrapper">
       {/* Banner Area */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-1.5 mb-1.5 text-[10px] text-gray-500 font-mono">
+      <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-1 text-[9px] text-gray-500 font-mono">
         <div className="flex items-center gap-1">
-          <span className="px-1.5 py-0.5 bg-white/10 font-bold tracking-wider rounded-inner text-emerald-400 uppercase text-[9px] border border-white/5">
-            {isLiveAdSenseActive ? 'GOOGLE ADSENSE LIVE' : 'AD CONSOLE PLACEHOLDER'}
+          <span className="px-1 py-0.5 bg-white/10 font-bold tracking-wider rounded text-emerald-400 uppercase text-[8px] border border-white/5">
+            AD CONSOLE PLACEHOLDER
           </span>
           <span className="text-gray-500 hidden sm:inline">
-            {isLiveAdSenseActive ? `Slot: ${adsenseSlotId}` : 'Mocking responsive mobile layout'}
+            Mocking mobile layout
           </span>
         </div>
         <button 
           onClick={() => setShowIntegrationDocs(!showIntegrationDocs)}
-          className="flex items-center gap-0.5 text-emerald-500 hover:text-emerald-400 transition-colors font-medium font-sans cursor-pointer text-[10px] uppercase tracking-wider animate-pulse"
+          className="flex items-center gap-0.5 text-emerald-500 hover:text-emerald-400 transition-colors font-medium font-sans cursor-pointer text-[9px] uppercase tracking-wider"
         >
-          <Info size={11} />
+          <Info size={10} />
           {showIntegrationDocs ? 'Hide Setup' : 'View AdSense & AdMob Guide'}
         </button>
       </div>
 
-      {isLiveAdSenseActive ? (
-        /* Real Google AdSense Banner Slot */
-        <div className="bg-black/40 p-1 border border-white/5 rounded-lg flex items-center justify-center min-h-[50px] overflow-hidden">
-          <ins className="adsbygoogle w-full block text-center text-xs text-gray-500"
-               style={{ display: 'block', minWidth: '250px', minHeight: '50px' }}
-               data-ad-client={adsenseClientId}
-               data-ad-slot={adsenseSlotId}
-               data-ad-format="horizontal"
-               data-full-width-responsive="true"></ins>
+      {/* Highly Interactive Mock Ads Slot */}
+      <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] p-2 border border-white/5 rounded-lg relative group min-h-[44px]">
+        {/* Banner Ad Content */}
+        <div className="flex-1 min-w-0 pr-12 animate-fade-in">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block px-1 py-0.5 text-[8px] tracking-wider font-extrabold uppercase rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
+              {currentAd.badge}
+            </span>
+            <h4 className="text-xs font-semibold text-gray-200 truncate">{currentAd.title}</h4>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-1 italic">{currentAd.desc}</p>
         </div>
-      ) : (
-        /* Highly Interactive Mock Ads Slot */
-        <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] p-2 border border-white/5 rounded-lg relative group min-h-[50px]">
-          {/* Banner Ad Content */}
-          <div className="flex-1 min-w-0 pr-12 animate-fade-in">
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block px-1 py-0.5 text-[8px] tracking-wider font-extrabold uppercase rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
-                {currentAd.badge}
-              </span>
-              <h4 className="text-xs font-semibold text-gray-200 truncate">{currentAd.title}</h4>
-            </div>
-            <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-1 italic">{currentAd.desc}</p>
-          </div>
 
-          {/* CTA Button */}
-          <div>
-            <button 
-              onClick={() => window.open(currentAd.url, '_blank')}
-              className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-md flex items-center gap-1 border-0 outline-hidden transition-all duration-150 cursor-pointer uppercase tracking-wider"
-            >
-              {currentAd.cta}
-            </button>
-          </div>
-
-          {/* Floating Ad Symbol */}
-          <div className="absolute right-1.5 top-1 text-[7px] text-gray-600 group-hover:text-emerald-400 pointer-events-none font-bold tracking-wider uppercase transition-colors">
-            AdSense Preview
-          </div>
+        {/* CTA Button */}
+        <div>
+          <button 
+            onClick={() => window.open(currentAd.url, '_blank')}
+            className="px-2 py-0.5 text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded flex items-center gap-1 border-0 outline-hidden transition-all duration-150 cursor-pointer uppercase tracking-wider"
+          >
+            {currentAd.cta}
+          </button>
         </div>
-      )}
+
+        {/* Floating Ad Symbol */}
+        <div className="absolute right-1.5 top-1 text-[7px] text-gray-600 group-hover:text-emerald-400 pointer-events-none font-bold tracking-wider uppercase transition-colors">
+          AdSense Preview
+        </div>
+      </div>
 
       {/* Embedded SDK Panel */}
       {showIntegrationDocs && (
