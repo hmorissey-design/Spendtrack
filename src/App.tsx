@@ -1341,7 +1341,7 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-4 animate-in fade-in duration-200" id="tab_dashboard">
+            <div className="space-y-2.5 animate-in fade-in duration-200" id="tab_dashboard">
               
               {/* Circular Gauge and Budget stats header */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
@@ -1397,61 +1397,78 @@ Date: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              {/* Spacer replacing the removed Log Expense and Insights buttons to preserve visual rhythm */}
-              <div className="h-1"></div>
-
-              {/* Mini Interactive Category Quick bars */}
+              {/* Pie Chart of category allocations directly underneath with tight spacing */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <div className="flex items-center justify-between mb-3.5">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans">Spending to date</h3>
-                  <span className="text-[9px] text-gray-400 font-bold font-mono">Tap bar to view ledger</span>
-                </div>
-
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans mb-3.5">
+                  Spending by Category
+                </h3>
+                
                 {categoryStats.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    <p className="text-xs font-medium">No active transactions logged this month.</p>
-                    <p className="text-[10px] mt-0.5">Click "Log Expense" to start.</p>
+                  <div className="text-center py-6 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
+                    Please log transaction items to model charts.
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {categoryStats.map((stat) => {
-                      const catLimit = stat.limit || 0;
-                      const remaining = catLimit - stat.total;
-                      const share = catLimit > 0 ? Math.round((stat.total / catLimit) * 100) : 100;
-                      return (
+                  <div className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-5 h-[110px] w-full text-[9px] relative flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                        <RePieChart>
+                          <Pie
+                            data={categoryPieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={24}
+                            outerRadius={40}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {categoryPieData.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color} 
+                                className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
+                                onClick={() => {
+                                  setFilterCategory(entry.id);
+                                  setActiveTab('history');
+                                }}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: any) => [`${currencySymbol}${value}`, 'Amount']} />
+                        </RePieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
+                        <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-7 space-y-1.5 shrink-0">
+                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-0.5">Click category to inspect:</span>
+                      {categoryStats.slice(0, 5).map((stat) => (
                         <div 
                           key={stat.id} 
-                          className="space-y-1.5 cursor-pointer hover:bg-white/5 p-2 -m-2 rounded-xl transition-all duration-150 relative group"
+                          className="flex items-center justify-between text-[9.5px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
                           onClick={() => {
                             setFilterCategory(stat.id);
                             setActiveTab('history');
                           }}
                           title={`Click to view all ${stat.label} transactions`}
                         >
-                          <div className="flex items-start justify-between text-xs">
-                            <div className="min-w-0">
-                              <span className="font-semibold text-gray-200 block truncate group-hover:text-emerald-400 transition-colors">{stat.label}</span>
-                              <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(0)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(0)} over limit`}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(0)}</span></span>
-                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-emerald-400 font-sans transition-colors">({share}%) →</span>
-                            </div>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                              backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
+                                              stat.color.includes('emerald') ? '#10b981' :
+                                              stat.color.includes('blue') ? '#3b82f6' :
+                                              stat.color.includes('amber') ? '#f59e0b' :
+                                              stat.color.includes('purple') ? '#8b5cf6' :
+                                              stat.color.includes('slate') ? '#64748b' : '#a855f7'
+                            }} />
+                            <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                           </div>
-                          <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
-                            <div 
-                              className={`h-full rounded-full transition-all group-hover:brightness-110 ${
-                                share >= 100 ? 'bg-rose-500' :
-                                share >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                              }`} 
-                              style={{ width: `${Math.min(share, 100)}%` }} 
-                            />
-                          </div>
+                          <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1892,78 +1909,57 @@ Date: ${new Date().toLocaleString()}
           {/* TAB 3: CHARTS AND ANALYTICS */}
           {activeTab === 'analytics' && (
             <div className="space-y-2 animate-in fade-in duration-200" id="tab_analytics">
-              {/* Pie Chart of category allocations */}
-              <div className="bg-[#111111] rounded-2xl p-3 border border-white/5 shadow-2xs">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-1 font-sans">
-                  Spending by Category
-                </h3>
-                
+              {/* Spending to Date Category progress bars */}
+              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
+                <div className="flex items-center justify-between mb-3.5">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans">Spending to date</h3>
+                  <span className="text-[9px] text-gray-400 font-bold font-mono">Tap bar to view ledger</span>
+                </div>
+
                 {categoryStats.length === 0 ? (
                   <div className="text-center py-6 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
-                    Please log transaction items to model charts.
+                    Please log transaction items to view spending bars.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-5 h-[110px] w-full text-[9px] relative flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                        <RePieChart>
-                          <Pie
-                            data={categoryPieData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={24}
-                            outerRadius={40}
-                            paddingAngle={3}
-                            dataKey="value"
-                          >
-                            {categoryPieData.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
-                                fill={entry.color} 
-                                className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
-                                onClick={() => {
-                                  setFilterCategory(entry.id);
-                                  setActiveTab('history');
-                                }}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: any) => [`${currencySymbol}${value}`, 'Amount']} />
-                        </RePieChart>
-                      </ResponsiveContainer>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
-                        <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
-                      </div>
-                    </div>
-
-                    <div className="col-span-7 space-y-1 shrink-0">
-                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-0.5">Click category to inspect:</span>
-                      {categoryStats.slice(0, 5).map((stat) => (
+                  <div className="space-y-4">
+                    {categoryStats.map((stat) => {
+                      const catLimit = stat.limit || 0;
+                      const remaining = catLimit - stat.total;
+                      const share = catLimit > 0 ? Math.round((stat.total / catLimit) * 100) : 100;
+                      return (
                         <div 
                           key={stat.id} 
-                          className="flex items-center justify-between text-[9px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
+                          className="space-y-1.5 cursor-pointer hover:bg-white/5 p-2 -m-2 rounded-xl transition-all duration-150 relative group"
                           onClick={() => {
                             setFilterCategory(stat.id);
                             setActiveTab('history');
                           }}
                           title={`Click to view all ${stat.label} transactions`}
                         >
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
-                              backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
-                                              stat.color.includes('emerald') ? '#10b981' :
-                                              stat.color.includes('blue') ? '#3b82f6' :
-                                              stat.color.includes('amber') ? '#f59e0b' :
-                                              stat.color.includes('purple') ? '#8b5cf6' :
-                                              stat.color.includes('slate') ? '#64748b' : '#a855f7'
-                            }} />
-                            <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                          <div className="flex items-start justify-between text-xs">
+                            <div className="min-w-0">
+                              <span className="font-semibold text-gray-200 block truncate group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                              <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
+                                {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(0)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(0)} over limit`}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(0)}</span></span>
+                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-emerald-400 font-sans transition-colors">({share}%) →</span>
+                            </div>
                           </div>
-                          <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
+                          <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
+                            <div 
+                              className={`h-full rounded-full transition-all group-hover:brightness-110 ${
+                                share >= 100 ? 'bg-rose-500' :
+                                share >= 85 ? 'bg-amber-500' : 'bg-emerald-500'
+                              }`} 
+                              style={{ width: `${Math.min(share, 100)}%` }} 
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -2091,7 +2087,7 @@ Date: ${new Date().toLocaleString()}
                       <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
                       <li><strong className="text-gray-300">Discretionary Limits:</strong> Compares total spent against any budget you've assigned that category.</li>
                       <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
-                      <li><strong className="text-gray-300">Category Bars:</strong> Displays individual category totals. Click any bar to instantly switch to the History tab to see just the transactions for that category.</li>
+                      <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
                       <li><strong className="text-gray-300">NOTE on Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing easy tracking and reporting of them without impacting your personal spending information.</li>
                     </ul>
                   </div>
@@ -2124,7 +2120,7 @@ Date: ${new Date().toLocaleString()}
                       Visual dashboards analyzing your monthly monetary trends and spend characteristics.
                     </p>
                     <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
+                      <li><strong className="text-gray-300">Category Spending Bars:</strong> Displays individual category totals. Click any bar to instantly switch to the History tab to see just the transactions for that category. Colors change to green (in budget), yellow (over 85%), or red (over-budget).</li>
                       <li><strong className="text-gray-300">Cumulative Spending this Month:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
                       <li><strong className="text-gray-300">Daily Spending:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
                     </ul>
