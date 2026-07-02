@@ -1057,12 +1057,12 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Dynamic AdMob Slot on top of content to represent standard ad-supported Play Store app layouts */}
-        <div className="bg-black/20 p-2.5 shrink-0">
+        <div className="bg-black/20 p-1.5 shrink-0">
           <AdMobBanner isTopAd={true} />
         </div>
 
         {/* Primary Screen Scrollable Frame */}
-        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-3 bg-[#0A0A0A] space-y-3">
+        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-2 bg-[#0A0A0A] space-y-2">
           
           {/* Quick-add floating trigger sheet */}
           {showAddForm && (
@@ -1317,21 +1317,21 @@ Date: ${new Date().toLocaleString()}
 
           {/* Universal Month Switcher Bar */}
           {activeTab !== 'budget_plan' && activeTab !== 'help' && (
-            <div className="bg-[#111111] p-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
+            <div className="bg-[#111111] py-1.5 px-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
               <button
                 onClick={handlePrevMonth}
-                className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
+                className="py-0.5 px-2.5 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-[11px] font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
                 title="Previous Month"
               >
                 ◀ Prev
               </button>
-              <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-[#eeeeee]">
-                <Calendar size={13} className="text-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#eeeeee]">
+                <Calendar size={11} className="text-emerald-500 animate-pulse" />
                 <span>{totals.monthName}</span>
               </div>
               <button
                 onClick={handleNextMonth}
-                className="p-1 px-3 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
+                className="py-0.5 px-2.5 hover:bg-white/5 text-emerald-400 hover:text-emerald-300 rounded-lg text-[11px] font-bold border border-white/5 bg-transparent cursor-pointer active:scale-95 transition-all text-center"
                 title="Next Month"
               >
                 Next ▶
@@ -1345,9 +1345,6 @@ Date: ${new Date().toLocaleString()}
               
               {/* Circular Gauge and Budget stats header */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <h2 className="text-[10px] uppercase font-bold tracking-widest text-gray-400 mb-3 font-mono">
-                  {totals.monthName} Status
-                </h2>
 
                 <div className="grid grid-cols-12 gap-3 items-center">
                   {/* Gauge */}
