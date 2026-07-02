@@ -105,6 +105,17 @@ export default function App() {
   // Initialize states
   const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
+  const [renderCharts, setRenderCharts] = useState(false);
+
+  // Delay rendering charts slightly to let elements mount and establish positive dimensions.
+  // This suppresses Recharts ResponsiveContainer warnings (width/height of -1 or 0)
+  useEffect(() => {
+    setRenderCharts(false);
+    const t = setTimeout(() => {
+      setRenderCharts(true);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [activeTab]);
 
   // Apply accent theme dynamically
   useEffect(() => {
@@ -1410,32 +1421,36 @@ Date: ${new Date().toLocaleString()}
                 ) : (
                   <div className="grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-5 h-[110px] w-full text-[9px] relative flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                        <RePieChart>
-                          <Pie
-                            data={categoryPieData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={24}
-                            outerRadius={40}
-                            paddingAngle={3}
-                            dataKey="value"
-                          >
-                            {categoryPieData.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
-                                fill={entry.color} 
-                                className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
-                                onClick={() => {
-                                  setFilterCategory(entry.id);
-                                  setActiveTab('history');
-                                }}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: any) => [`${currencySymbol}${value}`, 'Amount']} />
-                        </RePieChart>
-                      </ResponsiveContainer>
+                      {renderCharts ? (
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                          <RePieChart>
+                            <Pie
+                              data={categoryPieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={24}
+                              outerRadius={40}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {categoryPieData.map((entry, index) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={entry.color} 
+                                  className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
+                                  onClick={() => {
+                                    setFilterCategory(entry.id);
+                                    setActiveTab('history');
+                                  }}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value: any) => [`${currencySymbol}${value}`, 'Amount']} />
+                          </RePieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-[110px] w-full" />
+                      )}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
                         <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
@@ -1979,20 +1994,24 @@ Date: ${new Date().toLocaleString()}
                   </div>
                 ) : (
                   <div className="h-[140px] w-full text-[9px]">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                      <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
-                        <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
-                        <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
-                        <Tooltip 
-                          contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
-                          formatter={(value: any) => [`${currencySymbol}${value}`, 'Cumulative Spent']}
-                          labelFormatter={(label) => `Day ${label} of month`}
-                        />
-                        <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 7 }} />
-                        <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2} dot={{ r: 0.5 }} activeDot={{ r: 3 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    {renderCharts ? (
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                        <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
+                          <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                          <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                          <Tooltip 
+                            contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
+                            formatter={(value: any) => [`${currencySymbol}${value}`, 'Cumulative Spent']}
+                            labelFormatter={(label) => `Day ${label} of month`}
+                          />
+                          <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 7 }} />
+                          <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2} dot={{ r: 0.5 }} activeDot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-[140px] w-full" />
+                    )}
                   </div>
                 )}
               </div>
@@ -2008,18 +2027,22 @@ Date: ${new Date().toLocaleString()}
                   <div className="text-center py-6 bg-black/40 border border-[#242424] rounded-xl text-gray-500 text-xs">No entries to display.</div>
                 ) : (
                   <div className="h-[100px] w-full text-[9px]">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                      <BarChart data={trendChartData.slice(-14)} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
-                        <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
-                        <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
-                        <Tooltip 
-                          contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
-                          formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
-                        />
-                        <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {renderCharts ? (
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                        <BarChart data={trendChartData.slice(-14)} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
+                          <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                          <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
+                          <Tooltip 
+                            contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
+                            formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
+                          />
+                          <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[2, 2, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-[100px] w-full" />
+                    )}
                   </div>
                 )}
               </div>
