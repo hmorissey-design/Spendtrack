@@ -78,15 +78,39 @@ const getLocalDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
+export function resolveColorHex(colorClass: string): string {
+  const lower = (colorClass || '').toLowerCase();
+  if (lower.includes('emerald')) return '#10b981';
+  if (lower.includes('rose')) return '#f43f5e';
+  if (lower.includes('purple')) return '#8b5cf6';
+  if (lower.includes('amber')) return '#f59e0b';
+  if (lower.includes('blue')) return '#3b82f6';
+  if (lower.includes('slate')) return '#64748b';
+  if (lower.includes('green')) return '#22c55e';
+  if (lower.includes('lime')) return '#84cc16';
+  if (lower.includes('red')) return '#ef4444';
+  if (lower.includes('pink')) return '#ec4899';
+  if (lower.includes('violet')) return '#7c3aed';
+  if (lower.includes('indigo')) return '#6366f1';
+  if (lower.includes('sky')) return '#0ea5e9';
+  if (lower.includes('teal')) return '#0d9488';
+  if (lower.includes('cyan')) return '#06b6d4';
+  if (lower.includes('yellow')) return '#eab308';
+  if (lower.includes('orange')) return '#f97316';
+  if (lower.includes('stone')) return '#78716c';
+  if (lower.includes('zinc')) return '#71717a';
+  return '#a855f7'; // default purple
+}
+
 export default function App() {
-  // Check if opened before
-  const isFirstLaunch = useMemo(() => {
+  // Check if opened before and track if we are in tutorial first-launch mode
+  const [isFirstLaunchMode, setIsFirstLaunchMode] = useState<boolean>(() => {
     try {
       return !localStorage.getItem('expensetrack_first_open');
     } catch (e) {
       return false;
     }
-  }, []);
+  });
 
   // Detect session state to distinguish launching fresh (closed state) vs accidental page refresh
   const isSessionActive = useMemo(() => {
@@ -103,7 +127,14 @@ export default function App() {
   }, []);
 
   // Initialize states
-  const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
+  const [activeTab, setActiveTab ] = useState<ActiveTab>(() => {
+    try {
+      const isFirst = !localStorage.getItem('expensetrack_first_open');
+      return isFirst ? 'help' : 'dashboard';
+    } catch (e) {
+      return 'dashboard';
+    }
+  });
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
 
@@ -312,14 +343,17 @@ Date: ${new Date().toLocaleString()}
   // Run on initial mount and when month changes
   useEffect(() => {
     loadDatabaseState(selectedMonth);
-    try {
-      if (!localStorage.getItem('expensetrack_first_open')) {
-        localStorage.setItem('expensetrack_first_open', 'true');
-      }
-    } catch (e) {
-      console.warn('LocalStorage not available:', e);
-    }
   }, [selectedMonth]);
+
+  // Handle first-launch / tutorial persistence when navigating away from help
+  useEffect(() => {
+    if (activeTab !== 'help' && isFirstLaunchMode) {
+      try {
+        localStorage.setItem('expensetrack_first_open', 'true');
+      } catch (e) {}
+      setIsFirstLaunchMode(false);
+    }
+  }, [activeTab, isFirstLaunchMode]);
 
   // Action Handlers
   const handleDefaultCategoryChange = (id: string) => {
@@ -680,7 +714,12 @@ Date: ${new Date().toLocaleString()}
 
   const handleResetDatabase = () => {
     LocalDb.resetToFreshInstall();
+    try {
+      localStorage.removeItem('expensetrack_first_open');
+    } catch (e) {}
+    setIsFirstLaunchMode(true);
     loadDatabaseState(selectedMonth);
+    setActiveTab('help');
   };
 
   const handleAddCategory = (catData: Omit<Category, 'id'>, isDefault?: boolean) => {
@@ -829,12 +868,7 @@ Date: ${new Date().toLocaleString()}
       id: s.id,
       name: s.label,
       value: Math.round(s.total * 100) / 100,
-      color: s.color.includes('rose') ? '#f43f5e' :
-             s.color.includes('emerald') ? '#10b981' :
-             s.color.includes('blue') ? '#3b82f6' :
-             s.color.includes('amber') ? '#f59e0b' :
-             s.color.includes('purple') ? '#8b5cf6' :
-             s.color.includes('slate') ? '#64748b' : '#a855f7'
+      color: resolveColorHex(s.color)
     }));
   }, [categoryStats]);
 
@@ -1472,12 +1506,7 @@ Date: ${new Date().toLocaleString()}
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
-                                backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
-                                                stat.color.includes('emerald') ? '#10b981' :
-                                                stat.color.includes('blue') ? '#3b82f6' :
-                                                stat.color.includes('amber') ? '#f59e0b' :
-                                                stat.color.includes('purple') ? '#8b5cf6' :
-                                                stat.color.includes('slate') ? '#64748b' : '#a855f7'
+                                backgroundColor: resolveColorHex(stat.color)
                               }} />
                               <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                             </div>
@@ -2079,14 +2108,57 @@ Date: ${new Date().toLocaleString()}
             <div className="space-y-2 animate-in fade-in duration-200" id="tab_help">
               <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3.5">
                 {/* Header */}
-                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                  <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-[#10b981]">
-                    <HelpCircle size={15} />
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-[#10b981]">
+                      <HelpCircle size={15} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
-                  </div>
+                  {isFirstLaunchMode && (
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('expensetrack_first_open', 'true');
+                        } catch (e) {}
+                        setIsFirstLaunchMode(false);
+                        setActiveTab('dashboard');
+                      }}
+                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95 font-sans"
+                    >
+                      Skip to Dashboard
+                    </button>
+                  )}
                 </div>
+
+                {/* First-Time Welcome Interactive Card */}
+                {isFirstLaunchMode && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2 font-sans animate-in zoom-in-95 duration-200">
+                    <p className="text-[11px] text-emerald-400 font-extrabold flex items-center gap-1.5 uppercase tracking-wider">
+                      ✨ First-Launch Welcome Tutorial
+                    </p>
+                    <p className="text-[10px] text-gray-300 leading-normal font-bold">
+                      We've automatically brought you to the Help & Guide to help you get started! 
+                    </p>
+                    <p className="text-[9.5px] text-gray-400 leading-relaxed">
+                      You can review this quick guide to learn about personal vs. business expenses, spreadsheet export, budgeting alerts, and layout controls. Tap below to skip directly to your clean dashboard at any time.
+                    </p>
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('expensetrack_first_open', 'true');
+                        } catch (e) {}
+                        setIsFirstLaunchMode(false);
+                        setActiveTab('dashboard');
+                      }}
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 text-center block shadow-lg shadow-emerald-600/20"
+                    >
+                      Skip & Go to Dashboard
+                    </button>
+                  </div>
+                )}
 
                 {/* Introductory section */}
                 <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
@@ -2245,6 +2317,24 @@ Date: ${new Date().toLocaleString()}
                     </button>
                   </div>
                 </div>
+
+                {/* Bottom Skip Button for tutorial completion */}
+                {isFirstLaunchMode && (
+                  <div className="pt-2 font-sans">
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('expensetrack_first_open', 'true');
+                        } catch (e) {}
+                        setIsFirstLaunchMode(false);
+                        setActiveTab('dashboard');
+                      }}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 text-center block shadow-lg shadow-emerald-600/10"
+                    >
+                      All Set! Skip & Enter Dashboard
+                    </button>
+                  </div>
+                )}
 
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">

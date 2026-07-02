@@ -51,12 +51,35 @@ interface BudgetSettingsProps {
 
 // Preset color themes mapping named choices to background text pairings
 const COLOR_PRESETS = [
+  // Greens
   { label: 'Emerald Spark', value: 'emerald', bgClass: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textClass: 'text-emerald-400', hex: '#10b981' },
+  { label: 'Forest Green', value: 'green', bgClass: 'bg-green-600/10 text-green-400 border border-green-600/20', textClass: 'text-green-400', hex: '#22c55e' },
+  { label: 'Bright Lime', value: 'lime', bgClass: 'bg-lime-500/10 text-lime-400 border border-lime-500/20', textClass: 'text-lime-400', hex: '#84cc16' },
+
+  // Reds / Pinks
   { label: 'Crimson Rose', value: 'rose', bgClass: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textClass: 'text-rose-400', hex: '#f43f5e' },
+  { label: 'Ruby Red', value: 'red', bgClass: 'bg-red-500/10 text-red-400 border border-red-500/20', textClass: 'text-red-400', hex: '#ef4444' },
+  { label: 'Hot Pink', value: 'pink', bgClass: 'bg-pink-500/10 text-pink-400 border border-pink-500/20', textClass: 'text-pink-400', hex: '#ec4899' },
+
+  // Purples / Indigos
   { label: 'Cosmic Purple', value: 'purple', bgClass: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textClass: 'text-purple-400', hex: '#8b5cf6' },
-  { label: 'Amber Glow', value: 'amber', bgClass: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textClass: 'text-amber-400', hex: '#f59e0b' },
+  { label: 'Deep Violet', value: 'violet', bgClass: 'bg-violet-600/10 text-violet-400 border border-violet-600/20', textClass: 'text-violet-400', hex: '#7c3aed' },
+  { label: 'Royal Indigo', value: 'indigo', bgClass: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textClass: 'text-indigo-400', hex: '#6366f1' },
+
+  // Blues / Cyans
   { label: 'Ocean Blue', value: 'blue', bgClass: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', textClass: 'text-blue-400', hex: '#3b82f6' },
+  { label: 'Sky Blue', value: 'sky', bgClass: 'bg-sky-500/10 text-sky-400 border border-sky-500/20', textClass: 'text-sky-400', hex: '#0ea5e9' },
+  { label: 'Ocean Teal', value: 'teal', bgClass: 'bg-teal-500/10 text-teal-400 border border-teal-500/20', textClass: 'text-teal-400', hex: '#0d9488' },
+
+  // Yellows / Oranges
+  { label: 'Amber Glow', value: 'amber', bgClass: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textClass: 'text-amber-400', hex: '#f59e0b' },
+  { label: 'Gold Yellow', value: 'yellow', bgClass: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20', textClass: 'text-yellow-400', hex: '#eab308' },
+  { label: 'Sunset Orange', value: 'orange', bgClass: 'bg-orange-500/10 text-orange-400 border border-orange-500/20', textClass: 'text-orange-400', hex: '#f97316' },
+
+  // Grays / Earthy
   { label: 'Carbon Gray', value: 'slate', bgClass: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textClass: 'text-slate-400', hex: '#64748b' },
+  { label: 'Earthy Stone', value: 'stone', bgClass: 'bg-stone-500/10 text-stone-300 border border-stone-500/20', textClass: 'text-stone-400', hex: '#78716c' },
+  { label: 'Cool Zinc', value: 'zinc', bgClass: 'bg-zinc-500/10 text-zinc-300 border border-zinc-500/20', textClass: 'text-zinc-400', hex: '#71717a' },
 ];
 
 const ICON_PRESETS = [
@@ -652,20 +675,20 @@ export function BudgetSettings({
               {/* Color preset grid selector */}
               <div>
                 <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans">Preset Theme Color</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 max-h-[140px] overflow-y-auto pr-1 scrollbar-thin">
                   {COLOR_PRESETS.map(preset => (
                     <button
                       key={preset.value}
                       type="button"
                       onClick={() => setFormColor(preset.value)}
-                      className={`py-2 px-3 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
                         formColor === preset.value
                           ? 'bg-white/15 text-white border-white/40 ring-1 ring-white/10'
                           : 'bg-black/30 text-slate-300 border-white/5 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: preset.hex }} />
-                      <span>{preset.value.toUpperCase()}</span>
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: preset.hex }} />
+                      <span className="truncate">{preset.value.toUpperCase()}</span>
                     </button>
                   ))}
                 </div>
