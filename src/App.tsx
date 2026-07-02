@@ -1457,32 +1457,34 @@ Date: ${new Date().toLocaleString()}
                       </div>
                     </div>
 
-                    <div className="col-span-7 space-y-1.5 shrink-0">
-                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-0.5">Click category to inspect:</span>
-                      {categoryStats.slice(0, 5).map((stat) => (
-                        <div 
-                          key={stat.id} 
-                          className="flex items-center justify-between text-[9.5px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
-                          onClick={() => {
-                            setFilterCategory(stat.id);
-                            setActiveTab('history');
-                          }}
-                          title={`Click to view all ${stat.label} transactions`}
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
-                              backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
-                                              stat.color.includes('emerald') ? '#10b981' :
-                                              stat.color.includes('blue') ? '#3b82f6' :
-                                              stat.color.includes('amber') ? '#f59e0b' :
-                                              stat.color.includes('purple') ? '#8b5cf6' :
-                                              stat.color.includes('slate') ? '#64748b' : '#a855f7'
-                            }} />
-                            <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                    <div className="col-span-7 flex flex-col h-[110px]">
+                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-1 shrink-0">Click category to inspect:</span>
+                      <div className="space-y-1 overflow-y-auto pr-1 flex-1 scrollbar-thin">
+                        {categoryStats.map((stat) => (
+                          <div 
+                            key={stat.id} 
+                            className="flex items-center justify-between text-[9.5px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 rounded-md transition-all duration-150 group"
+                            onClick={() => {
+                              setFilterCategory(stat.id);
+                              setActiveTab('history');
+                            }}
+                            title={`Click to view all ${stat.label} transactions`}
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                                backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
+                                                stat.color.includes('emerald') ? '#10b981' :
+                                                stat.color.includes('blue') ? '#3b82f6' :
+                                                stat.color.includes('amber') ? '#f59e0b' :
+                                                stat.color.includes('purple') ? '#8b5cf6' :
+                                                stat.color.includes('slate') ? '#64748b' : '#a855f7'
+                              }} />
+                              <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                            </div>
+                            <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
                           </div>
-                          <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2006,7 +2008,7 @@ Date: ${new Date().toLocaleString()}
                             labelFormatter={(label) => `Day ${label} of month`}
                           />
                           <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 7 }} />
-                          <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2} dot={{ r: 0.5 }} activeDot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="cumulativeSpend" stroke={totals.totalSpent > totals.limit ? "#ef4444" : "#10b981"} strokeWidth={2} dot={{ r: 0.5 }} activeDot={{ r: 3 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (
