@@ -241,7 +241,11 @@ export function BudgetSettings({
     setFormName('');
     setFormLimit('0');
     setFormIcon('Sparkles');
-    setFormColor('emerald');
+    
+    // Auto-assign a color preset based on the current number of categories so they vary automatically!
+    const assignedPreset = COLOR_PRESETS[categories.length % COLOR_PRESETS.length];
+    setFormColor(assignedPreset.value);
+    
     setFormIsDefault(false);
     setErrorMsg(null);
   };

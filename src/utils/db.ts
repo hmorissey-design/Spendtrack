@@ -22,12 +22,12 @@ const STORAGE_KEYS = {
 };
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cat_uncategorized', name: 'Uncategorized', icon: 'Tag', color: 'bg-slate-100/15 text-slate-400 border border-slate-500/10', textColor: 'text-slate-400', isDefault: true, limit: 0 },
-  { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-100 text-emerald-800', textColor: 'text-emerald-600', isDefault: true, limit: 0 },
-  { id: 'cat_bars', name: 'Bars', icon: 'Beer', color: 'bg-amber-100 text-amber-900', textColor: 'text-amber-700', isDefault: true, limit: 0 },
-  { id: 'cat_restaurants', name: 'Restaurants', icon: 'Utensils', color: 'bg-rose-100 text-rose-800', textColor: 'text-rose-600', isDefault: true, limit: 0 },
-  { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-100 text-purple-800', textColor: 'text-purple-600', isDefault: true, limit: 0 },
-  { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-100 text-indigo-800', textColor: 'text-indigo-600', isDefault: true, limit: 0 },
+  { id: 'cat_uncategorized', name: 'Uncategorized', icon: 'Tag', color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400', isDefault: true, limit: 0 },
+  { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400', isDefault: true, limit: 0 },
+  { id: 'cat_bars', name: 'Bars', icon: 'Beer', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400', isDefault: true, limit: 0 },
+  { id: 'cat_restaurants', name: 'Restaurants', icon: 'Utensils', color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textColor: 'text-rose-400', isDefault: true, limit: 0 },
+  { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400', isDefault: true, limit: 0 },
+  { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 
 export const INITIAL_BUDGET = 1000; // $1,000 starting layout (user customizable)
@@ -116,7 +116,7 @@ export const LocalDb = {
         id: 'cat_uncategorized',
         name: 'Uncategorized',
         icon: 'Tag',
-        color: 'bg-slate-100/15 text-slate-400 border border-slate-500/10',
+        color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20',
         textColor: 'text-slate-400',
         isDefault: true,
         limit: 0
@@ -131,8 +131,8 @@ export const LocalDb = {
         id: 'cat_business_expense',
         name: 'Business Expense',
         icon: 'Briefcase',
-        color: 'bg-indigo-100 text-indigo-800',
-        textColor: 'text-indigo-600',
+        color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
+        textColor: 'text-indigo-400',
         isDefault: true,
         limit: 0
       };
@@ -141,15 +141,30 @@ export const LocalDb = {
     }
     
     const migrated = parsed.map(cat => {
+      let updated = { ...cat };
       if (cat.limit === undefined || cat.limit === null) {
         modified = true;
         const matchingDefault = DEFAULT_CATEGORIES.find(d => d.id === cat.id);
-        return {
-          ...cat,
-          limit: matchingDefault?.limit !== undefined ? matchingDefault.limit : 0
-        };
+        updated.limit = matchingDefault?.limit !== undefined ? matchingDefault.limit : 0;
       }
-      return cat;
+
+      // Auto-migrate legacy light theme default colors to premium translucent dark theme ones
+      const legacyColorMap: Record<string, { color: string; textColor: string }> = {
+        'bg-slate-100/15 text-slate-400 border border-slate-500/10': { color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400' },
+        'bg-emerald-100 text-emerald-800': { color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400' },
+        'bg-amber-100 text-amber-900': { color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400' },
+        'bg-rose-100 text-rose-800': { color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textColor: 'text-rose-400' },
+        'bg-purple-100 text-purple-800': { color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400' },
+        'bg-indigo-100 text-indigo-800': { color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400' },
+      };
+
+      if (legacyColorMap[cat.color]) {
+        modified = true;
+        updated.color = legacyColorMap[cat.color].color;
+        updated.textColor = legacyColorMap[cat.color].textColor;
+      }
+
+      return updated;
     });
     if (modified) {
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(migrated));

@@ -996,7 +996,7 @@ Date: ${new Date().toLocaleString()}
                     }`}
                   >
                     <PieChart size={14} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-                    <span>Trends & Analytics</span>
+                    <span>Trends & Insights</span>
                   </button>
 
                   {/* Settings link */}
@@ -1397,24 +1397,8 @@ Date: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              {/* High-quality Quick Add Trigger and Quick Insights */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="p-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-center shadow-xs cursor-pointer flex flex-col items-center justify-center gap-1 border-0 transition-all font-sans"
-                >
-                  <Plus size={20} className="stroke-[3]" />
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest">Log Expense</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className="p-3 bg-[#111111] hover:bg-[#1a1a1a] border border-white/5 text-emerald-400 rounded-xl text-center shadow-2xs cursor-pointer flex flex-col items-center justify-center gap-1 transition-all font-sans"
-                >
-                  <TrendingUp size={20} className="text-emerald-500 shrink-0" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#eeeeee]">View Insights</span>
-                </button>
-              </div>
+              {/* Spacer replacing the removed Log Expense and Insights buttons to preserve visual rhythm */}
+              <div className="h-1"></div>
 
               {/* Mini Interactive Category Quick bars */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
@@ -2097,6 +2081,9 @@ Date: ${new Date().toLocaleString()}
                       <LayoutDashboard size={11} className="shrink-0" />
                       1. Dashboard
                     </p>
+                    <p className="text-[9.5px] text-gray-400 leading-normal font-bold">
+                      Note: You can add new expenses anytime by tapping the prominent "+" button located at the bottom center of the navigation bar.
+                    </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal">
                       Your Main page for tracking budgets, how fast your're spending, and taking quick actions.
                     </p>
@@ -2131,7 +2118,7 @@ Date: ${new Date().toLocaleString()}
                   <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
                     <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
                       <PieChart size={11} className="shrink-0" />
-                      3. Analytics
+                      3. Insights
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal">
                       Visual dashboards analyzing your monthly monetary trends and spend characteristics.
@@ -2301,7 +2288,7 @@ Date: ${new Date().toLocaleString()}
             }`}
           >
             <PieChart size={18} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[10px] mt-1 font-sans">Analytics</span>
+            <span className="text-[10px] mt-1 font-sans">Insights</span>
           </button>
 
           {/* Nav Item: Local SQLite/Budget settings */}
