@@ -431,15 +431,15 @@ export function BudgetSettings({
   };
 
   return (
-    <div className="space-y-5 p-1" id="budget_settings_ui">
+    <div className="space-y-2 p-0.5" id="budget_settings_ui">
       {/* Category Limits Planner */}
-      <div className="bg-[#111111] rounded-xl p-4 border border-white/5 shadow-2xs text-white animate-in fade-in duration-200">
+      <div className="bg-[#111111] rounded-xl p-3 border border-white/5 shadow-2xs text-white animate-in fade-in duration-200">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setShowCategoryManager(true)}
-              className="w-full py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              className="w-full py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
             >
               <Sparkles size={12} className="animate-pulse shrink-0" /> Add/Edit Categories or Budgets
             </button>
@@ -726,13 +726,13 @@ export function BudgetSettings({
       )}
 
       {/* Dynamic Visual Accent Theme Swapper Card */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setShowThemeManager(true)}
-              className="w-full py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              className="w-full py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
             >
               <Sparkles size={12} className="text-emerald-500 animate-pulse shrink-0" /> Change Colour Theme
             </button>
@@ -814,13 +814,13 @@ export function BudgetSettings({
       )}
 
       {/* Currency Customization Preference Card */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setShowCurrencyManager(true)}
-              className="w-full py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              className="w-full py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
             >
               <Sparkles size={12} className="text-emerald-500 animate-pulse shrink-0" /> Change Currency Symbol
             </button>
@@ -894,24 +894,24 @@ export function BudgetSettings({
 
 
       {/* Localized Architecture Notice */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
-        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5 font-sans text-center">
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
+        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest mb-1.5 flex items-center justify-center gap-1.5 font-sans text-center">
           <Shield size={14} className="text-emerald-500 shrink-0" /> Backup or Restore from Your Device
         </h3>
-        <p className="text-[11px] text-slate-300 leading-normal text-center">
+        <p className="text-[10.5px] text-slate-300 leading-normal text-center">
           All records remain privately saved on your device only
         </p>
-        <div className="mt-3.5 pt-3.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
+        <div className="mt-2.5 pt-2.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
           <button
             onClick={handleExport}
-            className="py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+            className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
           >
             <Download size={12} className="text-emerald-500 shrink-0" /> Backup to Device
           </button>
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="py-2.5 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+            className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
           >
             <Upload size={12} className="text-emerald-500 shrink-0" /> Restore from Device
           </button>
@@ -958,7 +958,7 @@ export function BudgetSettings({
 
 
       {/* Database Purge Options */}
-      <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-4">
+      <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
         <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
           <AlertTriangle size={15} /> DANGER ! CAUTION
         </h4>
@@ -966,7 +966,7 @@ export function BudgetSettings({
           Delete ALL records. This will remove all records and set app to a new start.
         </p>
 
-        <div className="mt-3.5">
+        <div className="mt-2.5">
           {!confirmReset ? (
             <button
               onClick={() => setConfirmReset(true)}

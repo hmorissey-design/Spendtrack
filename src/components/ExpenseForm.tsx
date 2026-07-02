@@ -302,17 +302,17 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
   const orderedCategories = getOrderedCategories();
 
   return (
-    <div className="relative bg-[#111111] text-white rounded-t-2xl md:rounded-2xl p-5 border border-white/5 shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto" id="expense_entry_sheet">
-      <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+    <div className="relative bg-[#111111] text-white rounded-t-2xl md:rounded-2xl py-3 px-4 border border-white/5 shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto" id="expense_entry_sheet">
+      <div className="flex items-center justify-between border-b border-white/5 pb-2.5 mb-2.5">
         <h3 className="text-base font-bold text-white flex items-center gap-1.5 uppercase tracking-wider font-sans">
-          <Sparkles size={18} className="text-emerald-500 animate-pulse" />
+          <Sparkles size={16} className="text-emerald-500 animate-pulse" />
           {expenseToEdit ? 'Edit Expense Log' : 'Add Expense'}
         </h3>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button 
             type="button" 
             onClick={() => handleSubmit()}
-            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-lg cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-widest shadow-lg shadow-emerald-950/40"
+            className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-lg cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-widest shadow-lg shadow-emerald-950/40"
           >
             {expenseToEdit ? 'Save' : 'Add'}
           </button>
@@ -320,7 +320,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             <button 
               type="button" 
               onClick={onClose}
-              className="px-2.5 py-1 bg-neutral-800/80 hover:bg-red-950/80 hover:text-red-300 hover:border-red-900/50 text-neutral-400 font-bold text-[10px] rounded-md cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-wider border border-white/5"
+              className="px-2 py-1 bg-neutral-800/80 hover:bg-red-950/80 hover:text-red-300 hover:border-red-900/50 text-neutral-400 font-bold text-[10px] rounded-md cursor-pointer active:scale-95 transition-all outline-hidden font-sans uppercase tracking-wider border border-white/5"
             >
               Cancel
             </button>
@@ -329,18 +329,18 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       </div>
 
       {errorCode && (
-        <div className="mb-4 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg flex items-start gap-1.5 font-sans">
+        <div className="mb-2.5 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg flex items-start gap-1.5 font-sans">
           <span>⚠️ {errorCode}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Amount Entry - BIGGER AND MORE NOTICEABLE */}
         <div>
-          <div className="relative rounded-2xl bg-black/45 border border-white/5 p-4 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/50 focus-within:bg-black/80 transition-all flex flex-col items-center justify-center">
-            <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1.5 font-sans">AMOUNT</span>
+          <div className="relative rounded-2xl bg-black/45 border border-white/5 py-2.5 px-3.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/50 focus-within:bg-black/80 transition-all flex flex-col items-center justify-center">
+            <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1 font-sans">AMOUNT</span>
             <div className="flex items-center justify-center w-full min-w-0">
-              <span className="text-4xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
+              <span className="text-3xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -348,7 +348,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 onBlur={handleAmountBlur}
-                className="w-full max-w-[220px] bg-transparent border-0 text-3xl font-extrabold text-emerald-400 focus:text-white text-center font-mono outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
+                className="w-full max-w-[220px] bg-transparent border-0 text-2xl font-extrabold text-emerald-400 focus:text-white text-center font-mono outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
                 required
                 ref={amountInputRef}
               />
@@ -375,7 +375,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             })()}
 
             {/* Operator shortcuts for fast mobile entry */}
-            <div className="flex items-center justify-center gap-1.5 mt-3.5 select-none w-full border-t border-white/5 pt-3.5">
+            <div className="flex items-center justify-center gap-1.5 mt-2.5 select-none w-full border-t border-white/5 pt-2.5">
               {['+', '-', '*', '/'].map((op) => (
                 <button
                   key={op}
@@ -389,7 +389,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                     }
                     amountInputRef.current?.focus();
                   }}
-                  className="w-10 h-8 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300 font-mono font-black flex items-center justify-center hover:bg-white/10 hover:text-white cursor-pointer select-none active:scale-95 transition-all"
+                  className="w-10 h-7 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300 font-mono font-black flex items-center justify-center hover:bg-white/10 hover:text-white cursor-pointer select-none active:scale-95 transition-all"
                 >
                   {op}
                 </button>
@@ -400,7 +400,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                   setAmount('');
                   amountInputRef.current?.focus();
                 }}
-                className="px-2.5 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-400 font-bold tracking-wider uppercase flex items-center justify-center hover:bg-rose-500/20 cursor-pointer select-none active:scale-95 transition-all"
+                className="px-2.5 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-400 font-bold tracking-wider uppercase flex items-center justify-center hover:bg-rose-500/20 cursor-pointer select-none active:scale-95 transition-all"
               >
                 Clear
               </button>
@@ -410,7 +410,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
 
         {/* Category Picker with Interactive Reordering */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-1">
             <div>
               <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest font-sans">BUDGET CATEGORY</label>
               <span className="text-[8px] text-slate-350 block font-sans lowercase tracking-wide">
@@ -430,7 +430,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-4 gap-1.5 max-h-[240px] overflow-y-auto pr-1">
             {orderedCategories.map((cat) => (
               <div
                 key={cat.id}
@@ -440,13 +440,13 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                 onDragLeave={(e) => handleDragLeave(e, cat.id)}
                 onDrop={(e) => handleDrop(e, cat.id)}
                 onDragEnd={handleDragEnd}
-                className={`p-2 flex flex-col items-center justify-center rounded-xl border text-center transition-all relative cursor-grab active:cursor-grabbing select-none ${
+                className={`py-1.5 px-2 flex flex-col items-center justify-center rounded-xl border text-center transition-all relative cursor-grab active:cursor-grabbing select-none ${
                   draggedCatId === cat.id
                     ? 'opacity-40 scale-95 border-dashed border-emerald-500/40 bg-black/10'
                     : dragOverCatId === cat.id
-                      ? 'border-emerald-400 bg-emerald-500/15 scale-105 shadow-md shadow-emerald-500/10 ring-2 ring-emerald-500/20'
+                      ? 'border-emerald-400 bg-emerald-500/15 scale-105 shadow-md shadow-emerald-500/10 ring-2 ring-emerald-550/20'
                       : isReordering
-                        ? 'border-dashed border-emerald-550/40 bg-black/40 hover:border-emerald-500/60'
+                        ? 'border-dashed border-emerald-500/40 bg-black/40 hover:border-emerald-500/60'
                         : selectedCategory === cat.id
                           ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 shadow-xs font-bold ring-1 ring-emerald-500/10'
                           : 'border-white/5 hover:border-white/10 text-slate-300 bg-black/20 hover:bg-black/35'
@@ -478,9 +478,9 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
 
         {/* Note / Memo */}
         <div>
-          <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1.5">DESCRIPTION</label>
+          <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1">DESCRIPTION</label>
           <div className="relative">
-            <span className="absolute left-3 top-3.5 text-slate-300">
+            <span className="absolute left-3 top-2.5 text-slate-300">
                <MessageSquare size={14} />
             </span>
             <input
@@ -489,13 +489,13 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
               value={note}
               onChange={(e) => setNote(e.target.value)}
               ref={noteInputRef}
-              className="w-full pl-8.5 pr-4 py-2.5 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden transition-all"
+              className="w-full pl-8.5 pr-4 py-2 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden transition-all"
             />
           </div>
         </div>
 
         {/* Two-Column Date & Payment Method */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <div className="relative" ref={calendarRef}>
             <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1">DATE</label>
             <div className="relative">

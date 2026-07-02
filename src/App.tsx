@@ -1476,9 +1476,9 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 2: TRANSACTIONS HISTORY VIEW */}
           {activeTab === 'history' && (
-            <div className="space-y-4 animate-in fade-in duration-200" id="tab_history">
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <div className="flex items-center justify-between mb-3">
+            <div className="space-y-2 animate-in fade-in duration-200" id="tab_history">
+              <div className="bg-[#111111] rounded-2xl p-3 border border-white/5 shadow-2xs">
+                <div className="flex items-center justify-between mb-2">
                   <h2 className="text-xs font-bold text-white uppercase tracking-widest">Expenses Entered</h2>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -1503,23 +1503,23 @@ Date: ${new Date().toLocaleString()}
                 </div>
 
                 {/* Filter Actions */}
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1.5 mb-2.5">
                   {/* Search text */}
                   <div className="relative">
-                    <span className="absolute left-2.5 top-2.5 text-gray-500">
-                      <Search size={14} />
+                    <span className="absolute left-2.5 top-2 text-gray-500">
+                      <Search size={13} />
                     </span>
                     <input
                       type="text"
                       placeholder="Search transactions or notes..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-8 py-1.5 text-xs bg-black/40 border border-white/10 text-white focus:border-emerald-500 focus:bg-[#0A0A0A] rounded-lg outline-hidden"
+                      className="w-full pl-8 pr-8 py-1 text-xs bg-black/40 border border-white/10 text-white focus:border-emerald-500 focus:bg-[#0A0A0A] rounded-lg outline-hidden"
                     />
                     {searchQuery && (
                       <button 
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-2.5 top-2 py-0.5 text-gray-500 hover:text-white text-xs cursor-pointer"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1.5 py-0.5 text-gray-500 hover:text-white text-xs cursor-pointer"
                       >
                         <X size={12} />
                       </button>
@@ -1529,11 +1529,11 @@ Date: ${new Date().toLocaleString()}
                   {/* Dropdown Filters row */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-1">Tag Category</label>
+                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-0.5">Tag Category</label>
                       <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        className="w-full p-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300"
+                        className="w-full py-1 px-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300"
                       >
                         <option value="all">📁 All Categories</option>
                         {categories.map(c => (
@@ -1543,11 +1543,11 @@ Date: ${new Date().toLocaleString()}
                     </div>
 
                     <div>
-                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-1">Payment Channel</label>
+                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-0.5">Payment Channel</label>
                       <select
                         value={filterPayment}
                         onChange={(e) => setFilterPayment(e.target.value)}
-                        className="w-full p-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300"
+                        className="w-full py-1 px-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300"
                       >
                         <option value="all" className="bg-[#111111]">💳 All Methods</option>
                         <option value="card" className="bg-[#111111]">Card Payment</option>
@@ -1559,7 +1559,7 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   {/* Date Range filters */}
-                  <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
                     <div className="relative">
                       <div className="flex items-center justify-between mb-0.5">
                         <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider">Start Date</label>
@@ -1582,7 +1582,7 @@ Date: ${new Date().toLocaleString()}
                             setShowStartDateCalendar(!showStartDateCalendar);
                             setShowEndDateCalendar(false);
                           }}
-                          className="w-full pl-2 pr-7 py-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-[#10b981] select-none block font-mono cursor-pointer"
+                          className="w-full pl-2 pr-7 py-1 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-[#10b981] select-none block font-mono cursor-pointer"
                           placeholder="Select Start Date"
                         />
                         <button
@@ -1591,7 +1591,7 @@ Date: ${new Date().toLocaleString()}
                             setShowStartDateCalendar(!showStartDateCalendar);
                             setShowEndDateCalendar(false);
                           }}
-                          className="absolute right-2 top-1.5 text-gray-400 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
+                          className="absolute right-2 top-1 text-gray-400 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
                           title="Open Start Date Calendar"
                         >
                           <Calendar size={12} className={showStartDateCalendar ? "text-emerald-400 scale-110 transition-all" : "transition-all"} />
@@ -1721,7 +1721,7 @@ Date: ${new Date().toLocaleString()}
                             setShowEndDateCalendar(!showEndDateCalendar);
                             setShowStartDateCalendar(false);
                           }}
-                          className="w-full pl-2 pr-7 py-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-[#10b981] select-none block font-mono cursor-pointer"
+                          className="w-full pl-2 pr-7 py-1 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-[#10b981] select-none block font-mono cursor-pointer"
                           placeholder="Select End Date"
                         />
                         <button
@@ -1730,7 +1730,7 @@ Date: ${new Date().toLocaleString()}
                             setShowEndDateCalendar(!showEndDateCalendar);
                             setShowStartDateCalendar(false);
                           }}
-                          className="absolute right-2 top-1.5 text-gray-400 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
+                          className="absolute right-2 top-1 text-gray-400 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
                           title="Open End Date Calendar"
                         >
                           <Calendar size={12} className={showEndDateCalendar ? "text-emerald-400 scale-110 transition-all" : "transition-all"} />
@@ -1852,13 +1852,13 @@ Date: ${new Date().toLocaleString()}
                       const cat = categories.find(c => c.id === exp.category);
                       const isBusiness = exp.category === 'cat_business_expense';
                       return (
-                        <div key={exp.id} className="py-3 flex items-center justify-between group">
+                        <div key={exp.id} className="py-1.5 flex items-center justify-between group">
                           <div className="flex items-center gap-2 min-w-0">
                             {/* Category Icon with Custom Colors */}
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
                               cat?.color ? cat.color : 'bg-slate-100/15 text-slate-400 border border-slate-500/10'
                             }`}>
-                              {renderCategoryIcon(cat?.icon || 'Tag', 14)}
+                              {renderCategoryIcon(cat?.icon || 'Tag', 12)}
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate leading-tight flex items-center gap-1.5 flex-wrap">
@@ -1907,28 +1907,28 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 3: CHARTS AND ANALYTICS */}
           {activeTab === 'analytics' && (
-            <div className="space-y-4 animate-in fade-in duration-200" id="tab_analytics">
+            <div className="space-y-2 animate-in fade-in duration-200" id="tab_analytics">
               {/* Pie Chart of category allocations */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-1.5 font-sans">
+              <div className="bg-[#111111] rounded-2xl p-3 border border-white/5 shadow-2xs">
+                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-1 font-sans">
                   Spending by Category
                 </h3>
                 
                 {categoryStats.length === 0 ? (
-                  <div className="text-center py-10 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
+                  <div className="text-center py-6 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
                     Please log transaction items to model charts.
                   </div>
                 ) : (
                   <div className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-5 h-[130px] w-full text-[9px] relative flex items-center justify-center">
+                    <div className="col-span-5 h-[110px] w-full text-[9px] relative flex items-center justify-center">
                       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <RePieChart>
                           <Pie
                             data={categoryPieData}
                             cx="50%"
                             cy="50%"
-                            innerRadius={28}
-                            outerRadius={45}
+                            innerRadius={24}
+                            outerRadius={40}
                             paddingAngle={3}
                             dataKey="value"
                           >
@@ -1948,25 +1948,25 @@ Date: ${new Date().toLocaleString()}
                         </RePieChart>
                       </ResponsiveContainer>
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[11px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
-                        <span className="text-[7px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
+                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
+                        <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
                       </div>
                     </div>
 
-                    <div className="col-span-7 space-y-1.5 shrink-0">
-                      <span className="text-[8px] text-gray-400 font-bold tracking-wider uppercase block mb-1">Click category to inspect:</span>
+                    <div className="col-span-7 space-y-1 shrink-0">
+                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-0.5">Click category to inspect:</span>
                       {categoryStats.slice(0, 5).map((stat) => (
                         <div 
                           key={stat.id} 
-                          className="flex items-center justify-between text-[10px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
+                          className="flex items-center justify-between text-[9px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 -mx-1.5 rounded-md transition-all duration-150 group"
                           onClick={() => {
                             setFilterCategory(stat.id);
                             setActiveTab('history');
                           }}
                           title={`Click to view all ${stat.label} transactions`}
                         >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
                               backgroundColor: stat.color.includes('rose') ? '#f43f5e' :
                                               stat.color.includes('emerald') ? '#10b981' :
                                               stat.color.includes('blue') ? '#3b82f6' :
@@ -1985,32 +1985,32 @@ Date: ${new Date().toLocaleString()}
               </div>
 
               {/* Line Chart showing progression pacing against limit */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-1.5 font-sans">
+              <div className="bg-[#111111] rounded-2xl p-3 border border-white/5 shadow-2xs">
+                <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-0.5 font-sans">
                   Cumulative Spending this Month
                 </h2>
-                <p className="text-[10px] text-gray-450 mb-3 leading-tight">
-                  Visual trend comparing cumulative discretionary spending (solid line) against total limits (horizontal marker).
+                <p className="text-[9px] text-gray-450 mb-1.5 leading-tight">
+                  Discretionary spending (solid line) against total limits (horizontal marker).
                 </p>
 
                 {trendChartData.length === 0 || totals.totalSpent === 0 ? (
-                  <div className="text-center py-10 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
+                  <div className="text-center py-6 bg-black/40 border border-white/5 rounded-xl text-gray-500 text-xs">
                     No data logged for the line charts. Log expenses to generate lines.
                   </div>
                 ) : (
-                  <div className="h-[180px] w-full text-[10px]">
+                  <div className="h-[140px] w-full text-[9px]">
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
                         <XAxis dataKey="day" stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
                         <YAxis stroke="#9ca3af" tickLine={false} tick={{ fill: '#f3f4f6', fontWeight: 500 }} />
                         <Tooltip 
-                          contentStyle={{ fontSize: '10px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
+                          contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                           formatter={(value: any) => [`${currencySymbol}${value}`, 'Cumulative Spent']}
                           labelFormatter={(label) => `Day ${label} of month`}
                         />
-                        <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 8 }} />
-                        <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2.5} dot={{ r: 1 }} activeDot={{ r: 4 }} />
+                        <ReferenceLine y={totals.limit} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Limit', position: 'insideTopRight', fill: '#ef4444', fontSize: 7 }} />
+                        <Line type="monotone" dataKey="cumulativeSpend" stroke="var(--accent-500)" strokeWidth={2} dot={{ r: 0.5 }} activeDot={{ r: 3 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -2018,16 +2018,16 @@ Date: ${new Date().toLocaleString()}
               </div>
 
               {/* Bar Chart: Daily Individual Transactions */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-1 font-sans">
+              <div className="bg-[#111111] rounded-2xl p-3 border border-white/5 shadow-2xs">
+                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-0.5 font-sans">
                   Daily Spending
                 </h3>
-                <p className="text-[9px] text-gray-400 mb-3 font-sans">Individual daily spending amounts.</p>
+                <p className="text-[9px] text-gray-400 mb-1.5 font-sans">Individual daily spending amounts.</p>
 
                 {totals.totalSpent === 0 ? (
-                  <div className="text-center py-10 bg-black/40 border border-[#242424] rounded-xl text-gray-500 text-xs">No entries to display.</div>
+                  <div className="text-center py-6 bg-black/40 border border-[#242424] rounded-xl text-gray-500 text-xs">No entries to display.</div>
                 ) : (
-                  <div className="h-[120px] w-full text-[9px]">
+                  <div className="h-[100px] w-full text-[9px]">
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <BarChart data={trendChartData.slice(-14)} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
@@ -2037,7 +2037,7 @@ Date: ${new Date().toLocaleString()}
                           contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                           formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
                         />
-                        <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -2071,36 +2071,36 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 6: HELP GUIDE */}
           {activeTab === 'help' && (
-            <div className="space-y-4 animate-in fade-in duration-200" id="tab_help">
-              <div className="bg-[#111111] rounded-2xl p-5 border border-white/5 shadow-2xs space-y-5">
+            <div className="space-y-2 animate-in fade-in duration-200" id="tab_help">
+              <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3.5">
                 {/* Header */}
-                <div className="flex items-center gap-2.5 border-b border-white/5 pb-3">
-                  <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-[#10b981]">
-                    <HelpCircle size={18} />
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                  <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-[#10b981]">
+                    <HelpCircle size={15} />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-[#eeeeee] leading-tight text-sm">User Help & Guide</h3>
+                    <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
                   </div>
                 </div>
 
                 {/* Introductory section */}
-                <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
+                <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
                   Welcome to <strong>ExpenseTrack</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
                 </p>
 
                 {/* Screens */}
-                <div className="space-y-4 font-sans">
+                <div className="space-y-2 font-sans">
                   
                   {/* Dashboard Screen Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <LayoutDashboard size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <LayoutDashboard size={11} className="shrink-0" />
                       1. Dashboard
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                    <p className="text-[9.5px] text-gray-400 leading-normal">
                       Your Main page for tracking budgets, how fast your're spending, and taking quick actions.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
                       <li><strong className="text-gray-300">Discretionary Limits:</strong> Compares total spent against any budget you've assigned that category.</li>
                       <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
@@ -2110,15 +2110,15 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   {/* History Screen Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <History size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <History size={11} className="shrink-0" />
                       2. History
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                    <p className="text-[9.5px] text-gray-400 leading-normal">
                       Review, manage, search, and export your entire chronological expense ledger.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Modifying Records:</strong> Tap the <strong>pencil (Edit) icon</strong> to update any transaction, or tap the <strong>trash (Delete) icon</strong> to erase history.</li>
                       <li><strong className="text-gray-300">Multi-Channel Filter Bar:</strong> Search transaction notes instantly. Refine your list by choosing specific categories or payment methods (Cash, Card, Digital Wallet, Other). Payment methods are entirely optional and only there to allow you to track if you wish.</li>
                       <li><strong className="text-gray-300">Custom Date Range Calendars:</strong> By default the transactions shown are in the month that is currently showing on the top. If you want to see a specific date or range of dates you can tap the Start Date or End Date fields to open calendar picker dropdowns. Filter your list between custom days across different months.</li>
@@ -2128,15 +2128,15 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   {/* Analytics Screen Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <PieChart size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <PieChart size={11} className="shrink-0" />
                       3. Analytics
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                    <p className="text-[9.5px] text-gray-400 leading-normal">
                       Visual dashboards analyzing your monthly monetary trends and spend characteristics.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5">
+                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
                       <li><strong className="text-gray-300">Cumulative Spending this Month:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
                       <li><strong className="text-gray-300">Daily Spending:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
@@ -2144,48 +2144,47 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   {/* Settings Screen Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <Sliders size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <Sliders size={11} className="shrink-0" />
                       4. Settings
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                    <p className="text-[9.5px] text-gray-400 leading-normal">
                       Create or Edit categories, budgets and other preferences.
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5 font-sans">
+                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
                       <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
                       <li><strong className="text-gray-300">Change Colour Theme:</strong> Choose your preferred colour.</li>
                       <li><strong className="text-gray-300">Currency Symbols:</strong> Select the currency symbol you wish to use if not the default $ (e.g., $, €, £, ¥, ₹).</li>
                       <li><strong className="text-gray-300">BACKUP and RESTORE to your device</strong></li>
-                      {/* <li><strong className="text-gray-300">GOOGLE DRIVE BACKUP</strong> if you wish to save your data in your own personal Drive.</li> */}
                       <li><strong className="text-gray-300">Reset Data:</strong> Delete all local states to return the database to a fresh, empty install.</li>
                     </ul>
                   </div>
 
                   {/* Add or Edit New Transaction Screen Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <Plus size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <Plus size={11} className="shrink-0" />
                       5. Add or Edit New Transaction Screen
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
+                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
                       When in the Add Edit Transaction Screen you can adjust the order the Category icons are displayed according to your preference. Just Click on the <strong className="text-gray-300">"Arrange Icons"</strong> and proceed to drag and drop the icons into the order you prefer. Click on <strong className="text-gray-300">"Done Arranging"</strong> when you have finished.
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
+                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
                       If you don't choose a category the app will assign the expense to <span className="font-bold underline text-[#eeeeee]">Uncategorized</span>. You can change it later if you wish or, if you are just tracking your overall spending and not specific categories, you can leave it as Uncategorized.
                     </p>
-                    <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
+                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
                       Note that the Description field is optional <strong>EXCEPT for Business Expenses</strong>.
                     </p>
                   </div>
 
                   {/* General Help Section */}
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                    <p className="font-extrabold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1.5">
-                      <HelpCircle size={13} className="shrink-0" />
+                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                      <HelpCircle size={11} className="shrink-0" />
                       6. General Help
                     </p>
-                    <ul className="text-[10px] text-gray-400 list-disc list-inside pl-1 space-y-1.5 font-sans">
+                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
                       <li><strong className="text-gray-300">Menu Navigation:</strong> Move seamlessly between screens using the bottom navigation menu bar.</li>
                     </ul>
                   </div>
@@ -2193,19 +2192,19 @@ Date: ${new Date().toLocaleString()}
                 </div>
 
                 {/* Legal & Privacy Section */}
-                <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 font-sans">
-                  <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center justify-between">
-                    <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald-400" /> Privacy & Data Deletion</span>
+                <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5 font-sans">
+                  <p className="font-extrabold text-[#eeeeee] text-[10px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5"><ShieldCheck size={11} className="text-emerald-400" /> Privacy & Data Deletion</span>
                     <a 
                       href="privacy-policy.html" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[10px] font-medium"
+                      className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[9px] font-medium"
                     >
                       Read Policy ↗
                     </a>
                   </p>
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                  <p className="text-[9.5px] text-gray-400 leading-normal">
                     ExpenseTrack is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
                     All transactions reside <strong>strictly on your device</strong>. 
                     You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
