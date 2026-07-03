@@ -102,13 +102,73 @@ export function resolveColorHex(colorClass: string): string {
   return '#a855f7'; // default purple
 }
 
+// Safe localStorage fallback wrapper for strict incognito / private browser modes
+const safeStorage = (() => {
+  const memoryStorage: Record<string, string> = {};
+  return {
+    getItem(key: string): string | null {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (e) {
+        return memoryStorage[key] || null;
+      }
+    },
+    setItem(key: string, value: string): void {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStorage[key] = value;
+      }
+    },
+    removeItem(key: string): void {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStorage[key];
+      }
+    }
+  };
+})();
+
+// Safe sessionStorage fallback wrapper for strict incognito / private browser modes
+const safeSessionStorage = (() => {
+  const memoryStorage: Record<string, string> = {};
+  return {
+    getItem(key: string): string | null {
+      try {
+        return window.sessionStorage.getItem(key);
+      } catch (e) {
+        return memoryStorage[key] || null;
+      }
+    },
+    setItem(key: string, value: string): void {
+      try {
+        window.sessionStorage.setItem(key, value);
+      } catch (e) {
+        memoryStorage[key] = value;
+      }
+    },
+    removeItem(key: string): void {
+      try {
+        window.sessionStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStorage[key];
+      }
+    }
+  };
+})();
+
+// Shadow global storages safely to capture all operations
+const localStorage = safeStorage;
+const sessionStorage = safeSessionStorage;
+
 export default function App() {
-  // Check if opened before and track if we are in tutorial first-launch mode
-  const [isFirstLaunchMode, setIsFirstLaunchMode] = useState<boolean>(() => {
+  // State to track if the dashboard welcome notice banner is visible
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
     try {
-      return !localStorage.getItem('expensetrack_first_open');
+      return !localStorage.getItem('expensetrack_welcome_dismissed');
     } catch (e) {
-      return false;
+      return true;
     }
   });
 
@@ -338,15 +398,7 @@ Date: ${new Date().toLocaleString()}
     loadDatabaseState(selectedMonth);
   }, [selectedMonth]);
 
-  // Handle first-launch / tutorial persistence when navigating away from help
-  useEffect(() => {
-    if (activeTab !== 'help' && isFirstLaunchMode) {
-      try {
-        localStorage.setItem('expensetrack_first_open', 'true');
-      } catch (e) {}
-      setIsFirstLaunchMode(false);
-    }
-  }, [activeTab, isFirstLaunchMode]);
+
 
   // Action Handlers
   const handleDefaultCategoryChange = (id: string) => {
@@ -708,11 +760,11 @@ Date: ${new Date().toLocaleString()}
   const handleResetDatabase = () => {
     LocalDb.resetToFreshInstall();
     try {
-      localStorage.removeItem('expensetrack_first_open');
+      localStorage.removeItem('expensetrack_welcome_dismissed');
     } catch (e) {}
-    setIsFirstLaunchMode(true);
+    setShowWelcomeBanner(true);
     loadDatabaseState(selectedMonth);
-    setActiveTab('help');
+    setActiveTab('dashboard');
   };
 
   const handleLoadDemoData = () => {
@@ -1392,7 +1444,7 @@ Date: ${new Date().toLocaleString()}
             <div className="space-y-2.5 animate-in fade-in duration-200" id="tab_dashboard">
               
               {/* Welcome/Onboarding Banner */}
-              {isFirstLaunchMode && (
+              {showWelcomeBanner && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
@@ -1403,7 +1455,7 @@ Date: ${new Date().toLocaleString()}
                         We've pre-loaded 10 realistic demo transactions so you can instantly explore our interactive charts, budget metrics, and categories.
                       </p>
                       <p className="text-[9.5px] text-gray-400 leading-relaxed">
-                        This is a fully local, secure app. You can modify these transactions, add new ones, set category budget limits, or clear everything in the Settings tab when you're ready.
+                        Feel free to play around with them, edit them, delete them, or add your own. When you're ready to start with a fresh, clean slate, simply head to the <strong className="text-emerald-400">Settings</strong> tab and select <strong className="text-emerald-400">Reset Database</strong>.
                       </p>
                     </div>
                   </div>
@@ -1411,20 +1463,16 @@ Date: ${new Date().toLocaleString()}
                     <button
                       onClick={() => {
                         try {
-                          localStorage.setItem('expensetrack_first_open', 'true');
+                          localStorage.setItem('expensetrack_welcome_dismissed', 'true');
                         } catch (e) {}
-                        setIsFirstLaunchMode(false);
+                        setShowWelcomeBanner(false);
                       }}
                       className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
                     >
-                      Got it, Start Tracking!
+                      Got it, thanks!
                     </button>
                     <button
                       onClick={() => {
-                        try {
-                          localStorage.setItem('expensetrack_first_open', 'true');
-                        } catch (e) {}
-                        setIsFirstLaunchMode(false);
                         setActiveTab('help');
                       }}
                       className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9.5px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95"
@@ -2135,7 +2183,6 @@ Date: ${new Date().toLocaleString()}
                 currentBudget={currentBudget} 
                 onBudgetUpdated={handleUpdateBudget} 
                 onDatabaseReset={handleResetDatabase} 
-                onDatabaseLoadDemo={handleLoadDemoData}
                 onCategoryAdded={handleAddCategory}
                 onCategoryUpdated={handleUpdateCategory}
                 onCategoryDeleted={handleDeleteCategory}
@@ -2165,48 +2212,7 @@ Date: ${new Date().toLocaleString()}
                       <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
                     </div>
                   </div>
-                  {isFirstLaunchMode && (
-                    <button
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('expensetrack_first_open', 'true');
-                        } catch (e) {}
-                        setIsFirstLaunchMode(false);
-                        setActiveTab('dashboard');
-                      }}
-                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95 font-sans"
-                    >
-                      Skip to Dashboard
-                    </button>
-                  )}
                 </div>
-
-                {/* First-Time Welcome Interactive Card */}
-                {isFirstLaunchMode && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2 font-sans animate-in zoom-in-95 duration-200">
-                    <p className="text-[11px] text-emerald-400 font-extrabold flex items-center gap-1.5 uppercase tracking-wider">
-                      ✨ First-Launch Welcome Tutorial
-                    </p>
-                    <p className="text-[10px] text-gray-300 leading-normal font-bold">
-                      We've automatically brought you to the Help & Guide to help you get started! 
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-relaxed">
-                      You can review this quick guide to learn about personal vs. business expenses, spreadsheet export, budgeting alerts, and layout controls. Tap below to skip directly to your clean dashboard at any time.
-                    </p>
-                    <button
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('expensetrack_first_open', 'true');
-                        } catch (e) {}
-                        setIsFirstLaunchMode(false);
-                        setActiveTab('dashboard');
-                      }}
-                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 text-center block shadow-lg shadow-emerald-600/20"
-                    >
-                      Skip & Go to Dashboard
-                    </button>
-                  </div>
-                )}
 
                 {/* Introductory section */}
                 <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
@@ -2366,23 +2372,7 @@ Date: ${new Date().toLocaleString()}
                   </div>
                 </div>
 
-                {/* Bottom Skip Button for tutorial completion */}
-                {isFirstLaunchMode && (
-                  <div className="pt-2 font-sans">
-                    <button
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('expensetrack_first_open', 'true');
-                        } catch (e) {}
-                        setIsFirstLaunchMode(false);
-                        setActiveTab('dashboard');
-                      }}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 text-center block shadow-lg shadow-emerald-600/10"
-                    >
-                      All Set! Skip & Enter Dashboard
-                    </button>
-                  </div>
-                )}
+
 
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">

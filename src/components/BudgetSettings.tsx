@@ -38,7 +38,6 @@ interface BudgetSettingsProps {
   currentBudget: MonthlyBudget;
   onBudgetUpdated: (limit: number, limits: Record<string, number>) => void;
   onDatabaseReset: () => void;
-  onDatabaseLoadDemo?: () => void;
   onCategoryAdded?: (category: Omit<Category, 'id'>, isDefault?: boolean) => void;
   onCategoryUpdated?: (category: Category, isDefault?: boolean) => void;
   onCategoryDeleted?: (id: string) => void;
@@ -114,7 +113,6 @@ export function BudgetSettings({
   currentBudget,
   onBudgetUpdated,
   onDatabaseReset,
-  onDatabaseLoadDemo,
   onCategoryAdded,
   onCategoryUpdated,
   onCategoryDeleted,
@@ -124,7 +122,7 @@ export function BudgetSettings({
   isDevMode = false,
   activeThemeId = 'emerald',
   onThemeChanged
-}: BudgetSettingsProps) {
+ }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [downloadingAsset, setDownloadingAsset] = useState<boolean>(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -981,35 +979,6 @@ export function BudgetSettings({
           </div>
         )}
       </div>
-
-
-
-
-
-      {/* Demo & Review Data Seeding */}
-      {onDatabaseLoadDemo && (
-        <div className="bg-emerald-950/10 border border-emerald-500/10 rounded-xl p-3 space-y-2 animate-in fade-in duration-200">
-          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-            <Sparkles size={15} className="text-emerald-400 animate-pulse shrink-0" /> Demo & AdSense Review Mode
-          </h4>
-          <p className="text-[11px] text-gray-400 leading-normal">
-            Need rich sample transactions for testing or Google AdSense/Play Store reviews? Click below to instantly populate 10 diverse, realistic discretionary transactions for the current month.
-          </p>
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                onDatabaseLoadDemo();
-                setSuccessMsg('Loaded 10 rich demo transactions! Redirecting to Dashboard...');
-                setTimeout(() => setSuccessMsg(null), 3000);
-              }}
-              className="py-1.5 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
-            >
-              Populate 10 Rich Demo Transactions
-            </button>
-          </div>
-        </div>
-      )}
 
 
 
