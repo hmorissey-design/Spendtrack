@@ -957,7 +957,7 @@ Date: ${new Date().toLocaleString()}
     }
   }, [totals.percent, selectedMonth]);
 
-  const showAds = expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget';
+  const showAds = expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget' && activeTab !== 'budget_plan';
 
   return (
     <AndroidFrame 
