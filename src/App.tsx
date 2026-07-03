@@ -127,14 +127,7 @@ export default function App() {
   }, []);
 
   // Initialize states
-  const [activeTab, setActiveTab ] = useState<ActiveTab>(() => {
-    try {
-      const isFirst = !localStorage.getItem('expensetrack_first_open');
-      return isFirst ? 'help' : 'dashboard';
-    } catch (e) {
-      return 'dashboard';
-    }
-  });
+  const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
 
@@ -1398,6 +1391,50 @@ Date: ${new Date().toLocaleString()}
           {activeTab === 'dashboard' && (
             <div className="space-y-2.5 animate-in fade-in duration-200" id="tab_dashboard">
               
+              {/* Welcome/Onboarding Banner */}
+              {isFirstLaunchMode && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        ✨ Welcome to ExpenseTrack!
+                      </p>
+                      <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
+                        We've pre-loaded 10 realistic demo transactions so you can instantly explore our interactive charts, budget metrics, and categories.
+                      </p>
+                      <p className="text-[9.5px] text-gray-400 leading-relaxed">
+                        This is a fully local, secure app. You can modify these transactions, add new ones, set category budget limits, or clear everything in the Settings tab when you're ready.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 border-t border-emerald-500/10 pt-2.5">
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('expensetrack_first_open', 'true');
+                        } catch (e) {}
+                        setIsFirstLaunchMode(false);
+                      }}
+                      className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
+                    >
+                      Got it, Start Tracking!
+                    </button>
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('expensetrack_first_open', 'true');
+                        } catch (e) {}
+                        setIsFirstLaunchMode(false);
+                        setActiveTab('help');
+                      }}
+                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9.5px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95"
+                    >
+                      View Help Guide
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Circular Gauge and Budget stats header */}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
 

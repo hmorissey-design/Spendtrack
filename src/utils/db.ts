@@ -12,6 +12,37 @@ const getLocalMonthString = () => {
   return `${year}-${month}`;
 };
 
+// Safe localStorage fallback wrapper for strict incognito / private browser modes
+const safeStorage = (() => {
+  const memoryStorage: Record<string, string> = {};
+  return {
+    getItem(key: string): string | null {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (e) {
+        return memoryStorage[key] || null;
+      }
+    },
+    setItem(key: string, value: string): void {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStorage[key] = value;
+      }
+    },
+    removeItem(key: string): void {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStorage[key];
+      }
+    }
+  };
+})();
+
+// Shadow global localStorage safely to capture all database operations
+const localStorage = safeStorage;
+
 const STORAGE_KEYS = {
   EXPENSES: 'personal_finance_app_expenses',
   CATEGORIES: 'personal_finance_app_categories',
