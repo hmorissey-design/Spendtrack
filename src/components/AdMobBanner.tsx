@@ -11,6 +11,7 @@ interface AdMobBannerProps {
   isTopAd?: boolean; // Determines which default slot to load if not specified
   className?: string;
   themeColor?: string;
+  hasContent?: boolean; // Prevent live AdSense tags on empty/thin content screens
 }
 
 // Simulated dynamic ads to bring life to the preview
@@ -45,7 +46,7 @@ const SIMULATED_ADS = [
   }
 ];
 
-export function AdMobBanner({ adUnitId, isTopAd = false, className = '', themeColor = 'blue' }: AdMobBannerProps) {
+export function AdMobBanner({ adUnitId, isTopAd = false, className = '', themeColor = 'blue', hasContent = true }: AdMobBannerProps) {
   const [currentAdIndex, setCurrentAdIndex] = useState(3); // Start with AdSense / AdMob Test Banner
   const [copied, setCopied] = useState<string | null>(null);
   const [showIntegrationDocs, setShowIntegrationDocs] = useState(false);
@@ -54,7 +55,8 @@ export function AdMobBanner({ adUnitId, isTopAd = false, className = '', themeCo
   const adsenseClientId = (import.meta.env.VITE_ADSENSE_CLIENT_ID || '').trim();
   const adsenseSlotId = (adUnitId || (isTopAd ? import.meta.env.VITE_ADSENSE_TOP_SLOT_ID : import.meta.env.VITE_ADSENSE_BOTTOM_SLOT_ID) || '').trim();
 
-  const isLiveAdSenseActive = Boolean(adsenseClientId && adsenseSlotId);
+  // Disable live ads if the screen does not have substantial publisher content (e.g. empty database/tutorial mode)
+  const isLiveAdSenseActive = Boolean(adsenseClientId && adsenseSlotId) && hasContent;
 
   useEffect(() => {
     // Only cycle ads when simulated

@@ -1103,7 +1103,7 @@ Date: ${new Date().toLocaleString()}
 
         {/* Dynamic AdMob Slot on top of content to represent standard ad-supported Play Store app layouts */}
         <div className="bg-black/20 p-1.5 shrink-0">
-          <AdMobBanner isTopAd={true} />
+          <AdMobBanner isTopAd={true} hasContent={expenses.length > 0 && activeTab !== 'help'} />
         </div>
 
         {/* Primary Screen Scrollable Frame */}
@@ -2363,7 +2363,7 @@ Date: ${new Date().toLocaleString()}
 
         {/* Persistent bottom AdMob Slot for balanced dual-ad standard mobile layout */}
         <div className="bg-black/20 p-2.5 shrink-0 border-t border-white/5">
-          <AdMobBanner isTopAd={false} />
+          <AdMobBanner isTopAd={false} hasContent={expenses.length > 0 && activeTab !== 'help'} />
         </div>
 
         {/* Modern Bottom Android Navigation Tab bar */}
