@@ -30,6 +30,119 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 
+const getCurrentMonthDayString = (day: number) => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const dayStr = String(day).padStart(2, '0');
+  return `${year}-${month}-${dayStr}`;
+};
+
+const getDaysAgoString = (daysAgo: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getDefaultExpenses = (): Expense[] => {
+  // Generate highly realistic expenses locked to the current month to ensure they appear on the active dashboard charts
+  return [
+    {
+      id: 'seed_1',
+      amount: 124.50,
+      category: 'cat_groceries',
+      date: getCurrentMonthDayString(1), // Day 1
+      note: 'Whole Foods weekly grocery run',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 50,
+    },
+    {
+      id: 'seed_2',
+      amount: 42.80,
+      category: 'cat_restaurants',
+      date: getCurrentMonthDayString(2), // Day 2
+      note: 'Ramen dinner with friends',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 25,
+    },
+    {
+      id: 'seed_3',
+      amount: 25.00,
+      category: 'cat_bars',
+      date: getCurrentMonthDayString(2), // Day 2
+      note: 'Craft beers at local pub',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 24,
+    },
+    {
+      id: 'seed_4',
+      amount: 15.99,
+      category: 'cat_entertainment',
+      date: getCurrentMonthDayString(1), // Day 1
+      note: 'Premium music streaming plan',
+      paymentMethod: 'digital_wallet',
+      createdAt: Date.now() - 3600000 * 49,
+    },
+    {
+      id: 'seed_5',
+      amount: 48.20,
+      category: 'cat_groceries',
+      date: getCurrentMonthDayString(3), // Day 3
+      note: 'Organic Farmers Market veggie haul',
+      paymentMethod: 'cash',
+      createdAt: Date.now() - 3600000 * 2,
+    },
+    {
+      id: 'seed_6',
+      amount: 72.10,
+      category: 'cat_restaurants',
+      date: getCurrentMonthDayString(3), // Day 3
+      note: 'Italian pizza & pasta dinner',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 1,
+    },
+    {
+      id: 'seed_7',
+      amount: 18.50,
+      category: 'cat_entertainment',
+      date: getCurrentMonthDayString(2), // Day 2
+      note: 'Cinema movie tickets',
+      paymentMethod: 'digital_wallet',
+      createdAt: Date.now() - 3600000 * 20,
+    },
+    {
+      id: 'seed_8',
+      amount: 8.75,
+      category: 'cat_restaurants',
+      date: getCurrentMonthDayString(3), // Day 3
+      note: 'Morning latte & butter croissant',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 3,
+    },
+    {
+      id: 'seed_9',
+      amount: 35.00,
+      category: 'cat_uncategorized',
+      date: getCurrentMonthDayString(2), // Day 2
+      note: 'Gas station car fuel tank fill',
+      paymentMethod: 'card',
+      createdAt: Date.now() - 3600000 * 18,
+    },
+    {
+      id: 'seed_10',
+      amount: 120.00,
+      category: 'cat_business_expense',
+      date: getCurrentMonthDayString(1), // Day 1
+      note: 'Monthly cloud hosting servers & API limits',
+      paymentMethod: 'digital_wallet',
+      createdAt: Date.now() - 3600000 * 48,
+    }
+  ];
+};
+
 export const INITIAL_BUDGET = 1000; // $1,000 starting layout (user customizable)
 
 export const LocalDb = {
@@ -40,14 +153,20 @@ export const LocalDb = {
   initialize(): void {
     const isInit = localStorage.getItem(STORAGE_KEYS.HAS_INITIALIZED);
     if (!isInit) {
-      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(getDefaultExpenses()));
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
       
       const currentMonth = getLocalMonthString(); // "YYYY-MM"
       const budget: MonthlyBudget = {
         month: currentMonth,
         limitAmount: INITIAL_BUDGET,
-        categoryLimits: {},
+        categoryLimits: {
+          'cat_groceries': 300,
+          'cat_restaurants': 150,
+          'cat_bars': 50,
+          'cat_entertainment': 80,
+          'cat_business_expense': 200,
+        },
       };
       localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
       localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
@@ -58,6 +177,34 @@ export const LocalDb = {
    * Cleans the database, leaving it perfectly empty (except for defaults)
    */
   resetToFreshInstall(): void {
+    localStorage.removeItem(STORAGE_KEYS.EXPENSES);
+    localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+    localStorage.removeItem(STORAGE_KEYS.BUDGET);
+    localStorage.removeItem(STORAGE_KEYS.HAS_INITIALIZED);
+    // When clearing for fresh install, we initialize with completely empty expenses, unlike default demo seed
+    localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
+    
+    const currentMonth = getLocalMonthString(); // "YYYY-MM"
+    const budget: MonthlyBudget = {
+      month: currentMonth,
+      limitAmount: INITIAL_BUDGET,
+      categoryLimits: {
+        'cat_groceries': 300,
+        'cat_restaurants': 150,
+        'cat_bars': 50,
+        'cat_entertainment': 80,
+        'cat_business_expense': 200,
+      },
+    };
+    localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
+    localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
+  },
+
+  /**
+   * Clears existing data and populates 10 diverse, beautiful demo transactions within the current month
+   */
+  resetToDemoData(): void {
     localStorage.removeItem(STORAGE_KEYS.EXPENSES);
     localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
     localStorage.removeItem(STORAGE_KEYS.BUDGET);

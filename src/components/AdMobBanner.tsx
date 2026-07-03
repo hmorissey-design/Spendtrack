@@ -93,6 +93,10 @@ export function AdMobBanner({ adUnitId, isTopAd = false, className = '', themeCo
     }
   }, [isLiveAdSenseActive, adsenseClientId, adsenseSlotId]);
 
+  if (!hasContent) {
+    return null;
+  }
+
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopied(label);

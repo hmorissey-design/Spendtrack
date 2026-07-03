@@ -722,6 +722,12 @@ Date: ${new Date().toLocaleString()}
     setActiveTab('help');
   };
 
+  const handleLoadDemoData = () => {
+    LocalDb.resetToDemoData();
+    loadDatabaseState(selectedMonth);
+    setActiveTab('dashboard');
+  };
+
   const handleAddCategory = (catData: Omit<Category, 'id'>, isDefault?: boolean) => {
     const created = LocalDb.addCategory(catData, selectedMonth);
     if (isDefault) {
@@ -951,6 +957,8 @@ Date: ${new Date().toLocaleString()}
     }
   }, [totals.percent, selectedMonth]);
 
+  const showAds = expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget';
+
   return (
     <AndroidFrame 
       currentTime="01:15" 
@@ -1102,9 +1110,11 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Dynamic AdMob Slot on top of content to represent standard ad-supported Play Store app layouts */}
-        <div className="bg-black/20 p-1.5 shrink-0">
-          <AdMobBanner isTopAd={true} hasContent={expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget'} />
-        </div>
+        {showAds && (
+          <div className="bg-black/20 p-1.5 shrink-0">
+            <AdMobBanner isTopAd={true} hasContent={true} />
+          </div>
+        )}
 
         {/* Primary Screen Scrollable Frame */}
         <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-2 bg-[#0A0A0A] space-y-2">
@@ -2088,6 +2098,7 @@ Date: ${new Date().toLocaleString()}
                 currentBudget={currentBudget} 
                 onBudgetUpdated={handleUpdateBudget} 
                 onDatabaseReset={handleResetDatabase} 
+                onDatabaseLoadDemo={handleLoadDemoData}
                 onCategoryAdded={handleAddCategory}
                 onCategoryUpdated={handleUpdateCategory}
                 onCategoryDeleted={handleDeleteCategory}
@@ -2362,9 +2373,11 @@ Date: ${new Date().toLocaleString()}
 
 
         {/* Persistent bottom AdMob Slot for balanced dual-ad standard mobile layout */}
-        <div className="bg-black/20 p-2.5 shrink-0 border-t border-white/5">
-          <AdMobBanner isTopAd={false} hasContent={expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget'} />
-        </div>
+        {showAds && (
+          <div className="bg-black/20 p-2.5 shrink-0 border-t border-white/5">
+            <AdMobBanner isTopAd={false} hasContent={true} />
+          </div>
+        )}
 
         {/* Modern Bottom Android Navigation Tab bar */}
         <div className="bg-[#0A0A0A] border-t border-white/5 px-4 py-2.5 shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
