@@ -300,6 +300,13 @@ Date: ${new Date().toLocaleString()}
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
 
+  // Reset category filter when leaving the history screen
+  useEffect(() => {
+    if (activeTab !== 'history') {
+      setFilterCategory('all');
+    }
+  }, [activeTab]);
+
   // Start/End date dropdown calendar states
   const [showStartDateCalendar, setShowStartDateCalendar] = useState<boolean>(false);
   const [startCalendarYear, setStartCalendarYear] = useState<number>(() => new Date().getFullYear());
@@ -2163,7 +2170,7 @@ Date: ${new Date().toLocaleString()}
                             contentStyle={{ fontSize: '9px', background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                             formatter={(value: any) => [`${currencySymbol}${value}`, 'Daily Total']}
                           />
-                          <Bar dataKey="dailySpend" fill="var(--accent-500)" radius={[2, 2, 0, 0]} />
+                          <Bar dataKey="dailySpend" fill="#10b981" radius={[2, 2, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (

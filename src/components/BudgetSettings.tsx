@@ -191,6 +191,7 @@ export function BudgetSettings({
   const [deviceRestoreFilename, setDeviceRestoreFilename] = useState<string>('');
   const [deviceRestoreConfirm, setDeviceRestoreConfirm] = useState<boolean>(false);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
+  const [showBackupSuccess, setShowBackupSuccess] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentMonthPrefixVal = useMemo(() => {
@@ -350,8 +351,7 @@ export function BudgetSettings({
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
     
-    setSuccessMsg('ExpenseTrack backup saved and downloaded successfully!');
-    setTimeout(() => setSuccessMsg(null), 3500);
+    setShowBackupSuccess(true);
   };
 
   const handleDeviceRestoreClick = () => {
@@ -746,6 +746,39 @@ export function BudgetSettings({
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-rose-950/20"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Backup Success Confirmation Modal */}
+      {showBackupSuccess && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-in fade-in duration-250">
+          <div className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
+              <Check size={24} />
+            </div>
+            
+            <div className="space-y-1">
+              <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                Backup Successful!
+              </h4>
+              <p className="text-[11px] text-gray-400 leading-normal">
+                Your database backup file has been successfully generated and downloaded to your local device. 
+              </p>
+              <p className="text-[10px] text-gray-500 leading-normal">
+                We've also saved a secure cached copy in your browser for quick one-click restoration anytime from this tab.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBackupSuccess(false)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg shadow-emerald-950/20 active:scale-95"
+              >
+                Got it, thanks!
               </button>
             </div>
           </div>

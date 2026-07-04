@@ -642,23 +642,6 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="pt-2 flex gap-2">
-          <button
-            type="submit"
-            className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-xs tracking-widest uppercase rounded-xl shadow-lg cursor-pointer flex items-center justify-center gap-1 border-0 transition-all font-sans"
-          >
-            {expenseToEdit ? (
-              <>
-                <Check size={14} /> Save Changes
-              </>
-            ) : (
-              <>
-                <Plus size={14} /> Add Transaction
-              </>
-            )}
-          </button>
-        </div>
       </form>
 
       {/* Dynamic AdMob Slot on the new log screen */}
