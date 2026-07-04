@@ -54,10 +54,14 @@ const STORAGE_KEYS = {
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat_uncategorized', name: 'Uncategorized', icon: 'Tag', color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400', isDefault: true, limit: 0 },
-  { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400', isDefault: true, limit: 0 },
-  { id: 'cat_bars', name: 'Bars', icon: 'Beer', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400', isDefault: true, limit: 0 },
+  { id: 'cat_bars', name: 'Bar', icon: 'Beer', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400', isDefault: true, limit: 0 },
   { id: 'cat_restaurants', name: 'Restaurants', icon: 'Utensils', color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textColor: 'text-rose-400', isDefault: true, limit: 0 },
+  { id: 'cat_coffee_shops', name: 'Coffee shops', icon: 'Coffee', color: 'bg-orange-500/10 text-orange-400 border border-orange-500/20', textColor: 'text-orange-400', isDefault: true, limit: 0 },
+  { id: 'cat_smoking', name: 'Smoking', icon: 'Flame', color: 'bg-red-500/10 text-red-400 border border-red-500/20', textColor: 'text-red-400', isDefault: true, limit: 0 },
   { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400', isDefault: true, limit: 0 },
+  { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400', isDefault: true, limit: 0 },
+  { id: 'cat_gas_auto', name: 'Gas auto', icon: 'Car', color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', textColor: 'text-blue-400', isDefault: true, limit: 0 },
+  { id: 'cat_public_transport', name: 'Public transport', icon: 'Train', color: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20', textColor: 'text-cyan-400', isDefault: true, limit: 0 },
   { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 
@@ -147,7 +151,7 @@ const getDefaultExpenses = (): Expense[] => {
     {
       id: 'seed_8',
       amount: 8.75,
-      category: 'cat_restaurants',
+      category: 'cat_coffee_shops',
       date: getCurrentMonthDayString(3), // Day 3
       note: 'Morning latte & butter croissant',
       paymentMethod: 'card',
@@ -156,7 +160,7 @@ const getDefaultExpenses = (): Expense[] => {
     {
       id: 'seed_9',
       amount: 35.00,
-      category: 'cat_uncategorized',
+      category: 'cat_gas_auto',
       date: getCurrentMonthDayString(2), // Day 2
       note: 'Gas station car fuel tank fill',
       paymentMethod: 'card',
@@ -192,11 +196,15 @@ export const LocalDb = {
         month: currentMonth,
         limitAmount: INITIAL_BUDGET,
         categoryLimits: {
-          'cat_groceries': 300,
+          'cat_groceries': 250,
           'cat_restaurants': 150,
-          'cat_bars': 50,
-          'cat_entertainment': 80,
-          'cat_business_expense': 200,
+          'cat_bars': 100,
+          'cat_coffee_shops': 50,
+          'cat_smoking': 50,
+          'cat_entertainment': 100,
+          'cat_gas_auto': 150,
+          'cat_public_transport': 50,
+          'cat_business_expense': 150,
         },
       };
       localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
@@ -221,11 +229,15 @@ export const LocalDb = {
       month: currentMonth,
       limitAmount: INITIAL_BUDGET,
       categoryLimits: {
-        'cat_groceries': 300,
+        'cat_groceries': 250,
         'cat_restaurants': 150,
-        'cat_bars': 50,
-        'cat_entertainment': 80,
-        'cat_business_expense': 200,
+        'cat_bars': 100,
+        'cat_coffee_shops': 50,
+        'cat_smoking': 50,
+        'cat_entertainment': 100,
+        'cat_gas_auto': 150,
+        'cat_public_transport': 50,
+        'cat_business_expense': 150,
       },
     };
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));

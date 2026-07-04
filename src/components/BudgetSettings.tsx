@@ -9,7 +9,8 @@ import {
   DollarSign, Save, Download, Upload, AlertTriangle, CheckCircle, Shield,
   Plus, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
-  Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp
+  Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
+  Beer, Flame, Train
 } from 'lucide-react';
 
 import {
@@ -83,7 +84,7 @@ const COLOR_PRESETS = [
 ];
 
 const ICON_PRESETS = [
-  'Utensils', 'ShoppingBag', 'Film', 'Car', 'Sparkles', 'Coffee', 'Briefcase', 'Gift', 'Heart', 'Home', 'Laptop', 'Dumbbell', 'Plane', 'Users', 'Phone', 'HelpCircle'
+  'Utensils', 'ShoppingBag', 'Film', 'Car', 'Sparkles', 'Coffee', 'Briefcase', 'Gift', 'Heart', 'Home', 'Laptop', 'Dumbbell', 'Plane', 'Users', 'Phone', 'HelpCircle', 'Beer', 'Flame', 'Train'
 ];
 
 export function renderCategoryIcon(iconName: string, size = 16) {
@@ -104,6 +105,9 @@ export function renderCategoryIcon(iconName: string, size = 16) {
     case 'Users': return <Users size={size} />;
     case 'Phone': return <Phone size={size} />;
     case 'HelpCircle': return <HelpCircle size={size} />;
+    case 'Beer': return <Beer size={size} />;
+    case 'Flame': return <Flame size={size} />;
+    case 'Train': return <Train size={size} />;
     default: return <Tag size={size} />;
   }
 }
@@ -120,7 +124,7 @@ export function BudgetSettings({
   currencySymbol,
   onCurrencyChanged,
   isDevMode = false,
-  activeThemeId = 'emerald',
+  activeThemeId = 'blue',
   onThemeChanged
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);

@@ -1002,9 +1002,9 @@ Date: ${new Date().toLocaleString()}
       return {
         title: "Looking Good",
         desc: "Total spending is within your target",
-        color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
-        pillColor: "bg-emerald-500 text-white",
-        ringColor: "border-emerald-500"
+        color: "text-green-400 border-green-500/20 bg-green-500/5",
+        pillColor: "bg-green-500 text-white",
+        ringColor: "border-green-500"
       };
     }
   }, [totals.percent, selectedMonth]);
@@ -1502,7 +1502,7 @@ Date: ${new Date().toLocaleString()}
                         totals.percent >= 100 ? 'border-t-rose-500 border-r-rose-400' :
                         totals.percent >= 80 ? 'border-t-amber-500 border-r-amber-400' :
                         statusConfig.title.includes('Spending Too Fast') ? 'border-t-yellow-500 border-r-yellow-400' :
-                        'border-t-emerald-500 border-r-emerald-400'
+                        'border-t-green-500 border-r-green-400'
                       }`} style={{ transform: `rotate(${(totals.percent / 100) * 180}deg)` }}></span>
                       
                       <div className="text-center z-10">
@@ -1526,7 +1526,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       <div>
                         <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tight block">Budget Remaining</span>
-                        <span className={`text-xs font-extrabold font-mono ${totals.remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`text-xs font-extrabold font-mono ${totals.remaining >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
                           {currencySymbol}{totals.remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -2086,21 +2086,21 @@ Date: ${new Date().toLocaleString()}
                         >
                           <div className="flex items-start justify-between text-xs">
                             <div className="min-w-0">
-                              <span className="font-semibold text-gray-200 block truncate group-hover:text-emerald-400 transition-colors">{stat.label}</span>
-                              <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
+                              <span className="font-semibold text-gray-200 block truncate group-hover:text-green-400 transition-colors">{stat.label}</span>
+                              <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-green-400' : 'text-rose-450'}`}>
                                 {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(0)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(0)} over limit`}
                               </span>
                             </div>
                             <div className="text-right">
                               <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(0)}</span></span>
-                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-emerald-400 font-sans transition-colors">({share}%) →</span>
+                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-green-400 font-sans transition-colors">({share}%) →</span>
                             </div>
                           </div>
                           <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
                             <div 
                               className={`h-full rounded-full transition-all group-hover:brightness-110 ${
                                 share >= 100 ? 'bg-rose-500' :
-                                share >= 85 ? 'bg-amber-500' : 'bg-emerald-500'
+                                share >= 85 ? 'bg-amber-500' : 'bg-green-500'
                               }`} 
                               style={{ width: `${Math.min(share, 100)}%` }} 
                             />
