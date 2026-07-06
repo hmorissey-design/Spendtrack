@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Wifi, Battery, Signal, Terminal, Phone, Share2, Compass, Smartphone, Monitor } from 'lucide-react';
+import { Wifi, Battery, Signal, Smartphone, Monitor, Download, Info, X, CheckCircle, ArrowUpRight, HelpCircle } from 'lucide-react';
 
 interface AndroidFrameProps {
   children: React.ReactNode;
@@ -15,15 +15,44 @@ interface AndroidFrameProps {
 export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabase }: AndroidFrameProps) {
   const [deviceTime, setDeviceTime] = useState(currentTime);
   const [batteryLevel] = useState(87);
-  const [isMobileMode, setIsMobileMode] = useState<boolean>(true); // Default to gorgeous emulated Android view!
+  const [isMobileMode, setIsMobileMode] = useState<boolean>(false); // Default to gorgeous edge-to-edge Responsive Web view!
   const [isRealMobileAndTablet, setIsRealMobileAndTablet] = useState<boolean>(false);
   const [dismissSimulator, setDismissSimulator] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('dismiss_simulator') === 'true';
+      const stored = localStorage.getItem('dismiss_simulator');
+      return stored !== null ? stored === 'true' : true; // Default to true for pure web app experience!
     } catch {
-      return false;
+      return true;
     }
   });
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState<boolean>(false);
+  const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install prompt: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
 
   useEffect(() => {
     try {
@@ -68,14 +97,14 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
         <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
           {children}
         </div>
-        {dismissSimulator && (
+        {dismissSimulator && !isRealMobileAndTablet && (
           <button 
             onClick={() => setDismissSimulator(false)}
-            className="fixed bottom-16 right-4 bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg z-50 text-xs flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity"
-            title="Restore Simulator Frame"
+            className="fixed bottom-18 right-4 bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg z-50 text-xs flex items-center gap-1.5 opacity-30 hover:opacity-100 transition-opacity cursor-pointer duration-150 active:scale-95 border-0"
+            title="Show PWA Companion Hub"
           >
-            <Smartphone size={16} />
-            <span className="text-[10px] font-bold">Show Simulator</span>
+            <Smartphone size={15} />
+            <span className="text-[10px] font-bold">PWA Hub</span>
           </button>
         )}
       </div>
@@ -84,60 +113,84 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
   return (
     <div className="w-full flex flex-col items-center justify-start min-h-screen bg-[#070707] p-2 sm:p-4 text-slate-200 font-sans" id="android_preview_container">
-      {/* Upper Control Bar */}
-      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-2.5 bg-[#121212] border border-white/5 p-4 mb-4 rounded-2xl shadow-lg transition-all">
+      {/* Upper PWA Hub Options Bar */}
+      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 bg-[#111111] border border-white/5 p-4 mb-4 rounded-2xl shadow-xl transition-all">
         <div>
-          <h2 className="text-sm font-bold text-white flex items-center gap-1.5 font-sans uppercase tracking-[0.1em]">
-            <Smartphone size={16} className="text-emerald-500 animate-bounce" />
-            Vite-to-Android App Preflight Simulator
+          <h2 className="text-xs font-bold text-white flex items-center gap-1.5 font-sans uppercase tracking-[0.1em]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            ExpenseTrack PWA App Center
           </h2>
-          <p className="text-[11px] text-gray-400 mt-1">
-            Simulating Play Store sandboxed environment. Built with fully localized private database schemas.
+          <p className="text-[10px] text-gray-400 mt-1 max-w-lg leading-relaxed">
+            ExpenseTrack is built as a fully functional, offline-first installable **Progressive Web App (PWA)**. 
+            All data resides 100% locally on your own device.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* PWA Direct Installation Button */}
+          {showInstallBtn ? (
+            <button
+              onClick={handleInstallClick}
+              className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1 animate-pulse"
+              title="Install ExpenseTrack on your device as a native standalone application"
+            >
+              <Download size={13} className="stroke-[2.5]" />
+              <span>Install App 📲</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowInstallGuide(true)}
+              className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1.5"
+              title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
+            >
+              <Download size={13} />
+              <span>How to Install 📲</span>
+            </button>
+          )}
+
           {/* View Mode Select */}
           <div className="flex rounded-lg bg-black/40 p-0.5 border border-white/10">
             <button
               onClick={() => setIsMobileMode(true)}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all flex items-center gap-1 cursor-pointer border-0 bg-transparent ${
                 isMobileMode 
-                  ? 'bg-emerald-600 text-white shadow-xs' 
-                  : 'text-gray-400 hover:text-emerald-500 hover:bg-white/5'
+                  ? 'bg-[#1a1a1a] text-emerald-400 shadow-xs' 
+                  : 'text-gray-400 hover:text-emerald-400'
               }`}
+              title="Preview emulated Mobile Screen layout (9:19.5 aspect ratio)"
             >
-              <Smartphone size={13} />
-              <span>Android Mobile</span>
+              <Smartphone size={12} />
+              <span>Mobile Bezel</span>
             </button>
             <button
               onClick={() => setIsMobileMode(false)}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all flex items-center gap-1 cursor-pointer border-0 bg-transparent ${
                 !isMobileMode 
-                  ? 'bg-emerald-600 text-white shadow-xs' 
-                  : 'text-gray-400 hover:text-emerald-500 hover:bg-white/5'
+                  ? 'bg-[#1a1a1a] text-emerald-400 shadow-xs' 
+                  : 'text-gray-400 hover:text-emerald-400'
               }`}
+              title="View full-width standard Responsive Web layout"
             >
-              <Monitor size={13} />
+              <Monitor size={12} />
               <span>Responsive Web</span>
             </button>
           </div>
 
           <button
             onClick={() => setDismissSimulator(true)}
-            className="px-2.5 py-1.5 text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 cursor-pointer active:scale-95 rounded-md transition-all flex items-center gap-1"
-            title="Hides the simulator panel completely to show only the pure, fullscreen Web view of the app"
+            className="px-3 py-1.5 text-xs font-bold bg-[#1a1a1a] hover:bg-white/5 border border-white/10 text-gray-300 cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1"
+            title="Collapses this PWA options panel entirely to show the standalone app experience"
           >
-            ✨ Pure Full Web view
+            <span>✨ Pure App View</span>
           </button>
 
           {onRefreshDatabase && (
             <button
               onClick={onRefreshDatabase}
-              className="px-2.5 py-1.5 text-xs font-medium bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 cursor-pointer active:scale-95 rounded-md transition-all flex items-center gap-1"
-              title="Restores default setup structures instantly for clean-state testing"
+              className="px-2.5 py-1.5 text-[10px] font-bold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-400 cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1 border-0"
+              title="Wipes local state to perform a clean-state test"
             >
-              🗑️ Reset Local DB
+              Reset Database
             </button>
           )}
         </div>
@@ -173,17 +226,14 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
               {children}
             </div>
 
-            {/* Android Action Indicator Pill or Bottom Navigation Bar (Software keys) */}
+            {/* Android Navigation Pill Bar */}
             <div className="w-full flex justify-center items-center py-2.5 bg-black text-white select-none rounded-b-[36px] border-t border-white/5">
-              {/* Back Button */}
               <div className="flex-1 text-center shrink-0">
                 <span className="inline-block w-3.5 h-3.5 border-t-2 border-l-2 border-zinc-600 -rotate-45 transform cursor-pointer hover:border-white transition-colors"></span>
               </div>
-              {/* Home Indicator Button */}
               <div className="flex-1 text-center shrink-0 flex justify-center">
                 <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-600 transition-colors"></span>
               </div>
-              {/* Multitasking Button */}
               <div className="flex-1 text-center shrink-0 flex justify-center">
                 <span className="inline-block w-3 h-3 border-2 border-zinc-600 rounded-sm cursor-pointer hover:border-white transition-colors"></span>
               </div>
@@ -193,26 +243,101 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
           /* Normal Desktop Web View Layout Card */
           <div className="w-full bg-[#0A0A0A] rounded-2xl shadow-2xl border border-white/5 overflow-hidden flex flex-col h-[76vh] max-h-[820px] min-h-[500px]">
             {/* Simulated Desktop Header Bar */}
-            <div className="bg-[#111111] text-white px-4 py-2 text-xs font-mono flex items-center justify-between border-b border-white/5">
+            <div className="bg-[#111111] text-white px-4 py-2.5 text-xs font-mono flex items-center justify-between border-b border-white/5 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <span className="ml-2 font-semibold text-gray-400">https://localhost:3000/personal-finance-dashboard</span>
+                <span className="ml-2 font-semibold text-gray-400">https://expensetrack.pwa/dashboard</span>
               </div>
               <div className="flex items-center gap-2 text-[10px]">
-                <span className="bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-400 font-semibold uppercase tracking-wider text-[9px] border border-emerald-500/10">Local Sandbox Profile</span>
+                <span className="bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-400 font-semibold uppercase tracking-wider text-[9px] border border-emerald-500/10">Active Local Database</span>
                 <span className="text-gray-400">{deviceTime}</span>
               </div>
             </div>
 
             {/* Content view directly */}
-            <div className="flex-1 relative flex flex-col">
+            <div className="flex-1 relative flex flex-col overflow-hidden min-h-0">
               {children}
             </div>
           </div>
         )}
       </div>
+
+      {/* PWA Interactive Installation Guide Modal */}
+      {showInstallGuide && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowInstallGuide(false)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent"
+              title="Close Guide"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-2.5 border-b border-white/5 pb-3 mb-4">
+              <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl">
+                <Download size={18} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install ExpenseTrack PWA</h3>
+                <p className="text-[10px] text-gray-400 mt-0.5">Add standalone App icon to your home screen or desktop launcher.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 font-sans text-xs">
+              {/* iOS Guide */}
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                  📱 iPhone & iPad (Safari)
+                </p>
+                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
+                  <li>Open Safari and visit this website.</li>
+                  <li>Tap the <strong className="text-white font-semibold">Share button</strong> (square with up arrow).</li>
+                  <li>Scroll down and tap <strong className="text-white font-semibold">Add to Home Screen</strong>.</li>
+                  <li>Tap <strong className="text-emerald-400 font-bold">Add</strong> at the top right.</li>
+                </ol>
+              </div>
+
+              {/* Android Guide */}
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                  🤖 Android (Chrome)
+                </p>
+                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
+                  <li>Tap the browser's <strong className="text-white font-semibold">menu icon</strong> (3 dots in top right).</li>
+                  <li>Tap <strong className="text-white font-semibold">Install App</strong> or <strong className="text-white font-semibold">Add to Home screen</strong>.</li>
+                  <li>Follow the prompts on screen to confirm.</li>
+                </ol>
+              </div>
+
+              {/* Desktop Guide */}
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                  💻 Desktop (Chrome, Edge)
+                </p>
+                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
+                  <li>Click the <strong className="text-white font-semibold">Install icon</strong> (small monitor with download arrow) inside the URL address bar.</li>
+                  <li>Or open settings menu (3 dots) and click <strong className="text-white font-semibold">Save and share → Install app</strong>.</li>
+                </ol>
+              </div>
+
+              <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-[#161616] p-2.5 border border-white/5 rounded-xl">
+                <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+                <span>Stand-alone PWA apps consume near-zero memory, loads instantly offline, and can be easily uninstalled at any time.</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowInstallGuide(false)}
+              className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
