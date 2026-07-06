@@ -1,12 +1,12 @@
-const CACHE_NAME = 'expensetrack-cache-v4';
+const CACHE_NAME = 'expensetrack-cache-v5';
 const ASSETS_TO_CACHE = [
   './',
-  'index.html',
-  'manifest.json',
-  'icon.svg',
-  'icon-192.png',
-  'icon-512.png',
-  'icon.png'
+  './index.html',
+  './manifest.json',
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon.png'
 ];
 
 self.addEventListener('install', (event) => {
