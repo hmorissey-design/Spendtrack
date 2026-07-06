@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Wifi, Battery, Signal, Smartphone, Monitor, Download, Info, X, CheckCircle, ArrowUpRight, HelpCircle } from 'lucide-react';
 
 interface AndroidFrameProps {
@@ -103,28 +104,28 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
   const renderInstallGuideModal = () => {
     if (!showInstallGuide) return null;
-    return (
-      <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-        <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+    return createPortal(
+      <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[99999] p-4 animate-in fade-in duration-200">
+        <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200 text-slate-200 font-sans">
           <button
             onClick={() => setShowInstallGuide(false)}
-            className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent"
+            className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
             title="Close Guide"
           >
             <X size={16} />
           </button>
 
           <div className="flex items-center gap-2.5 border-b border-white/5 pb-3 mb-4">
-            <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl">
+            <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl flex items-center justify-center">
               <Download size={18} />
             </div>
-            <div>
+            <div className="text-left">
               <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install ExpenseTrack PWA</h3>
               <p className="text-[10px] text-gray-400 mt-0.5">Add standalone App icon to your home screen or desktop launcher.</p>
             </div>
           </div>
 
-          <div className="space-y-4 font-sans text-xs">
+          <div className="space-y-4 font-sans text-xs text-left">
             {/* iOS Guide */}
             <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
               <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
@@ -140,7 +141,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
             {/* Android Guide */}
             <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-              <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+              <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                 🤖 Android (Chrome)
               </p>
               <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
@@ -152,7 +153,7 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
             {/* Desktop Guide */}
             <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-              <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+              <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                 💻 Desktop (Chrome, Edge)
               </p>
               <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
@@ -162,19 +163,20 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
             </div>
 
             <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-[#161616] p-2.5 border border-white/5 rounded-xl">
-              <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+              <CheckCircle size={14} className="text-emerald-400 shrink-0 animate-pulse" />
               <span>Stand-alone PWA apps consume near-zero memory, loads instantly offline, and can be easily uninstalled at any time.</span>
             </div>
           </div>
 
           <button
             onClick={() => setShowInstallGuide(false)}
-            className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center"
+            className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center font-sans"
           >
             Got It
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   };
 

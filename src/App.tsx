@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   LayoutDashboard, 
   History, 
@@ -2584,8 +2585,8 @@ Date: ${new Date().toLocaleString()}
         </div>
       </div>
 
-      {/* Robust PWA Install Guide Modal */}
-      {showPwaGuide && (
+      {/* Robust PWA Install Guide Modal rendered outside of any parent transforms or clipping contexts via React Portal */}
+      {showPwaGuide && createPortal(
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200 text-slate-200 font-sans">
             <button
@@ -2622,7 +2623,7 @@ Date: ${new Date().toLocaleString()}
 
               {/* Android Guide */}
               <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                   🤖 Android (Chrome)
                 </p>
                 <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
@@ -2634,7 +2635,7 @@ Date: ${new Date().toLocaleString()}
 
               {/* Desktop Guide */}
               <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                   💻 Desktop (Chrome, Edge)
                 </p>
                 <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
@@ -2651,12 +2652,13 @@ Date: ${new Date().toLocaleString()}
 
             <button
               onClick={() => setShowPwaGuide(false)}
-              className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center"
+              className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center font-sans"
             >
               Got It
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AndroidFrame>
   );
