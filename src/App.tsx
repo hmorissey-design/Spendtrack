@@ -172,6 +172,23 @@ export default function App() {
     }
   });
 
+  // State to toggle mock simulated Ad slots (top and bottom banners)
+  const [showSimulatedAds, setShowSimulatedAds] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('expensetrack_show_ads');
+      return stored !== null ? stored === 'true' : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const handleShowSimulatedAdsChange = (val: boolean) => {
+    try {
+      localStorage.setItem('expensetrack_show_ads', String(val));
+    } catch (e) {}
+    setShowSimulatedAds(val);
+  };
+
   // Detect session state to distinguish launching fresh (closed state) vs accidental page refresh
   const isSessionActive = useMemo(() => {
     try {
@@ -1009,7 +1026,7 @@ Date: ${new Date().toLocaleString()}
     }
   }, [totals.percent, selectedMonth]);
 
-  const showAds = expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget' && activeTab !== 'budget_plan';
+  const showAds = showSimulatedAds && expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget' && activeTab !== 'budget_plan';
 
   return (
     <AndroidFrame 
@@ -1466,23 +1483,51 @@ Date: ${new Date().toLocaleString()}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2 border-t border-emerald-500/10 pt-2.5">
-                    <button
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('expensetrack_welcome_dismissed', 'true');
-                        } catch (e) {}
-                        setShowWelcomeBanner(false);
-                      }}
-                      className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
-                    >
-                      Got it, thanks!
-                    </button>
+                  <div className="flex flex-col sm:flex-row gap-2 border-t border-emerald-500/10 pt-2.5">
+                    {expenses.length === 0 ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            handleLoadDemoData();
+                            try {
+                              localStorage.setItem('expensetrack_welcome_dismissed', 'true');
+                            } catch (e) {}
+                            setShowWelcomeBanner(false);
+                          }}
+                          className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
+                        >
+                          Load 10 Demo Transactions 📊
+                        </button>
+                        <button
+                          onClick={() => {
+                            try {
+                              localStorage.setItem('expensetrack_welcome_dismissed', 'true');
+                            } catch (e) {}
+                            setShowWelcomeBanner(false);
+                          }}
+                          className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border border-white/5"
+                        >
+                          Start Empty (Clean Slate)
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          try {
+                            localStorage.setItem('expensetrack_welcome_dismissed', 'true');
+                          } catch (e) {}
+                          setShowWelcomeBanner(false);
+                        }}
+                        className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
+                      >
+                        Got it, thanks!
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         setActiveTab('help');
                       }}
-                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9.5px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95"
+                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9.5px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95 text-center"
                     >
                       View Help Guide
                     </button>
@@ -2199,6 +2244,9 @@ Date: ${new Date().toLocaleString()}
                 isDevMode={isDevMode}
                 activeThemeId={accentThemeId}
                 onThemeChanged={setAccentThemeId}
+                showSimulatedAds={showSimulatedAds}
+                onShowSimulatedAdsChange={handleShowSimulatedAdsChange}
+                onLoadDemoData={handleLoadDemoData}
               />
             </div>
           )}
