@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Fix relative paths and service worker registration on subdirectory environments like GitHub Pages.
+      // If the URL is accessed without a trailing slash (e.g. /ExpenseTrack), redirect to have the trailing slash (/ExpenseTrack/).
+      if (window.location.hostname !== 'localhost' && 
+          !window.location.pathname.endsWith('/') && 
+          !window.location.pathname.split('/').pop().includes('.')) {
+        window.location.replace(window.location.pathname + '/' + window.location.search + window.location.hash);
+      }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

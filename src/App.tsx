@@ -240,6 +240,37 @@ export default function App() {
   // Feedback & Support states
   const [showGlobalMenu, setShowGlobalMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  // PWA Prompt State inside App.tsx
+  const [pwaDeferredPrompt, setPwaDeferredPrompt] = useState<any>(null);
+  const [pwaInstallable, setPwaInstallable] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setPwaDeferredPrompt(e);
+      setPwaInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const triggerNativeInstall = async () => {
+    if (!pwaDeferredPrompt) return;
+    pwaDeferredPrompt.prompt();
+    const { outcome } = await pwaDeferredPrompt.userChoice;
+    console.log(`User responded to PWA install: ${outcome}`);
+    setPwaDeferredPrompt(null);
+    setPwaInstallable(false);
+  };
+
+  const triggerOpenInstallGuide = () => {
+    window.dispatchEvent(new CustomEvent('open-pwa-install-guide'));
+  };
   const [feedbackType, setFeedbackType] = useState<'bug' | 'enhancement'>('bug');
   const [feedbackTitle, setFeedbackTitle] = useState('');
   const [feedbackDescription, setFeedbackDescription] = useState('');
@@ -1051,6 +1082,27 @@ Date: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-2 relative z-50">
+            {/* Direct PWA Install or Guide Trigger */}
+            {pwaInstallable ? (
+              <button
+                onClick={triggerNativeInstall}
+                className="px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40"
+                title="Install ExpenseTrack on your device as a native standalone application"
+              >
+                <Download size={13} className="stroke-[3]" />
+                <span>Install App 📲</span>
+              </button>
+            ) : (
+              <button
+                onClick={triggerOpenInstallGuide}
+                className="px-2.5 py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
+              >
+                <Download size={12} />
+                <span>How to Install 📲</span>
+              </button>
+            )}
+
             {/* Click backdrop overlay to close the dropdown easily */}
             {showGlobalMenu && (
               <div 
@@ -1145,6 +1197,15 @@ Date: ${new Date().toLocaleString()}
                   >
                     <HelpCircle size={14} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
                     <span>Help & Guide</span>
+                  </button>
+
+                  {/* PWA Install Guide Link */}
+                  <button
+                    onClick={() => { triggerOpenInstallGuide(); setShowGlobalMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <Download size={14} className="stroke-[2] text-emerald-400" />
+                    <span>How to Install PWA 📲</span>
                   </button>
 
 

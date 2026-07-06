@@ -45,6 +45,16 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
     };
   }, []);
 
+  useEffect(() => {
+    const handleOpenGuide = () => {
+      setShowInstallGuide(true);
+    };
+    window.addEventListener('open-pwa-install-guide', handleOpenGuide);
+    return () => {
+      window.removeEventListener('open-pwa-install-guide', handleOpenGuide);
+    };
+  }, []);
+
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
