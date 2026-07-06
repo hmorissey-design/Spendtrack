@@ -4,25 +4,26 @@
   "description": "Premium visual budget tracker and finance companion app.",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "./icon.png",
+      "src": "icon.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "./",
+  "start_url": "index.html",
+  "scope": "./",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "display": "standalone",
