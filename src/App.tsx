@@ -246,20 +246,37 @@ export default function App() {
   const [pwaDeferredPrompt, setPwaDeferredPrompt] = useState<any>(null);
   const [pwaInstallable, setPwaInstallable] = useState<boolean>(false);
   const [showPwaGuide, setShowPwaGuide] = useState<boolean>(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(display-mode: standalone)').matches || 
+             (navigator as any).standalone === true ||
+             document.referrer.includes('android-app://');
+    }
+    return false;
+  });
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setPwaDeferredPrompt(e);
-      setPwaInstallable(true);
+      if (!isPwaInstalled) {
+        setPwaInstallable(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    const handleAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setPwaInstallable(false);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [isPwaInstalled]);
 
   const triggerNativeInstall = async () => {
     if (!pwaDeferredPrompt) return;
@@ -1085,24 +1102,26 @@ Date: ${new Date().toLocaleString()}
 
           <div className="flex items-center gap-2 relative z-50">
             {/* Direct PWA Install or Guide Trigger */}
-            {pwaInstallable ? (
-              <button
-                onClick={triggerNativeInstall}
-                className="px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40"
-                title="Install ExpenseTrack on your device as a native standalone application"
-              >
-                <Download size={13} className="stroke-[3]" />
-                <span>Install App 📲</span>
-              </button>
-            ) : (
-              <button
-                onClick={triggerOpenInstallGuide}
-                className="px-2.5 py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
-              >
-                <Download size={12} />
-                <span>How to Install 📲</span>
-              </button>
+            {!isPwaInstalled && (
+              pwaInstallable ? (
+                <button
+                  onClick={triggerNativeInstall}
+                  className="px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40"
+                  title="Install ExpenseTrack on your device as a native standalone application"
+                >
+                  <Download size={13} className="stroke-[3]" />
+                  <span>Install App 📲</span>
+                </button>
+              ) : (
+                <button
+                  onClick={triggerOpenInstallGuide}
+                  className="px-2.5 py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                  title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
+                >
+                  <Download size={12} />
+                  <span>How to Install 📲</span>
+                </button>
+              )
             )}
 
             {/* Click backdrop overlay to close the dropdown easily */}

@@ -31,20 +31,37 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState<boolean>(false);
   const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(display-mode: standalone)').matches || 
+             (navigator as any).standalone === true ||
+             document.referrer.includes('android-app://');
+    }
+    return false;
+  });
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowInstallBtn(true);
+      if (!isPwaInstalled) {
+        setShowInstallBtn(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    const handleAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setShowInstallBtn(false);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [isPwaInstalled]);
 
   useEffect(() => {
     const handleOpenGuide = () => {
@@ -218,24 +235,31 @@ export function AndroidFrame({ children, currentTime = '12:00', onRefreshDatabas
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* PWA Direct Installation Button */}
-          {showInstallBtn ? (
-            <button
-              onClick={handleInstallClick}
-              className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1 animate-pulse"
-              title="Install ExpenseTrack on your device as a native standalone application"
-            >
-              <Download size={13} className="stroke-[2.5]" />
-              <span>Install App 📲</span>
-            </button>
+          {!isPwaInstalled ? (
+            showInstallBtn ? (
+              <button
+                onClick={handleInstallClick}
+                className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1 animate-pulse"
+                title="Install ExpenseTrack on your device as a native standalone application"
+              >
+                <Download size={13} className="stroke-[2.5]" />
+                <span>Install App 📲</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowInstallGuide(true)}
+                className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1.5"
+                title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
+              >
+                <Download size={13} />
+                <span>How to Install 📲</span>
+              </button>
+            )
           ) : (
-            <button
-              onClick={() => setShowInstallGuide(true)}
-              className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 cursor-pointer active:scale-95 rounded-lg transition-all flex items-center gap-1.5"
-              title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
-            >
-              <Download size={13} />
-              <span>How to Install 📲</span>
-            </button>
+            <span className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg flex items-center gap-1.5">
+              <CheckCircle size={13} className="text-emerald-400 animate-pulse" />
+              <span>PWA Installed & Active ✅</span>
+            </span>
           )}
 
           {/* View Mode Select */}
