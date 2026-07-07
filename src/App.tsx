@@ -1111,7 +1111,7 @@ Date: ${new Date().toLocaleString()}
     >
       <div className="flex-1 flex flex-col h-full overflow-hidden select-none" id="android_app_root">
         {/* App Title & Top Header */}
-        <div className="bg-[#0A0A0A] text-white pt-3 pb-2.5 px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
+        <div className="bg-[#0A0A0A] text-white pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
           <div className="flex items-center gap-2.5 select-none pr-4">
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
@@ -1679,9 +1679,9 @@ Date: ${new Date().toLocaleString()}
               )}
 
               {/* Circular Gauge and Budget stats header */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
+              <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs">
 
-                <div className="grid grid-cols-12 gap-3 items-center">
+                <div className="grid grid-cols-12 gap-2.5 items-center">
                   {/* Gauge */}
                   <div className="col-span-5 flex flex-col items-center justify-center">
                     <div className="relative w-24 h-24 flex items-center justify-center rounded-full border-4 border-[#1c1c1c] shadow-inner bg-black/40">
@@ -1723,18 +1723,18 @@ Date: ${new Date().toLocaleString()}
                 </div>
 
                 {/* Status alert message */}
-                <div className={`mt-3.5 p-2 px-3 border rounded-xl text-xs flex items-start gap-2 ${statusConfig.color} transition-all`}>
-                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                <div className={`mt-2.5 p-1.5 px-2.5 border rounded-xl text-xs flex items-start gap-2 ${statusConfig.color} transition-all`}>
+                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block tracking-tight">{statusConfig.title}</span>
-                    <p className="text-[10px] leading-snug text-gray-400 mt-0.5">{statusConfig.desc}</p>
+                    <span className="font-bold block tracking-tight text-[11px]">{statusConfig.title}</span>
+                    <p className="text-[9.5px] leading-snug text-gray-400 mt-0.5">{statusConfig.desc}</p>
                   </div>
                 </div>
               </div>
 
               {/* Pie Chart of category allocations directly underneath with tight spacing */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans mb-3.5">
+              <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans mb-2.5">
                   Spending by Category
                 </h3>
                 
@@ -2600,13 +2600,13 @@ Date: ${new Date().toLocaleString()}
 
         {/* Persistent bottom AdMob Slot for balanced dual-ad standard mobile layout */}
         {showAds && (
-          <div className="bg-black/20 p-2.5 shrink-0 border-t border-white/5">
+          <div className="bg-black/20 px-2.5 py-1.5 shrink-0 border-t border-white/5">
             <AdMobBanner isTopAd={false} hasContent={true} />
           </div>
         )}
 
         {/* Modern Bottom Android Navigation Tab bar */}
-        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 py-1.5 shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
+        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
           
           {/* Nav Item: Dashboard */}
           <button
