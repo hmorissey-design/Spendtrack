@@ -83,102 +83,11 @@ const getDaysAgoString = (daysAgo: number) => {
 };
 
 const getDefaultExpenses = (): Expense[] => {
-  // Generate highly realistic expenses locked to the current month to ensure they appear on the active dashboard charts
-  return [
-    {
-      id: 'seed_1',
-      amount: 124.50,
-      category: 'cat_groceries',
-      date: getCurrentMonthDayString(1), // Day 1
-      note: 'Whole Foods weekly grocery run',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 50,
-    },
-    {
-      id: 'seed_2',
-      amount: 42.80,
-      category: 'cat_restaurants',
-      date: getCurrentMonthDayString(2), // Day 2
-      note: 'Ramen dinner with friends',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 25,
-    },
-    {
-      id: 'seed_3',
-      amount: 25.00,
-      category: 'cat_bars',
-      date: getCurrentMonthDayString(2), // Day 2
-      note: 'Craft beers at local pub',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 24,
-    },
-    {
-      id: 'seed_4',
-      amount: 15.99,
-      category: 'cat_entertainment',
-      date: getCurrentMonthDayString(1), // Day 1
-      note: 'Premium music streaming plan',
-      paymentMethod: 'digital_wallet',
-      createdAt: Date.now() - 3600000 * 49,
-    },
-    {
-      id: 'seed_5',
-      amount: 48.20,
-      category: 'cat_groceries',
-      date: getCurrentMonthDayString(3), // Day 3
-      note: 'Organic Farmers Market veggie haul',
-      paymentMethod: 'cash',
-      createdAt: Date.now() - 3600000 * 2,
-    },
-    {
-      id: 'seed_6',
-      amount: 72.10,
-      category: 'cat_restaurants',
-      date: getCurrentMonthDayString(3), // Day 3
-      note: 'Italian pizza & pasta dinner',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 1,
-    },
-    {
-      id: 'seed_7',
-      amount: 18.50,
-      category: 'cat_entertainment',
-      date: getCurrentMonthDayString(2), // Day 2
-      note: 'Cinema movie tickets',
-      paymentMethod: 'digital_wallet',
-      createdAt: Date.now() - 3600000 * 20,
-    },
-    {
-      id: 'seed_8',
-      amount: 8.75,
-      category: 'cat_coffee_shops',
-      date: getCurrentMonthDayString(3), // Day 3
-      note: 'Morning latte & butter croissant',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 3,
-    },
-    {
-      id: 'seed_9',
-      amount: 35.00,
-      category: 'cat_gas_auto',
-      date: getCurrentMonthDayString(2), // Day 2
-      note: 'Gas station car fuel tank fill',
-      paymentMethod: 'card',
-      createdAt: Date.now() - 3600000 * 18,
-    },
-    {
-      id: 'seed_10',
-      amount: 120.00,
-      category: 'cat_business_expense',
-      date: getCurrentMonthDayString(1), // Day 1
-      note: 'Monthly cloud hosting servers & API limits',
-      paymentMethod: 'digital_wallet',
-      createdAt: Date.now() - 3600000 * 48,
-    }
-  ];
+  // Return an empty array on first install so users start with a clean state as requested
+  return [];
 };
 
-export const INITIAL_BUDGET = 1000; // $1,000 starting layout (user customizable)
+export const INITIAL_BUDGET = 0; // $0 starting layout (user customizable)
 
 export const LocalDb = {
   /**
@@ -196,15 +105,15 @@ export const LocalDb = {
         month: currentMonth,
         limitAmount: INITIAL_BUDGET,
         categoryLimits: {
-          'cat_groceries': 250,
-          'cat_restaurants': 150,
-          'cat_bars': 100,
-          'cat_coffee_shops': 50,
-          'cat_smoking': 50,
-          'cat_entertainment': 100,
-          'cat_gas_auto': 150,
-          'cat_public_transport': 50,
-          'cat_business_expense': 150,
+          'cat_groceries': 0,
+          'cat_restaurants': 0,
+          'cat_bars': 0,
+          'cat_coffee_shops': 0,
+          'cat_smoking': 0,
+          'cat_entertainment': 0,
+          'cat_gas_auto': 0,
+          'cat_public_transport': 0,
+          'cat_business_expense': 0,
         },
       };
       localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
@@ -229,15 +138,15 @@ export const LocalDb = {
       month: currentMonth,
       limitAmount: INITIAL_BUDGET,
       categoryLimits: {
-        'cat_groceries': 250,
-        'cat_restaurants': 150,
-        'cat_bars': 100,
-        'cat_coffee_shops': 50,
-        'cat_smoking': 50,
-        'cat_entertainment': 100,
-        'cat_gas_auto': 150,
-        'cat_public_transport': 50,
-        'cat_business_expense': 150,
+        'cat_groceries': 0,
+        'cat_restaurants': 0,
+        'cat_bars': 0,
+        'cat_coffee_shops': 0,
+        'cat_smoking': 0,
+        'cat_entertainment': 0,
+        'cat_gas_auto': 0,
+        'cat_public_transport': 0,
+        'cat_business_expense': 0,
       },
     };
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
@@ -338,6 +247,41 @@ export const LocalDb = {
         updated.limit = matchingDefault?.limit !== undefined ? matchingDefault.limit : 0;
       }
 
+      // Auto-migrate legacy non-zero default category limits to 0 (based on ID or name)
+      const legacyIdDefaults: Record<string, number> = {
+        'cat_groceries': 300,
+        'cat_restaurants': 200,
+        'cat_bars': 150,
+        'cat_coffee_shops': 100,
+        'cat_smoking': 100,
+        'cat_entertainment': 100,
+        'cat_gas_auto': 150,
+        'cat_public_transport': 100,
+      };
+      const legacyNameDefaults: Record<string, number> = {
+        'groceries': 300,
+        'restaurants': 200,
+        'bar': 150,
+        'bars': 150,
+        'coffee shops': 100,
+        'coffee & snacks': 100,
+        'smoking': 100,
+        'entertainment': 100,
+        'gas auto': 150,
+        'public transport': 100,
+        'charity': 100,
+      };
+
+      const normName = updated.name ? updated.name.toLowerCase().trim() : '';
+      const matchedLegacyDefault = legacyIdDefaults[updated.id] !== undefined
+        ? legacyIdDefaults[updated.id]
+        : legacyNameDefaults[normName];
+
+      if (updated.limit !== undefined && matchedLegacyDefault !== undefined && updated.limit === matchedLegacyDefault) {
+        updated.limit = 0;
+        modified = true;
+      }
+
       // Auto-migrate legacy light theme default colors to premium translucent dark theme ones
       const legacyColorMap: Record<string, { color: string; textColor: string }> = {
         'bg-slate-100/15 text-slate-400 border border-slate-500/10': { color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400' },
@@ -367,8 +311,30 @@ export const LocalDb = {
     const raw = this.getCategoriesOnly();
     const activeMonth = month || getLocalMonthString();
     
-    return raw.map(cat => {
+    const mapped = raw.map(cat => {
       const limitVal = this.getLimitForCategoryForMonth(cat.id, activeMonth);
+      return {
+        ...cat,
+        limit: limitVal
+      };
+    });
+
+    const expenses = this.getExpenses();
+    const monthExpenses = expenses.filter(e => e.date.substring(0, 7) === activeMonth);
+
+    return mapped.filter(cat => {
+      if (!cat.isHidden) return true;
+      const hasExpenses = monthExpenses.some(e => e.category === cat.id);
+      const hasLimit = (cat.limit || 0) > 0;
+      return hasExpenses || hasLimit;
+    });
+  },
+
+  getAllCategoriesWithLimits(month: string): Category[] {
+    this.initialize();
+    const raw = this.getCategoriesOnly();
+    return raw.map(cat => {
+      const limitVal = this.getLimitForCategoryForMonth(cat.id, month);
       return {
         ...cat,
         limit: limitVal
@@ -429,22 +395,30 @@ export const LocalDb = {
 
   deleteCategory(id: string): void {
     if (id === 'cat_uncategorized') return; // Core constraint
-    const categories = this.getCategoriesOnly();
-    const filtered = categories.filter(c => c.id !== id);
-    this.saveCategories(filtered);
-
-    // Re-route deleted category expenses to 'cat_uncategorized'
+    
+    // Check if the category is used in past transactions or has budget history
     const expenses = this.getExpenses();
-    let updated = false;
-    const migratedExpenses = expenses.map(e => {
-      if (e.category === id) {
-        updated = true;
-        return { ...e, category: 'cat_uncategorized' };
+    const hasTransactions = expenses.some(e => e.category === id);
+    
+    const budgets = this.getBudgets();
+    const hasBudgetHistory = budgets.some(b => b.categoryLimits?.[id] !== undefined && b.categoryLimits[id] > 0);
+
+    const categories = this.getCategoriesOnly();
+    
+    if (hasTransactions || hasBudgetHistory) {
+      // It has history! Do not delete it from db, just hide it!
+      const index = categories.findIndex(c => c.id === id);
+      if (index !== -1) {
+        categories[index] = {
+          ...categories[index],
+          isHidden: true
+        };
+        this.saveCategories(categories);
       }
-      return e;
-    });
-    if (updated) {
-      this.saveExpenses(migratedExpenses);
+    } else {
+      // No history, we can safely delete it completely
+      const filtered = categories.filter(c => c.id !== id);
+      this.saveCategories(filtered);
     }
   },
 
@@ -452,7 +426,97 @@ export const LocalDb = {
   getBudgets(): MonthlyBudget[] {
     this.initialize();
     const data = localStorage.getItem(STORAGE_KEYS.BUDGET);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    try {
+      const parsed: MonthlyBudget[] = JSON.parse(data);
+      
+      const legacyIdDefaults: Record<string, number> = {
+        'cat_groceries': 300,
+        'cat_restaurants': 200,
+        'cat_bars': 150,
+        'cat_coffee_shops': 100,
+        'cat_smoking': 100,
+        'cat_entertainment': 100,
+        'cat_gas_auto': 150,
+        'cat_public_transport': 100,
+      };
+      const legacyNameDefaults: Record<string, number> = {
+        'groceries': 300,
+        'restaurants': 200,
+        'bar': 150,
+        'bars': 150,
+        'coffee shops': 100,
+        'coffee & snacks': 100,
+        'smoking': 100,
+        'entertainment': 100,
+        'gas auto': 150,
+        'public transport': 100,
+        'charity': 100,
+      };
+
+      // Extract raw categories list to get names for lookup
+      let rawCategories: any[] = [];
+      try {
+        const catData = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+        if (catData) rawCategories = JSON.parse(catData);
+      } catch (err) {}
+      
+      const catIdToNameMap: Record<string, string> = {};
+      rawCategories.forEach((c: any) => {
+        if (c && c.id) {
+          catIdToNameMap[c.id] = c.name || '';
+        }
+      });
+
+      let modified = false;
+      const migrated = parsed.map(budget => {
+        if (budget.categoryLimits) {
+          const updatedLimits = { ...budget.categoryLimits };
+          let limitModified = false;
+          
+          Object.entries(updatedLimits).forEach(([catId, currentLimit]) => {
+            const catName = catIdToNameMap[catId] || '';
+            const normName = catName.toLowerCase().trim();
+            
+            const matchedLegacyDefault = legacyIdDefaults[catId] !== undefined
+              ? legacyIdDefaults[catId]
+              : legacyNameDefaults[normName];
+              
+            if (currentLimit !== undefined && matchedLegacyDefault !== undefined && currentLimit === matchedLegacyDefault) {
+              updatedLimits[catId] = 0;
+              limitModified = true;
+            }
+          });
+
+          if (limitModified) {
+            modified = true;
+            // Recount budget total
+            const rawCats = this.getCategoriesOnly();
+            let totalSum = 0;
+            rawCats.forEach(cat => {
+              const catLimit = updatedLimits[cat.id] !== undefined ? updatedLimits[cat.id] : 0;
+              totalSum += catLimit;
+            });
+            return {
+              ...budget,
+              categoryLimits: updatedLimits,
+              limitAmount: totalSum
+            };
+          }
+        }
+        return budget;
+      });
+      if (modified) {
+        localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(migrated));
+      }
+      return migrated;
+    } catch (e) {
+      try {
+        return JSON.parse(data);
+      } catch (err) {
+        return [];
+      }
+    }
   },
 
   getBudgetForMonth(month: string): MonthlyBudget {

@@ -33,7 +33,9 @@ import {
   HelpCircle,
   MessageSquare,
   AlertTriangle,
-  Menu
+  Menu,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -238,6 +240,268 @@ export default function App() {
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
     return LocalDb.getCurrencySymbol();
   });
+
+  // Simulated Full Budget Monthly Planner states (under construction preview)
+  const [incomeStreams, setIncomeStreams] = useState<{ id: string; label: string; amount: number }[]>(() => {
+    try {
+      const stored = localStorage.getItem('expensetrack_income_streams');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const legacyDefaults: Record<string, number> = {
+          net_salary: 4000,
+          side_income: 500
+        };
+        let modified = false;
+        const migrated = parsed.map((item: any) => {
+          if (legacyDefaults[item.id] !== undefined && item.amount === legacyDefaults[item.id]) {
+            modified = true;
+            return { ...item, amount: 0 };
+          }
+          return item;
+        });
+        if (modified) {
+          localStorage.setItem('expensetrack_income_streams', JSON.stringify(migrated));
+        }
+        return migrated;
+      }
+    } catch (e) {}
+    return [
+      { id: 'net_salary', label: 'Primary Income', amount: 0 },
+      { id: 'side_income', label: 'Side Income', amount: 0 }
+    ];
+  });
+
+  const [fixedExpenses, setFixedExpenses] = useState<{ id: string; label: string; amount: number }[]>(() => {
+    try {
+      const stored = localStorage.getItem('expensetrack_fixed_expenses');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const legacyDefaults: Record<string, number[]> = {
+          mortgage_rent: [1500],
+          property_tax: [200],
+          condo_fees: [150],
+          electricity: [120],
+          water: [40],
+          property_insurance: [80],
+          loan_auto: [350],
+          health_insurance: [250],
+          internet: [60, 80],
+          phone: [50, 60],
+          bank_fee: [15]
+        };
+        let modified = false;
+        const migrated = parsed.map((item: any) => {
+          const possibleDefaults = legacyDefaults[item.id];
+          if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
+            modified = true;
+            return { ...item, amount: 0 };
+          }
+          return item;
+        });
+        if (modified) {
+          localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(migrated));
+        }
+        return migrated;
+      }
+    } catch (e) {}
+    return [
+      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
+      { id: 'property_tax', label: 'Property Tax', amount: 0 },
+      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
+      { id: 'electricity', label: 'Electricity', amount: 0 },
+      { id: 'water', label: 'Water', amount: 0 },
+      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
+      { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
+      { id: 'internet', label: 'Internet', amount: 0 },
+      { id: 'phone', label: 'Phone', amount: 0 },
+      { id: 'bank_fee', label: 'Bank fee', amount: 0 }
+    ];
+  });
+
+  const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number }[]>(() => {
+    try {
+      const stored = localStorage.getItem('expensetrack_savings_goals');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const legacyDefaults: Record<string, number[]> = {
+          emergency_fund: [300],
+          retirement: [400],
+          investment: [200],
+          vacation_fund: [100]
+        };
+        let modified = false;
+        const migrated = parsed.map((item: any) => {
+          const possibleDefaults = legacyDefaults[item.id];
+          if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
+            modified = true;
+            return { ...item, amount: 0 };
+          }
+          return item;
+        });
+        if (modified) {
+          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(migrated));
+        }
+        return migrated;
+      }
+    } catch (e) {}
+    return [
+      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0 },
+      { id: 'retirement', label: 'Retirement', amount: 0 },
+      { id: 'investment', label: 'Investment', amount: 0 },
+      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0 }
+    ];
+  });
+
+  // Accordion active toggles
+  const [accordionOpen, setAccordionOpen] = useState<Record<string, boolean>>({
+    income: true,
+    fixed: true,
+    discretionary: true,
+    savings: true
+  });
+
+  const toggleAccordion = (key: string) => {
+    setAccordionOpen(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
+    } catch (e) {}
+  }, [incomeStreams]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
+    } catch (e) {}
+  }, [fixedExpenses]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
+    } catch (e) {}
+  }, [savingsGoals]);
+
+  // Adding custom income / fixed expense / savings goals states
+  const [newIncomeName, setNewIncomeName] = useState('');
+  const [newIncomeAmount, setNewIncomeAmount] = useState('');
+  const [newFixedName, setNewFixedName] = useState('');
+  const [newFixedAmount, setNewFixedAmount] = useState('');
+  const [newSavingsName, setNewSavingsName] = useState('');
+  const [newSavingsAmount, setNewSavingsAmount] = useState('');
+
+  // Unified quick add states
+  const [quickAddName, setQuickAddName] = useState('');
+  const [quickAddSection, setQuickAddSection] = useState<'income' | 'fixed' | 'discretionary' | 'savings'>('fixed');
+  const [quickAddAmount, setQuickAddAmount] = useState('');
+
+  const handleQuickAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickAddName.trim()) return;
+    const amount = parseFloat(quickAddAmount) || 0;
+    const label = quickAddName.trim();
+
+    if (quickAddSection === 'income') {
+      const newItem = {
+        id: `income_${Date.now()}`,
+        label,
+        amount
+      };
+      setIncomeStreams(prev => [...prev, newItem]);
+    } else if (quickAddSection === 'fixed') {
+      const newItem = {
+        id: `fixed_${Date.now()}`,
+        label,
+        amount
+      };
+      setFixedExpenses(prev => [...prev, newItem]);
+    } else if (quickAddSection === 'discretionary') {
+      handleAddCategory({
+        name: label,
+        limit: amount,
+        icon: 'Tag',
+        color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+        textColor: 'text-amber-400'
+      });
+    } else if (quickAddSection === 'savings') {
+      const newItem = {
+        id: `savings_${Date.now()}`,
+        label,
+        amount
+      };
+      setSavingsGoals(prev => [...prev, newItem]);
+    }
+
+    setQuickAddName('');
+    setQuickAddAmount('');
+  };
+
+  const handleUpdateIncomeStream = (id: string, amount: number) => {
+    setIncomeStreams(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+  };
+
+  const handleDeleteIncomeStream = (id: string) => {
+    setIncomeStreams(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleAddIncomeStream = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newIncomeName.trim()) return;
+    const amount = parseFloat(newIncomeAmount) || 0;
+    const newItem = {
+      id: `income_${Date.now()}`,
+      label: newIncomeName.trim(),
+      amount
+    };
+    setIncomeStreams(prev => [...prev, newItem]);
+    setNewIncomeName('');
+    setNewIncomeAmount('');
+  };
+
+  const handleUpdateFixedExpense = (id: string, amount: number) => {
+    setFixedExpenses(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+  };
+
+  const handleUpdateSavingsGoal = (id: string, amount: number) => {
+    setSavingsGoals(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+  };
+
+  const handleAddFixedExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFixedName.trim()) return;
+    const amount = parseFloat(newFixedAmount) || 0;
+    const newItem = {
+      id: `fixed_${Date.now()}`,
+      label: newFixedName.trim(),
+      amount
+    };
+    setFixedExpenses(prev => [...prev, newItem]);
+    setNewFixedName('');
+    setNewFixedAmount('');
+  };
+
+  const handleAddSavingsGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSavingsName.trim()) return;
+    const amount = parseFloat(newSavingsAmount) || 0;
+    const newItem = {
+      id: `savings_${Date.now()}`,
+      label: newSavingsName.trim(),
+      amount
+    };
+    setSavingsGoals(prev => [...prev, newItem]);
+    setNewSavingsName('');
+    setNewSavingsAmount('');
+  };
+
+  const handleDeleteFixedExpense = (id: string) => {
+    setFixedExpenses(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleDeleteSavingsGoal = (id: string) => {
+    setSavingsGoals(prev => prev.filter(item => item.id !== id));
+  };
 
   // Feedback & Support states
   const [showGlobalMenu, setShowGlobalMenu] = useState(false);
@@ -852,7 +1116,33 @@ Date: ${new Date().toLocaleString()}
     LocalDb.resetToFreshInstall();
     try {
       localStorage.removeItem('expensetrack_welcome_dismissed');
+      localStorage.removeItem('expensetrack_income_streams');
+      localStorage.removeItem('expensetrack_fixed_expenses');
+      localStorage.removeItem('expensetrack_savings_goals');
     } catch (e) {}
+    setIncomeStreams([
+      { id: 'net_salary', label: 'Primary Income', amount: 0 },
+      { id: 'side_income', label: 'Side Income', amount: 0 }
+    ]);
+    setFixedExpenses([
+      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
+      { id: 'property_tax', label: 'Property Tax', amount: 0 },
+      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
+      { id: 'electricity', label: 'Electricity', amount: 0 },
+      { id: 'water', label: 'Water', amount: 0 },
+      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
+      { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
+      { id: 'internet', label: 'Internet', amount: 0 },
+      { id: 'phone', label: 'Phone', amount: 0 },
+      { id: 'bank_fee', label: 'Bank fee', amount: 0 }
+    ]);
+    setSavingsGoals([
+      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0 },
+      { id: 'retirement', label: 'Retirement', amount: 0 },
+      { id: 'investment', label: 'Investment', amount: 0 },
+      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0 }
+    ]);
     setShowWelcomeBanner(true);
     loadDatabaseState(selectedMonth);
     setActiveTab('dashboard');
@@ -1220,6 +1510,19 @@ Date: ${new Date().toLocaleString()}
                     <span>Trends & Insights</span>
                   </button>
 
+                  {/* Full Budget link */}
+                  <button
+                    onClick={() => { setActiveTab('budget_full'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'budget_full'
+                        ? 'bg-emerald-500/10 text-emerald-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Wallet size={14} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+                    <span>Monthly Budget (Beta)</span>
+                  </button>
+
                   {/* Settings link */}
                   <button
                     onClick={() => { setActiveTab('budget_plan'); setShowGlobalMenu(false); }}
@@ -1551,7 +1854,7 @@ Date: ${new Date().toLocaleString()}
 
 
           {/* Universal Month Switcher Bar */}
-          {activeTab !== 'budget_plan' && activeTab !== 'help' && (
+          {activeTab !== 'budget_plan' && activeTab !== 'help' && activeTab !== 'budget_full' && (
             <div className="bg-[#111111] py-1.5 px-3 rounded-xl border border-white/5 flex items-center justify-between shadow-xs select-none">
               <button
                 onClick={handlePrevMonth}
@@ -1605,74 +1908,6 @@ Date: ${new Date().toLocaleString()}
                       className="py-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-black font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden"
                     >
                       Go to Backup 💾
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Welcome/Onboarding Banner */}
-              {showWelcomeBanner && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                        ✨ Welcome to ExpenseTrack!
-                      </p>
-                      <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
-                        We've pre-loaded 10 realistic demo transactions so you can instantly explore our interactive charts, budget metrics, and categories.
-                      </p>
-                      <p className="text-[9.5px] text-gray-400 leading-relaxed">
-                        Feel free to play around with them, edit them, delete them, or add your own. When you're ready to start with a fresh, clean slate, simply head to the <strong className="text-emerald-400">Settings</strong> tab and select <strong className="text-emerald-400">Reset Database</strong>.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2 border-t border-emerald-500/10 pt-2.5">
-                    {expenses.length === 0 ? (
-                      <>
-                        <button
-                          onClick={() => {
-                            handleLoadDemoData();
-                            try {
-                              localStorage.setItem('expensetrack_welcome_dismissed', 'true');
-                            } catch (e) {}
-                            setShowWelcomeBanner(false);
-                          }}
-                          className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
-                        >
-                          Load 10 Demo Transactions 📊
-                        </button>
-                        <button
-                          onClick={() => {
-                            try {
-                              localStorage.setItem('expensetrack_welcome_dismissed', 'true');
-                            } catch (e) {}
-                            setShowWelcomeBanner(false);
-                          }}
-                          className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border border-white/5"
-                        >
-                          Start Empty (Clean Slate)
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          try {
-                            localStorage.setItem('expensetrack_welcome_dismissed', 'true');
-                          } catch (e) {}
-                          setShowWelcomeBanner(false);
-                        }}
-                        className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden focus:ring-2 focus:ring-emerald-500/20"
-                      >
-                        Got it, thanks!
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setActiveTab('help');
-                      }}
-                      className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 hover:text-emerald-300 rounded-lg font-bold text-[9.5px] uppercase tracking-wider transition-all border border-emerald-500/20 cursor-pointer active:scale-95 text-center"
-                    >
-                      View Help Guide
                     </button>
                   </div>
                 </div>
@@ -2395,6 +2630,494 @@ Date: ${new Date().toLocaleString()}
             </div>
           )}
 
+          {/* TAB 5: FULL MONTHLY BUDGET (PREVIEW MODE) */}
+          {activeTab === 'budget_full' && (() => {
+            const totalIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
+            const totalFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
+            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+            const totalSavings = savingsGoals.reduce((sum, item) => sum + item.amount, 0);
+            const overallSurplus = totalIncome - (totalFixed + totalDiscretionary + totalSavings);
+
+            return (
+              <div className="space-y-4 animate-in fade-in duration-200" id="tab_budget_full">
+                
+                {/* Warning if Discretionary Budget goes negative */}
+                {overallSurplus < 0 && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-400 text-[10px] font-semibold animate-pulse shadow-md shadow-rose-950/20">
+                    <AlertCircle size={15} className="shrink-0" />
+                    <span>Warning: Budget allocations & savings exceed total income by {currencySymbol}{Math.abs(overallSurplus).toLocaleString()}!</span>
+                  </div>
+                )}
+
+                {/* 2. UNIFIED QUICK ADD FORM WITH SECTION SELECTION */}
+                <form onSubmit={handleQuickAddSubmit} className="bg-[#111111] rounded-2xl p-4 border border-white/5 space-y-3.5">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <div className="p-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
+                      <Plus size={12} className="stroke-[2.5]" />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Quick Add Budget Item</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Item Name */}
+                    <div className="space-y-1">
+                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Item Name</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g. Salary, Electricity, Gym"
+                        value={quickAddName}
+                        onChange={(e) => setQuickAddName(e.target.value)}
+                        className="w-full px-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs text-white transition-all placeholder:text-gray-600"
+                        required
+                      />
+                    </div>
+
+                    {/* Section Selector */}
+                    <div className="space-y-1">
+                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Section Category</label>
+                      <select
+                        value={quickAddSection}
+                        onChange={(e) => setQuickAddSection(e.target.value as any)}
+                        className="w-full px-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs text-white transition-all cursor-pointer"
+                      >
+                        <option value="income" className="bg-[#111111] text-white">Income Streams</option>
+                        <option value="fixed" className="bg-[#111111] text-white">Fixed Expenses</option>
+                        <option value="discretionary" className="bg-[#111111] text-white">Discretionary Limits</option>
+                        <option value="savings" className="bg-[#111111] text-white">Savings Goals</option>
+                      </select>
+                    </div>
+
+                    {/* Budget Amount */}
+                    <div className="space-y-1">
+                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Budget Amount ({currencySymbol})</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">{currencySymbol}</span>
+                        <input 
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          value={quickAddAmount}
+                          onChange={(e) => setQuickAddAmount(e.target.value)}
+                          className="w-full pl-6.5 pr-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs font-mono font-bold text-white transition-all text-right"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    className="w-full py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer text-center active:scale-98 flex items-center justify-center gap-1.5"
+                  >
+                    <Plus size={12} className="stroke-[2.5]" />
+                    <span>Add Item to Budget</span>
+                  </button>
+                </form>
+
+                {/* ACCORDION 0: INCOME STREAMS */}
+                <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
+                  <button 
+                    onClick={() => toggleAccordion('income')}
+                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-white/2 transition-all cursor-pointer border-none bg-transparent"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-emerald-500/15 border border-emerald-500/25 rounded-lg text-emerald-400">
+                        <Wallet size={14} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Income Streams</span>
+                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 py-0.2 rounded font-mono">
+                            {incomeStreams.length} SOURCES
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Primary salary, side income, investments</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-extrabold font-mono text-emerald-400">
+                        {currencySymbol}{totalIncome.toLocaleString()}
+                      </span>
+                      {accordionOpen.income ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {accordionOpen.income && (
+                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-2.5">
+                      
+                      {/* Column Header: Budget */}
+                      <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
+                        <span>Income Source</span>
+                        <span className="pr-6.5">Amount</span>
+                      </div>
+
+                      <div className="divide-y divide-white/5 space-y-1.5">
+                        {incomeStreams.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
+                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  value={item.amount || ''}
+                                  onChange={(e) => handleUpdateIncomeStream(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
+                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                />
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteIncomeStream(item.id)}
+                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Remove Income Source"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Custom Income Stream Mini Form */}
+                      <form onSubmit={handleAddIncomeStream} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
+                        <input 
+                          type="text"
+                          placeholder="Add other (e.g. Side Hustle)"
+                          value={newIncomeName}
+                          onChange={(e) => setNewIncomeName(e.target.value)}
+                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-white"
+                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            min="0"
+                            placeholder="Amount"
+                            value={newIncomeAmount}
+                            onChange={(e) => setNewIncomeAmount(e.target.value)}
+                            className="w-16 pl-4.5 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-right font-mono text-white"
+                          />
+                        </div>
+                        <button 
+                          type="submit"
+                          className="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                        >
+                          Add
+                        </button>
+                      </form>
+
+                    </div>
+                  )}
+                </div>
+
+                {/* ACCORDION 1: FIXED EXPENSES */}
+                <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
+                  <button 
+                    onClick={() => toggleAccordion('fixed')}
+                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-white/2 transition-all cursor-pointer border-none bg-transparent"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-sky-500/15 border border-sky-500/25 rounded-lg text-sky-400">
+                        <Building size={14} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Fixed Expenses</span>
+                          <span className="text-[8px] bg-sky-500/10 text-sky-400 font-bold px-1 py-0.2 rounded font-mono">
+                            {fixedExpenses.length} ITEMS
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Recurring commitments, housing & taxes</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-extrabold font-mono text-sky-400">
+                        {currencySymbol}{totalFixed.toLocaleString()}
+                      </span>
+                      {accordionOpen.fixed ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {accordionOpen.fixed && (
+                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-2.5">
+                      
+                      {/* Column Header: Budget */}
+                      <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
+                        <span>Fixed Commitment</span>
+                        <span className="pr-6.5">Budget</span>
+                      </div>
+
+                      <div className="divide-y divide-white/5 space-y-1.5">
+                        {fixedExpenses.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
+                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  value={item.amount || ''}
+                                  onChange={(e) => handleUpdateFixedExpense(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
+                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                />
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteFixedExpense(item.id)}
+                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Remove Fixed Expense"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Custom Fixed Expense Mini Form */}
+                      <form onSubmit={handleAddFixedExpense} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
+                        <input 
+                          type="text"
+                          placeholder="Add other (e.g. Gym)"
+                          value={newFixedName}
+                          onChange={(e) => setNewFixedName(e.target.value)}
+                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-sky-500/30 outline-none rounded-lg text-[10px] text-white"
+                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            value={newFixedAmount}
+                            onChange={(e) => setNewFixedAmount(e.target.value)}
+                            className="w-16 pl-4 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-sky-500/30 outline-none rounded-lg text-[10px] font-mono text-right text-white"
+                          />
+                        </div>
+                        <button 
+                          type="submit"
+                          className="p-1 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/25 hover:border-sky-500/45 text-sky-400 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+                {/* ACCORDION 2: DISCRETIONARY EXPENSES */}
+                <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
+                  <button 
+                    onClick={() => toggleAccordion('discretionary')}
+                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-white/2 transition-all cursor-pointer border-none bg-transparent"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-amber-500/15 border border-amber-500/25 rounded-lg text-amber-400">
+                        <CreditCard size={14} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Discretionary Limits</span>
+                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold px-1 py-0.2 rounded font-mono">
+                            LIVE SYNC
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Flexible spending (Saves directly to database)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-extrabold font-mono text-amber-400">
+                        {currencySymbol}{totalDiscretionary.toLocaleString()}
+                      </span>
+                      {accordionOpen.discretionary ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {accordionOpen.discretionary && (
+                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-2">
+                      <p className="text-[9px] text-gray-400 italic mb-1">
+                        Tip: Changing the limits here updates your active category budget goals instantly across the entire app.
+                      </p>
+
+                      {/* Column Header: Budget */}
+                      <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
+                        <span>Discretionary Category</span>
+                        <span className="pr-1.5">Budget</span>
+                      </div>
+                      
+                      <div className="divide-y divide-white/5 space-y-1.5 pt-1">
+                        {categories.map((cat) => {
+                          const isBusiness = cat.id === 'cat_business_expense';
+                          return (
+                            <div key={cat.id} className="flex items-center justify-between pt-1.5 first:pt-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`p-1.5 rounded-lg ${cat.color} scale-90`}>
+                                  {renderCategoryIcon(cat.icon, 11)}
+                                </span>
+                                <span className="text-xs text-gray-300 font-medium">
+                                  {cat.name}
+                                  {isBusiness && <span className="text-[7.5px] bg-slate-500/20 text-slate-400 ml-1.5 px-1 rounded font-mono font-bold uppercase">Tax Deductible</span>}
+                                </span>
+                              </div>
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  value={cat.limit || ''}
+                                  onChange={(e) => {
+                                    const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                    handleUpdateCategory({ ...cat, limit: val });
+                                  }}
+                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ACCORDION 3: SAVINGS GOALS */}
+                <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
+                  <button 
+                    onClick={() => toggleAccordion('savings')}
+                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-white/2 transition-all cursor-pointer border-none bg-transparent"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-emerald-500/15 border border-emerald-500/25 rounded-lg text-emerald-400">
+                        <TrendingUp size={14} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Savings Targets</span>
+                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 py-0.2 rounded font-mono">
+                            {savingsGoals.length} GOALS
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Emergency funds, investing & dreams</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-extrabold font-mono text-emerald-400">
+                        {currencySymbol}{totalSavings.toLocaleString()}
+                      </span>
+                      {accordionOpen.savings ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {accordionOpen.savings && (
+                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-2.5">
+                      
+                      {/* Column Header: Budget */}
+                      <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
+                        <span>Savings Goal</span>
+                        <span className="pr-6.5">Budget</span>
+                      </div>
+
+                      <div className="divide-y divide-white/5 space-y-1.5">
+                        {savingsGoals.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
+                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  value={item.amount || ''}
+                                  onChange={(e) => handleUpdateSavingsGoal(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
+                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                />
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteSavingsGoal(item.id)}
+                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Remove Savings Goal"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Custom Savings Goal Mini Form */}
+                      <form onSubmit={handleAddSavingsGoal} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
+                        <input 
+                          type="text"
+                          placeholder="Add other (e.g. New Car)"
+                          value={newSavingsName}
+                          onChange={(e) => setNewSavingsName(e.target.value)}
+                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-white"
+                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            value={newSavingsAmount}
+                            onChange={(e) => setNewSavingsAmount(e.target.value)}
+                            className="w-16 pl-4 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] font-mono text-right text-white"
+                          />
+                        </div>
+                        <button 
+                          type="submit"
+                          className="p-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 hover:border-emerald-500/45 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+                {/* Blueprint Map */}
+                <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <div className="p-1.5 bg-indigo-950/20 border border-indigo-500/20 rounded-lg text-indigo-400">
+                      <FileSpreadsheet size={15} />
+                    </div>
+                    <h3 className="font-extrabold text-[#eeeeee] text-xs uppercase tracking-wider">Planned Features Blueprint Map (v2.0)</h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
+                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🗂️ Envelopes</span>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for non-discretionary payments.</p>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
+                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">📅 Bills Calendar</span>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Add auto-recurring bills to track upcoming due dates easily.</p>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
+                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🎯 Savings Goals</span>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Configure milestones and visual trackers for savings.</p>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
+                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🔗 Linked Sync</span>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Automatically tie discretionary funds directly into active gauges.</p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => alert("Thank you for your feedback! The development team has logged your interest.")}
+                    className="w-full mt-1.5 py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-[#eeeeee] font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer text-center active:scale-98"
+                  >
+                    🚀 Vote for this Feature Release
+                  </button>
+                </div>
+
+              </div>
+            );
+          })()}
+
 
 
           {/* TAB 6: HELP GUIDE */}
@@ -2584,7 +3307,7 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Dynamic bottom floating CTA trigger for quick accessibility */}
-        {activeTab !== 'budget_plan' && activeTab !== 'dev_hub' && activeTab !== 'help' && (
+        {activeTab !== 'budget_plan' && activeTab !== 'dev_hub' && activeTab !== 'help' && activeTab !== 'budget_full' && (
           <div className="absolute right-5 bottom-18 z-20">
             <button
               onClick={() => setShowAddForm(true)}
@@ -2639,6 +3362,17 @@ Date: ${new Date().toLocaleString()}
           >
             <PieChart size={17} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
             <span className="text-[8.5px] mt-0.5 font-sans">Insights</span>
+          </button>
+
+          {/* Nav Item: Full Budget */}
+          <button
+            onClick={() => { setActiveTab('budget_full'); setShowAddForm(false); }}
+            className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
+              activeTab === 'budget_full' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+            }`}
+          >
+            <Wallet size={17} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Budget</span>
           </button>
 
           {/* Nav Item: Local SQLite/Budget settings */}

@@ -21,6 +21,7 @@ export interface Category {
   textColor: string; // Text color class
   isDefault?: boolean;
   limit?: number; // Target budget amount for this category in dollars
+  isHidden?: boolean;
 }
 
 export interface MonthlyBudget {
@@ -29,7 +30,7 @@ export interface MonthlyBudget {
   categoryLimits?: Record<string, number>; // Optional category-specific limits
 }
 
-export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub';
+export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub' | 'budget_full';
 
 export interface AccentTheme {
   id: string;
