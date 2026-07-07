@@ -23,10 +23,21 @@
     <title>ExpenseTrack</title>
     <!-- Google AdSense Auto Ads / Verification Code -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7011980314251971" crossorigin="anonymous"></script>
+    
+    <!-- Google Publisher Tag (GPT) / Google Ad Manager bootstrap -->
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+    <script>
+      window.googletag = window.googletag || { cmd: [] };
+      googletag.cmd.push(function() {
+        // Safe global publisher settings to encourage adsense density
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
         const registerSW = () => {

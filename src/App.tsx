@@ -43,6 +43,7 @@ import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { AndroidFrame } from './components/AndroidFrame';
 import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
+import { ContextualTipCard } from './components/ContextualTipCard';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
@@ -896,6 +897,27 @@ Date: ${new Date().toLocaleString()}
       monthName
     };
   }, [expenses, categories, selectedMonth]);
+
+  const showBackupReminder = useMemo(() => {
+    // Only remind if the user has transactions to back up
+    if (expenses.length === 0) return false;
+    
+    try {
+      const lastBackupStr = localStorage.getItem('expensetrack_last_backup_time');
+      if (!lastBackupStr) {
+        // If they have never backed up, show reminder
+        return true;
+      }
+      const lastBackup = Number(lastBackupStr);
+      if (isNaN(lastBackup)) return true;
+      
+      const diffTime = Date.now() - lastBackup;
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      return diffDays > 7;
+    } catch {
+      return false;
+    }
+  }, [expenses]);
  
   // Derived category statistics for insights
   const categoryStats = useMemo(() => {
@@ -1260,12 +1282,15 @@ Date: ${new Date().toLocaleString()}
           </div>
         </div>
 
-        {/* Dynamic AdMob Slot on top of content to represent standard ad-supported Play Store app layouts */}
-        {showAds && (
-          <div className="bg-black/20 p-1.5 shrink-0">
-            <AdMobBanner isTopAd={true} hasContent={true} />
-          </div>
-        )}
+        {/* Contextual Savings & Budget Tip Card */}
+        <div className="px-4 pt-2.5 pb-1 shrink-0">
+          <ContextualTipCard 
+            expenses={expenses}
+            categories={categories}
+            totalBudget={totals.limit}
+            totalSpent={totals.totalSpent}
+          />
+        </div>
 
         {/* Primary Screen Scrollable Frame */}
         <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-2 bg-[#0A0A0A] space-y-2">
@@ -1548,6 +1573,38 @@ Date: ${new Date().toLocaleString()}
           {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'dashboard' && (
             <div className="space-y-2.5 animate-in fade-in duration-200" id="tab_dashboard">
+              
+              {/* Backup Reminder Banner */}
+              {showBackupReminder && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl shrink-0">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <p className="text-xs font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        ⚠️ Database Backup Reminder
+                      </p>
+                      <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
+                        Your transaction history has not been backed up to your device for over 7 days (or ever).
+                      </p>
+                      <p className="text-[9.5px] text-gray-400 leading-normal">
+                        To protect your valuable financial records from browser cache clears, please take a quick backup of your database file.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end border-t border-amber-500/10 pt-2.5">
+                    <button
+                      onClick={() => {
+                        setActiveTab('budget_plan');
+                      }}
+                      className="py-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-black font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden"
+                    >
+                      Go to Backup 💾
+                    </button>
+                  </div>
+                </div>
+              )}
               
               {/* Welcome/Onboarding Banner */}
               {showWelcomeBanner && (

@@ -347,6 +347,7 @@ export function BudgetSettings({
     
     // Save to localStorage internal backup slot for 1-click restore
     localStorage.setItem('expensetrack_device_backup', dataStr);
+    localStorage.setItem('expensetrack_last_backup_time', String(Date.now()));
     
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const d = new Date();
@@ -780,6 +781,13 @@ export function BudgetSettings({
               <p className="text-[10px] text-gray-500 leading-normal">
                 We've also saved a secure cached copy in your browser for quick one-click restoration anytime from this tab.
               </p>
+            </div>
+
+            <div className="text-[11px] text-emerald-400/95 font-medium leading-normal bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl text-left flex items-start gap-2 font-sans">
+              <Cloud size={16} className="shrink-0 mt-0.5 text-emerald-400 animate-pulse" />
+              <span>
+                <strong>Keep it safe:</strong> We highly encourage you to copy/upload this downloaded backup file to your preferred cloud service (like <strong>Google Drive</strong>, <strong>OneDrive</strong>, or <strong>Dropbox</strong>) for ultimate piece of mind!
+              </span>
             </div>
 
             <div className="pt-2">
