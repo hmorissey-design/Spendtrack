@@ -133,7 +133,7 @@ export function AndroidFrame({ children }: AndroidFrameProps) {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-[#0A0A0A] text-slate-200 select-none pb-safe relative overflow-hidden animate-in fade-in duration-300">
+    <div className="w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#0A0A0A] text-slate-200 select-none relative overflow-hidden animate-in fade-in duration-300">
       <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
         {children}
       </div>

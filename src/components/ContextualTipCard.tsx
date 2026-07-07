@@ -179,34 +179,34 @@ export function ContextualTipCard({ expenses, categories, totalBudget, totalSpen
 
   return (
     <div 
-      className="w-full overflow-hidden rounded-xl border border-white/5 bg-[#111111]/80 backdrop-blur-md p-3 text-white transition-all shadow-md relative" 
+      className="w-full overflow-hidden rounded-xl border border-white/5 bg-[#111111]/80 backdrop-blur-md p-2.5 text-white transition-all shadow-md relative" 
       id="contextual_tip_card"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         {/* Left Icon Panel */}
-        <div className="p-2 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
+        <div className="p-1.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
           {renderIcon(currentTip.iconType)}
         </div>
 
         {/* Content Panel */}
         <div className="flex-1 min-w-0 pr-6">
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 font-mono">
+            <span className="text-[8px] font-extrabold uppercase tracking-widest text-emerald-400 font-mono">
               Smart Savings Tip
             </span>
             {currentTip.id.startsWith('contextual_') && (
-              <span className="px-1 py-0.5 text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase rounded font-sans tracking-wide">
+              <span className="px-1 py-0.5 text-[7px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase rounded font-sans tracking-wide">
                 Contextual
               </span>
             )}
             {currentTip.id === 'high_spending_alert' && (
-              <span className="px-1 py-0.5 text-[8px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold uppercase rounded font-sans tracking-wide animate-pulse">
+              <span className="px-1 py-0.5 text-[7px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold uppercase rounded font-sans tracking-wide animate-pulse">
                 Critical
               </span>
             )}
           </div>
-          <h4 className="text-xs font-bold text-slate-200 mt-1 truncate">{currentTip.title}</h4>
-          <p className="text-[11px] text-gray-400 mt-0.5 leading-normal italic font-medium">
+          <h4 className="text-[11px] font-bold text-slate-200 mt-0.5 truncate">{currentTip.title}</h4>
+          <p className="text-[10px] text-gray-400 mt-0.5 leading-normal italic font-medium">
             "{currentTip.description}"
           </p>
         </div>

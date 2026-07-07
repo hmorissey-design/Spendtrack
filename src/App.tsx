@@ -1111,7 +1111,7 @@ Date: ${new Date().toLocaleString()}
     >
       <div className="flex-1 flex flex-col h-full overflow-hidden select-none" id="android_app_root">
         {/* App Title & Top Header */}
-        <div className="bg-[#0A0A0A] text-white pt-5 pb-4 px-4 flex items-center justify-between shrink-0 border-b border-white/5 relative">
+        <div className="bg-[#0A0A0A] text-white pt-3 pb-2.5 px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
           <div className="flex items-center gap-2.5 select-none pr-4">
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
@@ -1287,7 +1287,7 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Contextual Savings & Budget Tip Card */}
-        <div className="px-4 pt-2.5 pb-1 shrink-0">
+        <div className="px-3 pt-1.5 pb-0.5 shrink-0">
           <ContextualTipCard 
             expenses={expenses}
             categories={categories}
@@ -1297,7 +1297,7 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Primary Screen Scrollable Frame */}
-        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-2 bg-[#0A0A0A] space-y-2">
+        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-3.5 py-1.5 bg-[#0A0A0A] space-y-1.5">
           
           {/* Quick-add floating trigger sheet */}
           {showAddForm && (
@@ -2606,61 +2606,61 @@ Date: ${new Date().toLocaleString()}
         )}
 
         {/* Modern Bottom Android Navigation Tab bar */}
-        <div className="bg-[#0A0A0A] border-t border-white/5 px-4 py-2.5 shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
+        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 py-1.5 shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
           
           {/* Nav Item: Dashboard */}
           <button
             onClick={() => { setActiveTab('dashboard'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'dashboard' ? 'text-emerald-400 scale-105 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'dashboard' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
             }`}
           >
-            <LayoutDashboard size={18} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[9px] mt-1 font-sans">Dashboard</span>
+            <LayoutDashboard size={17} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Dashboard</span>
           </button>
 
           {/* Nav Item: Logs history */}
           <button
             onClick={() => { setActiveTab('history'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'history' ? 'text-emerald-400 scale-105 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'history' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
             }`}
           >
-            <History size={18} className={activeTab === 'history' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[9px] mt-1 font-sans">History</span>
+            <History size={17} className={activeTab === 'history' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">History</span>
           </button>
 
           {/* Nav Item: Trends & Charts */}
           <button
             onClick={() => { setActiveTab('analytics'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'analytics' ? 'text-emerald-400 scale-105 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'analytics' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
             }`}
           >
-            <PieChart size={18} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[10px] mt-1 font-sans">Insights</span>
+            <PieChart size={17} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Insights</span>
           </button>
 
           {/* Nav Item: Local SQLite/Budget settings */}
           <button
             onClick={() => { setActiveTab('budget_plan'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'budget_plan' ? 'text-emerald-400 scale-105 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'budget_plan' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
             }`}
           >
-            <Sliders size={18} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[9px] mt-1 font-sans">Settings</span>
+            <Sliders size={17} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Settings</span>
           </button>
 
           {/* Nav Item: Help & Guide */}
           <button
             onClick={() => { setActiveTab('help'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'help' ? 'text-emerald-400 scale-105 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'help' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
             }`}
           >
-            <HelpCircle size={18} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[9px] mt-1 font-sans">Help</span>
+            <HelpCircle size={17} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Help</span>
           </button>
 
         </div>

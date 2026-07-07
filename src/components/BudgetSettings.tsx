@@ -1037,58 +1037,6 @@ export function BudgetSettings({
         )}
       </div>
 
-
-
-
-
-      {/* Preferences & Demo Content */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs space-y-3">
-        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-          <Sparkles size={14} className="text-emerald-500 shrink-0" /> Preferences & Demo Content
-        </h3>
-        <p className="text-[10.5px] text-slate-300 leading-normal">
-          Manage visual settings and mock data for testing.
-        </p>
-
-        <div className="space-y-2.5 pt-2 border-t border-white/5">
-          {/* Ad Mock Toggles */}
-          {onShowSimulatedAdsChange && (
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/15 border border-white/5">
-              <div className="space-y-0.5 max-w-[75%]">
-                <span className="block text-[11px] font-bold text-gray-200">Show Simulated Ad Slots</span>
-                <span className="block text-[9.5px] text-gray-400 leading-tight">
-                  Toggles the top and bottom mock banner ads to simulate real Play Store ad layouts.
-                </span>
-              </div>
-              <button
-                onClick={() => onShowSimulatedAdsChange(!showSimulatedAds)}
-                className={`w-10 h-5 rounded-full p-0.5 transition-all border-0 cursor-pointer ${
-                  showSimulatedAds ? 'bg-emerald-600 flex justify-end' : 'bg-gray-700 flex justify-start'
-                }`}
-              >
-                <span className="w-4 h-4 rounded-full bg-white shadow-sm" />
-              </button>
-            </div>
-          )}
-
-          {/* Load 10 Demo Transactions Button */}
-          {onLoadDemoData && (
-            <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-black/15 border border-white/5">
-              <span className="block text-[11px] font-bold text-gray-200">Populate Demo Data</span>
-              <span className="block text-[9.5px] text-gray-400 leading-tight mb-1">
-                Instantly load 10 realistic discretionary transactions for the active month to populate charts, lists, and gauges.
-              </span>
-              <button
-                onClick={onLoadDemoData}
-                className="py-1.5 px-3 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer text-center"
-              >
-                Load 10 Demo Transactions 📊
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Database Purge Options */}
       <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
         <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
