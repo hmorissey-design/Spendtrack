@@ -45,6 +45,16 @@
             .then(reg => console.log('Service Worker registered successfully:', reg.scope))
             .catch(err => console.log('Service Worker registration failed:', err));
         };
+
+        // Listen for controllerchange to trigger auto-reload on service worker updates
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
           registerSW();
         } else {

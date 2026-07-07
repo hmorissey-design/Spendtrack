@@ -256,6 +256,22 @@ export default function App() {
     return false;
   });
 
+  const [lastBackupTime, setLastBackupTime] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('expensetrack_last_backup_time');
+      if (stored) {
+        const parsed = Number(stored);
+        if (!isNaN(parsed)) return parsed;
+      }
+      // If not present, initialize it as current time (prevents prompt on first day)
+      const now = Date.now();
+      localStorage.setItem('expensetrack_last_backup_time', String(now));
+      return now;
+    } catch {
+      return Date.now();
+    }
+  });
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -902,22 +918,10 @@ Date: ${new Date().toLocaleString()}
     // Only remind if the user has transactions to back up
     if (expenses.length === 0) return false;
     
-    try {
-      const lastBackupStr = localStorage.getItem('expensetrack_last_backup_time');
-      if (!lastBackupStr) {
-        // If they have never backed up, show reminder
-        return true;
-      }
-      const lastBackup = Number(lastBackupStr);
-      if (isNaN(lastBackup)) return true;
-      
-      const diffTime = Date.now() - lastBackup;
-      const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      return diffDays > 7;
-    } catch {
-      return false;
-    }
-  }, [expenses]);
+    const diffTime = Date.now() - lastBackupTime;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays > 7;
+  }, [expenses, lastBackupTime]);
  
   // Derived category statistics for insights
   const categoryStats = useMemo(() => {
@@ -2386,6 +2390,7 @@ Date: ${new Date().toLocaleString()}
                 showSimulatedAds={showSimulatedAds}
                 onShowSimulatedAdsChange={handleShowSimulatedAdsChange}
                 onLoadDemoData={handleLoadDemoData}
+                onBackupCompleted={() => setLastBackupTime(Date.now())}
               />
             </div>
           )}

@@ -51,6 +51,7 @@ interface BudgetSettingsProps {
   showSimulatedAds?: boolean;
   onShowSimulatedAdsChange?: (val: boolean) => void;
   onLoadDemoData?: () => void;
+  onBackupCompleted?: () => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -131,7 +132,8 @@ export function BudgetSettings({
   onThemeChanged,
   showSimulatedAds = true,
   onShowSimulatedAdsChange,
-  onLoadDemoData
+  onLoadDemoData,
+  onBackupCompleted
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [downloadingAsset, setDownloadingAsset] = useState<boolean>(false);
@@ -348,6 +350,10 @@ export function BudgetSettings({
     // Save to localStorage internal backup slot for 1-click restore
     localStorage.setItem('expensetrack_device_backup', dataStr);
     localStorage.setItem('expensetrack_last_backup_time', String(Date.now()));
+    
+    if (onBackupCompleted) {
+      onBackupCompleted();
+    }
     
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const d = new Date();
