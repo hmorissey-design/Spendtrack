@@ -395,6 +395,10 @@ export default function App() {
   const [newDiscretionaryName, setNewDiscretionaryName] = useState('');
   const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
 
+  // Inline editing of names / labels states
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemValue, setEditingItemValue] = useState<string>('');
+
   const [itemToDelete, setItemToDelete] = useState<{
     type: 'income' | 'fixed' | 'savings' | 'category';
     id: string;
@@ -1402,7 +1406,7 @@ Date: ${new Date().toLocaleString()}
         title: "Over Budget Limit!",
         desc: totals.limit === 0 
           ? "No budget limits set, but expenses exist. Create a budget to stay on track." 
-          : "Discretionary expenses have exceeded set goals. Limit your expenditures immediately.",
+          : "Daily spending expenses have exceeded set goals. Limit your expenditures immediately.",
         color: "text-rose-400 border-rose-500/20 bg-rose-500/5",
         pillColor: "bg-rose-500 text-white",
         ringColor: "border-rose-500"
@@ -1410,7 +1414,7 @@ Date: ${new Date().toLocaleString()}
     } else if (totals.percent >= 80) {
       return {
         title: "Approaching Limit",
-        desc: "You have used more than 80% of discretionary limits. Control optional purchases.",
+        desc: "You have used more than 80% of daily spending limits. Control optional purchases.",
         color: "text-amber-400 border-amber-500/20 bg-amber-500/5",
         pillColor: "bg-amber-500 text-white",
         ringColor: "border-amber-500"
@@ -1523,7 +1527,7 @@ Date: ${new Date().toLocaleString()}
                     }`}
                   >
                     <LayoutDashboard size={14} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-                    <span>Dashboard</span>
+                    <span>Daily Spending</span>
                   </button>
 
                   {/* History link */}
@@ -2582,8 +2586,8 @@ Date: ${new Date().toLocaleString()}
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-0.5 font-sans">
                   Cumulative Spending this Month
                 </h2>
-                <p className="text-[9px] text-gray-450 mb-1.5 leading-tight">
-                  Discretionary spending (solid line) against total limits (horizontal marker).
+                <p className="text-[9px] text-gray-455 mb-1.5 leading-tight">
+                  Daily spending (solid line) against total limits (horizontal marker).
                 </p>
 
                 {trendChartData.length === 0 || totals.totalSpent === 0 ? (
@@ -2729,7 +2733,45 @@ Date: ${new Date().toLocaleString()}
                       <div className="divide-y divide-white/5 space-y-1.5">
                         {incomeStreams.map((item) => (
                           <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
-                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            {editingItemId === item.id ? (
+                              <input 
+                                type="text"
+                                value={editingItemValue}
+                                onChange={(e) => setEditingItemValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    if (editingItemValue.trim()) {
+                                      setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    }
+                                    setEditingItemId(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingItemId(null);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingItemValue.trim()) {
+                                    setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                  }
+                                  setEditingItemId(null);
+                                }}
+                                className="px-2 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
+                                <button 
+                                  onClick={() => {
+                                    setEditingItemId(item.id);
+                                    setEditingItemValue(item.label);
+                                  }}
+                                  className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0"
+                                  title="Edit Name"
+                                >
+                                  <Pencil size={10} />
+                                </button>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5">
                               <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
@@ -2827,7 +2869,45 @@ Date: ${new Date().toLocaleString()}
                       <div className="divide-y divide-white/5 space-y-1.5">
                         {fixedExpenses.map((item) => (
                           <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
-                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            {editingItemId === item.id ? (
+                              <input 
+                                type="text"
+                                value={editingItemValue}
+                                onChange={(e) => setEditingItemValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    if (editingItemValue.trim()) {
+                                      setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    }
+                                    setEditingItemId(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingItemId(null);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingItemValue.trim()) {
+                                    setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                  }
+                                  setEditingItemId(null);
+                                }}
+                                className="px-2 py-0.5 bg-black/60 border border-sky-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
+                                <button 
+                                  onClick={() => {
+                                    setEditingItemId(item.id);
+                                    setEditingItemValue(item.label);
+                                  }}
+                                  className="p-0.5 text-gray-500 hover:text-sky-400 transition-all cursor-pointer rounded shrink-0"
+                                  title="Edit Name"
+                                >
+                                  <Pencil size={10} />
+                                </button>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5">
                               <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
@@ -2884,7 +2964,7 @@ Date: ${new Date().toLocaleString()}
                   )}
                 </div>
 
-                 {/* ACCORDION 2: DISCRETIONARY EXPENSES */}
+                 {/* ACCORDION 2: DAILY SPENDING */}
                 <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
                   <button 
                     onClick={() => toggleAccordion('discretionary')}
@@ -2896,7 +2976,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Discretionary Limits</span>
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Daily Spending</span>
                           <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold px-1 py-0.2 rounded font-mono">
                             LIVE SYNC
                           </span>
@@ -2935,12 +3015,12 @@ Date: ${new Date().toLocaleString()}
                         onClick={() => setShowCategoryManager(true)}
                         className="w-full mb-3.5 py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[10px] font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
                       >
-                        <Sparkles size={11} className="animate-pulse shrink-0 text-emerald-400" /> Add/Edit Discretionary Budget Categories
+                        <Sparkles size={11} className="animate-pulse shrink-0 text-emerald-400" /> Add/Edit Daily Spending Budget Category
                       </button>
 
                       {/* Column Header: Budget */}
                       <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
-                        <span>Discretionary Category</span>
+                        <span>Daily Spending Category</span>
                         <span className="pr-6.5">Budget</span>
                       </div>
                       
@@ -2948,15 +3028,57 @@ Date: ${new Date().toLocaleString()}
                         {categories.map((cat) => {
                           const isBusiness = cat.id === 'cat_business_expense';
                           return (
-                            <div key={cat.id} className="flex items-center justify-between pt-1.5 first:pt-0">
-                              <div className="flex items-center gap-2">
-                                <span className={`p-1.5 rounded-lg ${cat.color} scale-90`}>
+                            <div key={cat.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`p-1.5 rounded-lg ${cat.color} scale-90 shrink-0`}>
                                   {renderCategoryIcon(cat.icon, 11)}
                                 </span>
-                                <span className="text-xs text-gray-300 font-medium">
-                                  {cat.name}
-                                  {isBusiness && <span className="text-[7.5px] bg-slate-500/20 text-slate-400 ml-1.5 px-1 rounded font-mono font-bold uppercase">Tax Deductible</span>}
-                                </span>
+                                {editingItemId === cat.id ? (
+                                  <input 
+                                    type="text"
+                                    value={editingItemValue}
+                                    onChange={(e) => setEditingItemValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        if (editingItemValue.trim()) {
+                                          handleUpdateCategory({ ...cat, name: editingItemValue.trim() });
+                                        }
+                                        setEditingItemId(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingItemId(null);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      if (editingItemValue.trim() && editingItemValue.trim() !== cat.name) {
+                                        handleUpdateCategory({ ...cat, name: editingItemValue.trim() });
+                                      }
+                                      setEditingItemId(null);
+                                    }}
+                                    className="px-2 py-0.5 bg-black/60 border border-amber-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="text-xs text-gray-300 font-medium truncate">
+                                      {cat.name}
+                                    </span>
+                                    {isBusiness && (
+                                      <span className="text-[7.5px] bg-slate-500/20 text-slate-400 ml-1.5 px-1 rounded font-mono font-bold uppercase shrink-0">
+                                        Tax Deductible
+                                      </span>
+                                    )}
+                                    <button 
+                                      onClick={() => {
+                                        setEditingItemId(cat.id);
+                                        setEditingItemValue(cat.name);
+                                      }}
+                                      className="p-0.5 text-gray-500 hover:text-amber-400 transition-all cursor-pointer rounded shrink-0"
+                                      title="Edit Name"
+                                    >
+                                      <Pencil size={10} />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <div className="relative">
@@ -2988,11 +3110,11 @@ Date: ${new Date().toLocaleString()}
                         })}
                       </div>
 
-                      {/* Add Custom Discretionary Budget Category Mini Form */}
+                      {/* Add Custom Daily Spending Category Mini Form */}
                       <form onSubmit={handleAddDiscretionaryCategory} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add Custom Discretionary Budget Category"
+                          placeholder="Add Custom Daily Spending Category"
                           value={newDiscretionaryName}
                           onChange={(e) => setNewDiscretionaryName(e.target.value)}
                           className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
@@ -3060,7 +3182,45 @@ Date: ${new Date().toLocaleString()}
                       <div className="divide-y divide-white/5 space-y-1.5">
                         {savingsGoals.map((item) => (
                           <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
-                            <span className="text-xs text-gray-300 font-medium">{item.label}</span>
+                            {editingItemId === item.id ? (
+                              <input 
+                                type="text"
+                                value={editingItemValue}
+                                onChange={(e) => setEditingItemValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    if (editingItemValue.trim()) {
+                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    }
+                                    setEditingItemId(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingItemId(null);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingItemValue.trim()) {
+                                    setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                  }
+                                  setEditingItemId(null);
+                                }}
+                                className="px-2 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
+                                <button 
+                                  onClick={() => {
+                                    setEditingItemId(item.id);
+                                    setEditingItemValue(item.label);
+                                  }}
+                                  className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0"
+                                  title="Edit Name"
+                                >
+                                  <Pencil size={10} />
+                                </button>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5">
                               <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
@@ -3129,7 +3289,7 @@ Date: ${new Date().toLocaleString()}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
                       <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🗂️ Envelopes</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for non-discretionary payments.</p>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for fixed expense payments.</p>
                     </div>
                     <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
                       <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">📅 Bills Calendar</span>
@@ -3141,7 +3301,7 @@ Date: ${new Date().toLocaleString()}
                     </div>
                     <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
                       <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🔗 Linked Sync</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Automatically tie discretionary funds directly into active gauges.</p>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Automatically tie daily spending funds directly into active gauges.</p>
                     </div>
                   </div>
 
@@ -3183,11 +3343,11 @@ Date: ${new Date().toLocaleString()}
                 {/* Screens */}
                 <div className="space-y-2 font-sans">
                   
-                  {/* Dashboard Screen Section */}
+                  {/* Daily Spending Screen Section */}
                   <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
                     <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
                       <LayoutDashboard size={11} className="shrink-0" />
-                      1. Dashboard
+                      1. Daily Spending
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal font-bold">
                       Note: You can add new expenses anytime by tapping the prominent "+" button located at the bottom center of the navigation bar.
@@ -3197,7 +3357,7 @@ Date: ${new Date().toLocaleString()}
                     </p>
                     <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
-                      <li><strong className="text-gray-300">Discretionary Limits:</strong> Compares total spent against any budget you've assigned that category.</li>
+                      <li><strong className="text-gray-300">Daily Spending:</strong> Compares total spent against any budget you've assigned that category.</li>
                       <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
                       <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
                       <li><strong className="text-gray-300">NOTE on Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing easy tracking and reporting of them without impacting your personal spending information.</li>
@@ -3351,7 +3511,7 @@ Date: ${new Date().toLocaleString()}
             <button
               onClick={() => setShowAddForm(true)}
               className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center border-0 outline-hidden focus:ring-4 focus:ring-emerald-500/20"
-              title="Add Discretionary Expense"
+              title="Add Daily Spending Expense"
             >
               <Plus size={22} className="stroke-[3]" />
             </button>
@@ -3378,7 +3538,7 @@ Date: ${new Date().toLocaleString()}
             }`}
           >
             <LayoutDashboard size={17} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Dashboard</span>
+            <span className="text-[8.5px] mt-0.5 font-sans">Daily Spending</span>
           </button>
 
           {/* Nav Item: Logs history */}

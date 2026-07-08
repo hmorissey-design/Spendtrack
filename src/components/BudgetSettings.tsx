@@ -748,13 +748,13 @@ function RenderActiveDashboardLive({
     if (percentSpent >= 100) {
       return {
         title: "Over Budget Limit!",
-        desc: "Discretionary expenses have exceeded set goals. Limit your expenditures immediately.",
+        desc: "Daily spending expenses have exceeded set goals. Limit your expenditures immediately.",
         color: "text-rose-400 border-rose-500/20 bg-rose-500/5"
       };
     } else if (percentSpent >= 80) {
       return {
         title: "Approaching Limit",
-        desc: "You have used more than 80% of discretionary limits. Control optional purchases.",
+        desc: "You have used more than 80% of daily spending limits. Control optional purchases.",
         color: "text-amber-400 border-amber-500/20 bg-amber-500/5"
       };
     } else {
@@ -777,7 +777,7 @@ function RenderActiveDashboardLive({
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
-          Device Frame: Dashboard
+          Device Frame: Daily Spending
         </span>
       </div>
 
@@ -846,7 +846,7 @@ function RenderActiveDashboardLive({
 
         {categoryStats.length === 0 ? (
           <div className="text-center py-6 text-gray-500 text-[10px]">
-            No discretionary limits configured.
+            No daily spending limits configured.
           </div>
         ) : (
           categoryStats.map((stat, i) => {

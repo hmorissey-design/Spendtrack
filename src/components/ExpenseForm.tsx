@@ -306,7 +306,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       <div className="flex items-center justify-between border-b border-white/5 pb-2.5 mb-2.5">
         <h3 className="text-base font-bold text-white flex items-center gap-1.5 uppercase tracking-wider font-sans">
           <Sparkles size={16} className="text-emerald-500 animate-pulse" />
-          {expenseToEdit ? 'Edit Expense Log' : 'Add Expense'}
+          {expenseToEdit ? 'Edit Expense Log' : 'Daily Spending Expense'}
         </h3>
         <div className="flex items-center gap-2">
           <button 
