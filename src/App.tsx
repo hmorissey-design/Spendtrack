@@ -35,7 +35,10 @@ import {
   AlertTriangle,
   Menu,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowRight,
+  ArrowLeft,
+  RefreshCw
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -321,25 +324,44 @@ export default function App() {
     ];
   });
 
-  const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number }[]>(() => {
+  const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number }[]>(() => {
     try {
       const stored = localStorage.getItem('expensetrack_savings_goals');
       if (stored) {
         const parsed = JSON.parse(stored);
-        const legacyDefaults: Record<string, number[]> = {
-          emergency_fund: [300],
-          retirement: [400],
-          investment: [200],
-          vacation_fund: [100]
-        };
         let modified = false;
         const migrated = parsed.map((item: any) => {
-          const possibleDefaults = legacyDefaults[item.id];
-          if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
+          let updated = { ...item };
+          if (updated.amount === undefined) {
+            updated.amount = 0;
             modified = true;
-            return { ...item, amount: 0 };
           }
-          return item;
+          if (updated.targetAmount === undefined) {
+            if (item.amount > 1000) {
+              updated.targetAmount = item.amount;
+              updated.amount = 0;
+            } else {
+              updated.targetAmount = item.id === 'emergency_fund' ? 10000 
+                : item.id === 'retirement' ? 50000 
+                : item.id === 'investment' ? 20000 
+                : item.id === 'vacation_fund' ? 5000 
+                : 1000;
+            }
+            modified = true;
+          }
+          if (updated.currentAmount === undefined) {
+            updated.currentAmount = 0;
+            modified = true;
+          }
+          if (updated.allocationPercent === undefined) {
+            updated.allocationPercent = item.id === 'emergency_fund' ? 40 
+              : item.id === 'retirement' ? 30 
+              : item.id === 'investment' ? 20 
+              : item.id === 'vacation_fund' ? 10 
+              : 25;
+            modified = true;
+          }
+          return updated;
         });
         if (modified) {
           localStorage.setItem('expensetrack_savings_goals', JSON.stringify(migrated));
@@ -348,10 +370,10 @@ export default function App() {
       }
     } catch (e) {}
     return [
-      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0 },
-      { id: 'retirement', label: 'Retirement', amount: 0 },
-      { id: 'investment', label: 'Investment', amount: 0 },
-      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0 }
+      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0, targetAmount: 10000, currentAmount: 0, allocationPercent: 40 },
+      { id: 'retirement', label: 'Retirement', amount: 0, targetAmount: 50000, currentAmount: 0, allocationPercent: 30 },
+      { id: 'investment', label: 'Investment', amount: 0, targetAmount: 20000, currentAmount: 0, allocationPercent: 20 },
+      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0, targetAmount: 5000, currentAmount: 0, allocationPercent: 10 }
     ];
   });
 
@@ -385,6 +407,12 @@ export default function App() {
     } catch (e) {}
   }, [savingsGoals]);
 
+  const getPreviousMonthName = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    return date.toLocaleString('default', { month: 'long' });
+  };
+
   // Adding custom income / fixed expense / savings goals states
   const [newIncomeName, setNewIncomeName] = useState('');
   const [newIncomeAmount, setNewIncomeAmount] = useState('');
@@ -392,8 +420,37 @@ export default function App() {
   const [newFixedAmount, setNewFixedAmount] = useState('');
   const [newSavingsName, setNewSavingsName] = useState('');
   const [newSavingsAmount, setNewSavingsAmount] = useState('');
+  const [newSavingsTarget, setNewSavingsTarget] = useState('');
+  const [newSavingsCurrent, setNewSavingsCurrent] = useState('');
+  const [newSavingsPercent, setNewSavingsPercent] = useState('');
   const [newDiscretionaryName, setNewDiscretionaryName] = useState('');
   const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
+
+  // Reconciliation states
+  const [showReconciliationModal, setShowReconciliationModal] = useState(false);
+  const [reconciliationStep, setReconciliationStep] = useState(1);
+  const [chequingBalance, setChequingBalance] = useState('');
+  const [savingsBalance, setSavingsBalance] = useState('');
+  const [cashOnHand, setCashOnHand] = useState('');
+  const [tempSavingsGoals, setTempSavingsGoals] = useState<any[]>([]);
+  const [dismissedReconciliationBanner, setDismissedReconciliationBanner] = useState(() => {
+    try {
+      const today = new Date().toDateString();
+      return localStorage.getItem('dismissed_reconciliation_date') === today;
+    } catch (e) {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (showReconciliationModal) {
+      setTempSavingsGoals(savingsGoals.map(g => ({
+        ...g,
+        allocationPercent: g.allocationPercent || 0,
+        currentAmount: g.currentAmount || 0,
+        targetAmount: g.targetAmount || 0
+      })));
+    }
+  }, [showReconciliationModal, savingsGoals]);
 
   // Inline editing of names / labels states
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -442,7 +499,10 @@ export default function App() {
       const newItem = {
         id: `savings_${Date.now()}`,
         label,
-        amount
+        amount,
+        targetAmount: amount > 0 ? amount * 10 : 1000,
+        currentAmount: 0,
+        allocationPercent: 25
       };
       setSavingsGoals(prev => [...prev, newItem]);
     }
@@ -499,14 +559,24 @@ export default function App() {
     e.preventDefault();
     if (!newSavingsName.trim()) return;
     const amount = parseFloat(newSavingsAmount) || 0;
+    const targetAmount = parseFloat(newSavingsTarget) || 0;
+    const currentAmount = parseFloat(newSavingsCurrent) || 0;
+    const allocationPercent = parseFloat(newSavingsPercent) || 0;
+
     const newItem = {
       id: `savings_${Date.now()}`,
       label: newSavingsName.trim(),
-      amount
+      amount,
+      targetAmount,
+      currentAmount,
+      allocationPercent
     };
     setSavingsGoals(prev => [...prev, newItem]);
     setNewSavingsName('');
     setNewSavingsAmount('');
+    setNewSavingsTarget('');
+    setNewSavingsCurrent('');
+    setNewSavingsPercent('');
   };
 
   const handleDeleteFixedExpense = (id: string) => {
@@ -1959,6 +2029,61 @@ Date: ${new Date().toLocaleString()}
                 </div>
               )}
 
+              {/* Reconciliation Reminder Banner */}
+              {new Date().getDate() === 1 && !dismissedReconciliationBanner && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
+                      <RefreshCw className="animate-spin-slow text-emerald-400" size={18} />
+                    </div>
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <p className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        📅 Monthly Reconciliation Due
+                      </p>
+                      <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
+                        Today is the first day of the month! It's time to run your account reconciliation process.
+                      </p>
+                      <p className="text-[9.5px] text-gray-400 leading-normal">
+                        Reconcile your actual cash balances from chequing, savings, and cash to calculate your surplus and distribute it to your savings goals.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('dismissed_reconciliation_date', new Date().toDateString());
+                          setDismissedReconciliationBanner(true);
+                        } catch (e) {}
+                      }}
+                      className="text-gray-400 hover:text-white p-1 cursor-pointer border-0 bg-transparent flex items-center justify-center"
+                      title="Dismiss"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="flex justify-end border-t border-emerald-500/10 pt-2.5 gap-2">
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('dismissed_reconciliation_date', new Date().toDateString());
+                          setDismissedReconciliationBanner(true);
+                        } catch (e) {}
+                      }}
+                      className="py-1 px-2 text-[9px] font-semibold text-gray-400 hover:text-white rounded transition-colors cursor-pointer border-0 bg-transparent"
+                    >
+                      Remind Me Later
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowReconciliationModal(true);
+                      }}
+                      className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 text-center border-0 outline-hidden"
+                    >
+                      Start Reconciliation Process 🔄
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Circular Gauge and Budget stats header */}
               <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs">
 
@@ -3171,106 +3296,282 @@ Date: ${new Date().toLocaleString()}
                   </button>
 
                   {accordionOpen.savings && (
-                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-2.5">
+                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-3.5">
                       
-                      {/* Column Header: Budget */}
-                      <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
-                        <span>Savings Goal</span>
-                        <span className="pr-6.5">Budget</span>
+                      {/* Monthly Reconciliation Tool Card */}
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl space-y-1.5 text-left">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <RefreshCw size={11} className="text-emerald-400 shrink-0" />
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#eeeeee]">Surplus Allocation Tool</span>
+                          </div>
+                          <span className="text-[7.5px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold px-1 rounded font-mono">
+                            RECONCILIATION
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-gray-400 leading-normal">
+                          Reconcile your actual cash balances from chequing, savings, and cash to calculate your surplus and distribute it to your savings goals based on allocation percentages.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReconciliationStep(1);
+                            setShowReconciliationModal(true);
+                          }}
+                          className="w-full mt-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-extrabold tracking-wider uppercase rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 shadow-xs border-0"
+                        >
+                          <RefreshCw size={10} className="stroke-[2.5]" /> Run Account Reconciliation
+                        </button>
                       </div>
 
-                      <div className="divide-y divide-white/5 space-y-1.5">
-                        {savingsGoals.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
-                            {editingItemId === item.id ? (
-                              <input 
-                                type="text"
-                                value={editingItemValue}
-                                onChange={(e) => setEditingItemValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    if (editingItemValue.trim()) {
-                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
-                                    }
-                                    setEditingItemId(null);
-                                  } else if (e.key === 'Escape') {
-                                    setEditingItemId(null);
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingItemValue.trim()) {
-                                    setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
-                                  }
-                                  setEditingItemId(null);
-                                }}
-                                className="px-2 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
-                                autoFocus
-                              />
-                            ) : (
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
-                                <button 
-                                  onClick={() => {
-                                    setEditingItemId(item.id);
-                                    setEditingItemValue(item.label);
-                                  }}
-                                  className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0"
-                                  title="Edit Name"
-                                >
-                                  <Pencil size={10} />
-                                </button>
+                      <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1 text-left">
+                        Savings Targets & Progress
+                      </div>
+
+                      <div className="space-y-3">
+                        {savingsGoals.map((item) => {
+                          const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.round(((item.currentAmount || 0) / (item.targetAmount || 0)) * 100)) : 0;
+                          return (
+                            <div key={item.id} className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 group">
+                              {/* Row 1: Name, Edit pencil, delete */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {editingItemId === item.id ? (
+                                    <input 
+                                      type="text"
+                                      value={editingItemValue}
+                                      onChange={(e) => setEditingItemValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          if (editingItemValue.trim()) {
+                                            setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                          }
+                                          setEditingItemId(null);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingItemId(null);
+                                        }
+                                      }}
+                                      onBlur={() => {
+                                        if (editingItemValue.trim()) {
+                                          setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                        }
+                                        setEditingItemId(null);
+                                      }}
+                                      className="px-2 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-40 font-medium font-sans"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <span className="text-xs text-white font-extrabold truncate">{item.label}</span>
+                                      <button 
+                                        onClick={() => {
+                                          setEditingItemId(item.id);
+                                          setEditingItemValue(item.label);
+                                        }}
+                                        className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0 bg-transparent border-0"
+                                        title="Edit Name"
+                                      >
+                                        <Pencil size={10} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold">
+                                    {percentSaved}% Saved
+                                  </span>
+                                  <button 
+                                    onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
+                                    className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
+                                    title="Remove Savings Goal"
+                                  >
+                                    <Trash2 size={11} />
+                                  </button>
+                                </div>
                               </div>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
-                                <input 
-                                  type="number"
-                                  min="0"
-                                  placeholder="0"
-                                  value={item.amount || ''}
-                                  onChange={(e) => handleUpdateSavingsGoal(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
-                                />
+
+                              {/* Row 2: Progress Bar */}
+                              <div className="space-y-1">
+                                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                  <div 
+                                    className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
+                                    style={{ width: `${percentSaved}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between text-[9px] text-gray-400 font-mono">
+                                  <span>Saved: <strong className="text-gray-200">{currencySymbol}{(item.currentAmount || 0).toLocaleString()}</strong></span>
+                                  <span>Target: <strong className="text-gray-200">{currencySymbol}{(item.targetAmount || 0).toLocaleString()}</strong></span>
+                                </div>
                               </div>
-                              <button 
-                                onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
-                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                title="Remove Savings Goal"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+
+                              {/* Row 3: Adjustable Values */}
+                              <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/5 text-[9px]">
+                                {/* Desired target input */}
+                                <div className="space-y-0.5 text-left">
+                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Target Total</label>
+                                  <div className="relative">
+                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">{currencySymbol}</span>
+                                    <input 
+                                      type="number"
+                                      min="0"
+                                      placeholder="0"
+                                      value={item.targetAmount || ''}
+                                      onChange={(e) => {
+                                        const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x));
+                                      }}
+                                      className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Current amount input */}
+                                <div className="space-y-0.5 text-left">
+                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Current Saved</label>
+                                  <div className="relative">
+                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">{currencySymbol}</span>
+                                    <input 
+                                      type="number"
+                                      min="0"
+                                      placeholder="0"
+                                      value={item.currentAmount || ''}
+                                      onChange={(e) => {
+                                        const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x));
+                                      }}
+                                      className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Allocation percent input */}
+                                <div className="space-y-0.5 text-left">
+                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Allocation %</label>
+                                  <div className="relative">
+                                    <input 
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      placeholder="0"
+                                      value={item.allocationPercent || ''}
+                                      onChange={(e) => {
+                                        const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x));
+                                      }}
+                                      className="w-full pl-1.5 pr-3.5 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    />
+                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Row 4: Monthly Budget Goal */}
+                              <div className="pt-1.5 flex items-center justify-between text-[9px] border-t border-white/5">
+                                <span className="text-gray-400 font-medium">Monthly Target Budget Goal:</span>
+                                <div className="relative text-left">
+                                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">{currencySymbol}</span>
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={item.amount || ''}
+                                    onChange={(e) => handleUpdateSavingsGoal(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
+                                    className="w-20 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
+                                  />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Add Custom Savings Goal Mini Form */}
-                      <form onSubmit={handleAddSavingsGoal} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
-                        <input 
-                          type="text"
-                          placeholder="Add Custom Savings Budget Category"
-                          value={newSavingsName}
-                          onChange={(e) => setNewSavingsName(e.target.value)}
-                          className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
-                        />
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
-                          <input 
-                            type="number"
-                            placeholder="0"
-                            min="0"
-                            value={newSavingsAmount}
-                            onChange={(e) => setNewSavingsAmount(e.target.value)}
-                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
-                          />
+                      <form onSubmit={handleAddSavingsGoal} className="bg-black/30 p-3 rounded-xl border border-white/5 space-y-2.5">
+                        <p className="text-[9.5px] font-extrabold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                          <Plus size={11} /> Create New Savings Goal
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-left">
+                          <div className="space-y-1 col-span-2">
+                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Goal Name</label>
+                            <input 
+                              type="text"
+                              placeholder="e.g. Dream Home, New Car"
+                              value={newSavingsName}
+                              onChange={(e) => setNewSavingsName(e.target.value)}
+                              className="w-full px-2.5 py-1.5 bg-[#121212] border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400/40 font-medium font-sans"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Target Saved Amt</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="5000"
+                                min="0"
+                                value={newSavingsTarget}
+                                onChange={(e) => setNewSavingsTarget(e.target.value)}
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Current Saved Amt</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="150"
+                                min="0"
+                                value={newSavingsCurrent}
+                                onChange={(e) => setNewSavingsCurrent(e.target.value)}
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Allocation %</label>
+                            <div className="relative">
+                              <input 
+                                type="number"
+                                placeholder="25"
+                                min="0"
+                                max="100"
+                                value={newSavingsPercent}
+                                onChange={(e) => setNewSavingsPercent(e.target.value)}
+                                className="w-full pl-2.5 pr-5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
+                              />
+                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">%</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Mo. Target Budget</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="200"
+                                min="0"
+                                value={newSavingsAmount}
+                                onChange={(e) => setNewSavingsAmount(e.target.value)}
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
+                              />
+                            </div>
+                          </div>
                         </div>
+
                         <button 
                           type="submit"
-                          className="p-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center shrink-0"
-                          title="Add item"
+                          className="w-full py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider"
                         >
-                          <Plus size={13} className="stroke-[2.5]" />
+                          <Plus size={12} className="stroke-[2.5]" /> Add Savings Goal
                         </button>
                       </form>
                     </div>
@@ -3734,6 +4035,514 @@ Date: ${new Date().toLocaleString()}
           isOpen={showCategoryManager}
           onClose={() => setShowCategoryManager(false)}
         />,
+        document.body
+      )}
+
+      {showReconciliationModal && createPortal(
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl shadow-2xl relative flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 text-slate-200 font-sans">
+            
+            {/* Modal Header */}
+            <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl flex items-center justify-center">
+                  <RefreshCw size={15} className="animate-spin-slow" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-extrabold text-white text-xs uppercase tracking-wider">Surplus Allocation Tool</h3>
+                  <p className="text-[8px] text-gray-400 font-mono uppercase tracking-widest mt-0.5">Reconciliation • Step {reconciliationStep} of 3</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReconciliationModal(false)}
+                className="p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
+                title="Close"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Steps indicator bar */}
+            <div className="px-4 py-2 bg-black/40 border-b border-white/5 flex items-center justify-between shrink-0">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center gap-1.5">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    reconciliationStep === step 
+                      ? 'bg-emerald-500 text-black font-extrabold'
+                      : reconciliationStep > step
+                        ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-white/5 text-gray-500'
+                  }`}>
+                    {step}
+                  </div>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider ${
+                    reconciliationStep === step ? 'text-emerald-400' : 'text-gray-500'
+                  }`}>
+                    {step === 1 ? 'Cash Balances' : step === 2 ? 'Surplus Calculation' : 'Goal Distribution'}
+                  </span>
+                  {step < 3 && <span className="text-gray-600">/</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* Scrollable Content Area */}
+            <div className="p-4 overflow-y-auto space-y-4 flex-1 text-left">
+              {reconciliationStep === 1 && (
+                <div className="space-y-3.5">
+                  <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-1">
+                    <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest">
+                      Enter cash balances
+                    </p>
+                    <p className="text-[9px] text-gray-400 leading-normal">
+                      Please enter your actual cash balances across your liquid accounts as of the last day of {getPreviousMonthName()}.
+                    </p>
+                  </div>
+
+                  {/* Chequing Account */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-gray-400 uppercase tracking-wider font-bold block">Chequing Accounts Balance</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">{currencySymbol}</span>
+                      <input 
+                        type="number"
+                        placeholder="0.00"
+                        min="0"
+                        value={chequingBalance}
+                        onChange={(e) => setChequingBalance(e.target.value)}
+                        className="w-full pl-7 pr-3 py-2 bg-[#1c1c1c] border border-white/10 focus:border-emerald-500/50 outline-none rounded-xl text-xs font-mono font-bold text-white text-left placeholder:text-gray-600"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  {/* Savings Account */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-gray-400 uppercase tracking-wider font-bold block">Liquid Savings Accounts Balance</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">{currencySymbol}</span>
+                      <input 
+                        type="number"
+                        placeholder="0.00"
+                        min="0"
+                        value={savingsBalance}
+                        onChange={(e) => setSavingsBalance(e.target.value)}
+                        className="w-full pl-7 pr-3 py-2 bg-[#1c1c1c] border border-white/10 focus:border-emerald-500/50 outline-none rounded-xl text-xs font-mono font-bold text-white text-left placeholder:text-gray-600"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cash on Hand */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-gray-400 uppercase tracking-wider font-bold block">Physical Cash on Hand</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">{currencySymbol}</span>
+                      <input 
+                        type="number"
+                        placeholder="0.00"
+                        min="0"
+                        value={cashOnHand}
+                        onChange={(e) => setCashOnHand(e.target.value)}
+                        className="w-full pl-7 pr-3 py-2 bg-[#1c1c1c] border border-white/10 focus:border-emerald-500/50 outline-none rounded-xl text-xs font-mono font-bold text-white text-left placeholder:text-gray-600"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {reconciliationStep === 2 && (() => {
+                const chequingVal = parseFloat(chequingBalance) || 0;
+                const savingsVal = parseFloat(savingsBalance) || 0;
+                const cashVal = parseFloat(cashOnHand) || 0;
+                const balancesTotal = chequingVal + savingsVal + cashVal;
+
+                const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
+                const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
+                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                const projectedExpenses = projectedFixed + projectedDiscretionary;
+
+                const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+
+                return (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-1">
+                      <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest">
+                        Reconciled surplus available
+                      </p>
+                      <p className="text-[9px] text-gray-400 leading-normal">
+                        Here is the calculation to derive the reconciled available surplus to distribute to your savings goals.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-[#181818] border border-white/5 rounded-2xl space-y-2.5 font-mono text-xs">
+                      {/* Sub-balances breakdown */}
+                      <div className="flex justify-between items-center text-gray-400 border-b border-white/5 pb-1.5">
+                        <span className="font-sans text-[10px] font-bold uppercase text-gray-500">Liquidity Subtotal</span>
+                        <span className="font-extrabold text-white">{currencySymbol}{balancesTotal.toLocaleString()}</span>
+                      </div>
+                      
+                      <div className="pl-3 space-y-1 border-l border-white/5 text-[11px] text-gray-400">
+                        <div className="flex justify-between items-center">
+                          <span>Chequing balances:</span>
+                          <span>{currencySymbol}{chequingVal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>Savings balances:</span>
+                          <span>{currencySymbol}{savingsVal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>Cash on hand:</span>
+                          <span>{currencySymbol}{cashVal.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Calculation Rows */}
+                      <div className="space-y-1.5 pt-2 border-t border-white/5">
+                        <div className="flex justify-between items-center text-[#eeeeee]">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-emerald-500 font-bold">+</span> Total Account Balances:
+                          </span>
+                          <span className="font-bold">{currencySymbol}{balancesTotal.toLocaleString()}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-emerald-400">
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-bold">+</span> Projected Income ({totals.monthName}):
+                          </span>
+                          <span className="font-bold">{currencySymbol}{projectedIncome.toLocaleString()}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-rose-400">
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-bold">-</span> Projected Expenses:
+                          </span>
+                          <span className="font-bold">{currencySymbol}{projectedExpenses.toLocaleString()}</span>
+                        </div>
+                        
+                        <div className="pl-3.5 space-y-0.5 text-[10px] text-gray-500 leading-normal border-l border-white/5">
+                          <div className="flex justify-between">
+                            <span>Fixed Obligations:</span>
+                            <span>{currencySymbol}{projectedFixed.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Daily Spending Limits:</span>
+                            <span>{currencySymbol}{projectedDiscretionary.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Calculated Surplus Summary block */}
+                      <div className={`p-3 rounded-xl border flex flex-col items-center justify-center mt-3 text-center ${
+                        reconciledSurplus >= 0
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-rose-550/10 border-rose-500/20 text-rose-400'
+                      }`}>
+                        <span className="text-[8px] font-black uppercase tracking-widest font-sans">
+                          {reconciledSurplus >= 0 ? 'RECONCILED SURPLUS' : 'RECONCILED DEFICIT'}
+                        </span>
+                        <span className="text-xl font-black font-mono mt-1">
+                          {currencySymbol}{reconciledSurplus.toLocaleString()}
+                        </span>
+                        <span className="text-[8px] font-sans text-gray-400 mt-1 uppercase tracking-wider">
+                          {reconciledSurplus >= 0 
+                            ? 'Funds ready to transfer to Savings targets!'
+                            : 'Adjust budgets or deposit funds to cover this month\'s obligations.'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {reconciliationStep === 3 && (() => {
+                const chequingVal = parseFloat(chequingBalance) || 0;
+                const savingsVal = parseFloat(savingsBalance) || 0;
+                const cashVal = parseFloat(cashOnHand) || 0;
+                const balancesTotal = chequingVal + savingsVal + cashVal;
+
+                const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
+                const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
+                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                const projectedExpenses = projectedFixed + projectedDiscretionary;
+
+                const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+
+                if (tempSavingsGoals.length === 0) {
+                  return (
+                    <div className="space-y-4 text-center py-4">
+                      <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto text-amber-400">
+                        <AlertCircle size={24} />
+                      </div>
+                      <div className="space-y-1 max-w-xs mx-auto">
+                        <h4 className="font-extrabold text-white text-sm uppercase tracking-wider">No Savings Goals Set</h4>
+                        <p className="text-[10.5px] text-gray-400 leading-relaxed">
+                          You do not have any active Savings Goals to receive your reconciled amount of <strong className={reconciledSurplus >= 0 ? "text-emerald-400" : "text-rose-400"}>{currencySymbol}{reconciledSurplus.toLocaleString()}</strong>.
+                        </p>
+                        <p className="text-[9.5px] text-gray-500 leading-normal pt-2">
+                          Please exit the reconciliation flow, add a custom savings goal with its desired allocation percent, and run this process again.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                const totalAllocatedPercent = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent) || 0), 0);
+                const isOverAllocated = totalAllocatedPercent > 100;
+                const bufferPercent = Math.max(0, 100 - totalAllocatedPercent);
+                const bufferAmount = reconciledSurplus * (bufferPercent / 100);
+
+                return (
+                  <div className="space-y-3.5">
+                    <div className={`p-3 rounded-xl space-y-1 ${reconciledSurplus >= 0 ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-rose-500/5 border border-rose-500/10'}`}>
+                      <p className={`text-[10px] font-extrabold uppercase tracking-widest ${reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {reconciledSurplus >= 0 
+                          ? `Distribute ${currencySymbol}${reconciledSurplus.toLocaleString()} surplus` 
+                          : `Distribute ${currencySymbol}${Math.abs(reconciledSurplus).toLocaleString()} deficit`
+                        }
+                      </p>
+                      <p className="text-[9px] text-gray-400 leading-normal">
+                        {reconciledSurplus >= 0 
+                          ? "Modify allocation percentages to control what portion of this month's surplus is directed to each goal."
+                          : "Modify allocation percentages to control how this month's deficit is subtracted from each goal."
+                        }
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                      {tempSavingsGoals.map((item) => {
+                        const currentPercent = parseFloat(item.allocationPercent) || 0;
+                        const allocatedPortion = reconciledSurplus * (currentPercent / 100);
+                        const updatedAmount = (item.currentAmount || 0) + allocatedPortion;
+                        const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.max(0, Math.round((updatedAmount / (item.targetAmount || 0)) * 100))) : 0;
+
+                        return (
+                          <div key={item.id} className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-[#eeeeee]">{item.label}</span>
+                              <div className="flex items-center gap-1.5">
+                                <label className="text-[8px] text-gray-500 uppercase font-black">Allocation</label>
+                                <div className="relative">
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={item.allocationPercent}
+                                    onChange={(e) => {
+                                      const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                                      setTempSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x));
+                                    }}
+                                    className={`w-14 pl-1.5 pr-4 py-0.5 bg-[#121212] border border-white/10 focus:border-emerald-500/50 outline-none rounded text-[10px] font-mono text-left font-bold ${reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                                  />
+                                  <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-500 font-bold">%</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center text-[9.5px] font-mono text-gray-400 pt-1 border-t border-white/5">
+                              <div>
+                                <span>Portion: </span>
+                                {reconciledSurplus >= 0 ? (
+                                  <strong className="text-emerald-400">+{currencySymbol}{allocatedPortion.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                ) : (
+                                  <strong className="text-rose-400">-{currencySymbol}{Math.abs(allocatedPortion).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                )}
+                              </div>
+                              <div>
+                                <span>Balances: </span>
+                                <span className="text-gray-300">
+                                  {currencySymbol}{(item.currentAmount || 0).toLocaleString()} → <strong className="text-white font-extrabold">{currencySymbol}{updatedAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Mini progress preview */}
+                            <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden">
+                              <div 
+                                className={`h-1 rounded-full transition-all ${reconciledSurplus >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                                style={{ width: `${percentSaved}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Allocation validation bar */}
+                    <div className={`p-2.5 rounded-xl border text-[9.5px] leading-relaxed space-y-1 ${
+                      isOverAllocated
+                        ? 'bg-rose-550/10 border-rose-500/20 text-rose-400'
+                        : totalAllocatedPercent === 100
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-indigo-950/10 border-indigo-500/20 text-indigo-400'
+                    }`}>
+                      <div className="flex justify-between font-bold">
+                        <span>Total Allocation Percentage:</span>
+                        <span>{totalAllocatedPercent}% / 100%</span>
+                      </div>
+                      {isOverAllocated ? (
+                        <p className="text-gray-400 font-medium">
+                          ⚠️ Total allocation exceeds 100% ({totalAllocatedPercent}%). Please decrease percentages before continuing.
+                        </p>
+                      ) : totalAllocatedPercent === 100 ? (
+                        <p className="text-gray-400 font-medium font-sans">
+                          {reconciledSurplus >= 0 ? (
+                            <>✅ Perfectly matched! 100% of the reconciled surplus will be distributed fully to your savings goals.</>
+                          ) : (
+                            <>✅ Perfectly matched! 100% of the reconciled deficit will be subtracted fully from your savings goals.</>
+                          )}
+                        </p>
+                      ) : (
+                        <p className="text-gray-400 font-medium font-sans">
+                          {reconciledSurplus >= 0 ? (
+                            <>ℹ️ Remaining <strong className="text-white font-bold">{bufferPercent}%</strong> (<strong className="text-white font-bold">{currencySymbol}{bufferAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>) will remain in liquid accounts as unallocated cushion.</>
+                          ) : (
+                            <>ℹ️ Remaining <strong className="text-white font-bold">{bufferPercent}%</strong> (<strong className="text-white font-bold">{currencySymbol}{Math.abs(bufferAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>) will remain as unallocated liquid deficit.</>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div className="p-4 border-t border-white/5 bg-[#151515] rounded-b-2xl flex gap-2.5 shrink-0 justify-between items-center">
+              <div>
+                {reconciliationStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setReconciliationStep(prev => prev - 1)}
+                    className="py-2 px-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border-0 active:scale-95"
+                  >
+                    <ArrowLeft size={12} /> Back
+                  </button>
+                )}
+              </div>
+
+              <div>
+                {reconciliationStep === 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!chequingBalance || !savingsBalance || !cashOnHand) {
+                        alert("Please fill in all balance values to proceed.");
+                        return;
+                      }
+                      setReconciliationStep(2);
+                    }}
+                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border-0 active:scale-95"
+                  >
+                    Calculate Surplus <ArrowRight size={12} />
+                  </button>
+                )}
+
+                {reconciliationStep === 2 && (() => {
+                  const chequingVal = parseFloat(chequingBalance) || 0;
+                  const savingsVal = parseFloat(savingsBalance) || 0;
+                  const cashVal = parseFloat(cashOnHand) || 0;
+                  const balancesTotal = chequingVal + savingsVal + cashVal;
+
+                  const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
+                  const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
+                  const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                  const projectedExpenses = projectedFixed + projectedDiscretionary;
+
+                  const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReconciliationStep(3);
+                      }}
+                      className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border-0 active:scale-95"
+                    >
+                      {reconciledSurplus >= 0 ? 'Proceed to Allocation' : 'Proceed to Deficit Allocation'} <ArrowRight size={12} />
+                    </button>
+                  );
+                })()}
+
+                {reconciliationStep === 3 && (() => {
+                  const chequingVal = parseFloat(chequingBalance) || 0;
+                  const savingsVal = parseFloat(savingsBalance) || 0;
+                  const cashVal = parseFloat(cashOnHand) || 0;
+                  const balancesTotal = chequingVal + savingsVal + cashVal;
+
+                  const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
+                  const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
+                  const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                  const projectedExpenses = projectedFixed + projectedDiscretionary;
+
+                  const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+
+                  if (tempSavingsGoals.length === 0) {
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowReconciliationModal(false);
+                        }}
+                        className="py-2 px-4 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-0 active:scale-95"
+                      >
+                        Acknowledge & Close
+                      </button>
+                    );
+                  }
+
+                  const totalAllocatedPercent = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent) || 0), 0);
+                  const isOverAllocated = totalAllocatedPercent > 100;
+
+                  return (
+                    <button
+                      type="button"
+                      disabled={isOverAllocated}
+                      onClick={() => {
+                        if (isOverAllocated) return;
+                        
+                        // Apply distributed amounts to actual savingsGoals
+                        setSavingsGoals(prev => prev.map(originalGoal => {
+                          const tempGoal = tempSavingsGoals.find(t => t.id === originalGoal.id);
+                          if (!tempGoal) return originalGoal;
+                          
+                          const percent = parseFloat(tempGoal.allocationPercent) || 0;
+                          const allocatedPortion = reconciledSurplus * (percent / 100);
+                          return {
+                            ...originalGoal,
+                            allocationPercent: percent,
+                            currentAmount: (originalGoal.currentAmount || 0) + allocatedPortion
+                          };
+                        }));
+
+                        setShowReconciliationModal(false);
+                        
+                        // Soft browser Alert success
+                        if (reconciledSurplus >= 0) {
+                          alert(`Reconciliation Successful! Distributed ${currencySymbol}${reconciledSurplus.toLocaleString(undefined, { maximumFractionDigits: 0 })} surplus across your Savings Goals!`);
+                        } else {
+                          alert(`Reconciliation Successful! Subtracted ${currencySymbol}${Math.abs(reconciledSurplus).toLocaleString(undefined, { maximumFractionDigits: 0 })} deficit from your Savings Goals!`);
+                        }
+                      }}
+                      className={`py-2 px-4 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all border-0 ${
+                        isOverAllocated
+                          ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                          : reconciledSurplus >= 0 
+                            ? 'bg-emerald-600 hover:bg-emerald-500 active:scale-95 cursor-pointer'
+                            : 'bg-rose-600 hover:bg-rose-500 active:scale-95 cursor-pointer'
+                      }`}
+                    >
+                      <CheckCircle size={12} className="stroke-[2.5]" /> Approve & Apply
+                    </button>
+                  );
+                })()}
+              </div>
+            </div>
+
+          </div>
+        </div>,
         document.body
       )}
     </AndroidFrame>
