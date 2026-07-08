@@ -74,19 +74,6 @@ export function ContextualTipCard({ expenses, categories, totalBudget, totalSpen
   const activeTips = useMemo(() => {
     const list: FinancialTip[] = [];
 
-    // Trigger 1: Over budget or close to over budget
-    if (totalBudget > 0) {
-      const budgetPercent = (totalSpent / totalBudget) * 100;
-      if (budgetPercent >= 85) {
-        list.push({
-          id: 'high_spending_alert',
-          title: "Budget Exhaustion Warning",
-          description: `You have spent ${budgetPercent.toFixed(0)}% of your monthly budget. Pause non-essential shopping to prevent exceeding your target.`,
-          iconType: 'alert'
-        });
-      }
-    }
-
     // Trigger 2: High Category Spendings
     if (expenses.length > 0 && categories.length > 0) {
       // Aggregate spendings by category

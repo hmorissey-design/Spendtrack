@@ -375,7 +375,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
             })()}
 
             {/* Operator shortcuts for fast mobile entry */}
-            <div className="flex items-center justify-center gap-1.5 mt-2.5 select-none w-full border-t border-white/5 pt-2.5">
+            <div className="flex items-center justify-center gap-2 mt-2.5 select-none w-full border-t border-white/5 pt-2.5">
               {['+', '-', '*', '/'].map((op) => (
                 <button
                   key={op}
@@ -389,7 +389,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                     }
                     amountInputRef.current?.focus();
                   }}
-                  className="w-10 h-7 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300 font-mono font-black flex items-center justify-center hover:bg-white/10 hover:text-white cursor-pointer select-none active:scale-95 transition-all"
+                  className="w-12 h-10 rounded-xl bg-white/5 border border-white/10 text-lg text-slate-200 font-mono font-bold flex items-center justify-center hover:bg-white/10 hover:text-white cursor-pointer select-none active:scale-95 transition-all shadow-xs"
                 >
                   {op}
                 </button>
@@ -400,7 +400,7 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                   setAmount('');
                   amountInputRef.current?.focus();
                 }}
-                className="px-2.5 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-400 font-bold tracking-wider uppercase flex items-center justify-center hover:bg-rose-500/20 cursor-pointer select-none active:scale-95 transition-all"
+                className="px-3 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 font-extrabold tracking-wider uppercase flex items-center justify-center hover:bg-rose-500/20 cursor-pointer select-none active:scale-95 transition-all"
               >
                 Clear
               </button>

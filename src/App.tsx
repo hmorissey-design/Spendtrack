@@ -47,6 +47,7 @@ import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ContextualTipCard } from './components/ContextualTipCard';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
+import { CategoryManager } from './components/CategoryManager';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
 // Recharts components imports
@@ -234,6 +235,7 @@ export default function App() {
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
   const [defaultCategoryId, setDefaultCategoryIdState] = useState<string>('');
@@ -353,12 +355,12 @@ export default function App() {
     ];
   });
 
-  // Accordion active toggles
+  // Accordion active toggles (initially collapsed by default)
   const [accordionOpen, setAccordionOpen] = useState<Record<string, boolean>>({
-    income: true,
-    fixed: true,
-    discretionary: true,
-    savings: true
+    income: false,
+    fixed: false,
+    discretionary: false,
+    savings: false
   });
 
   const toggleAccordion = (key: string) => {
@@ -390,6 +392,14 @@ export default function App() {
   const [newFixedAmount, setNewFixedAmount] = useState('');
   const [newSavingsName, setNewSavingsName] = useState('');
   const [newSavingsAmount, setNewSavingsAmount] = useState('');
+  const [newDiscretionaryName, setNewDiscretionaryName] = useState('');
+  const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
+
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: 'income' | 'fixed' | 'savings' | 'category';
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Unified quick add states
   const [quickAddName, setQuickAddName] = useState('');
@@ -501,6 +511,23 @@ export default function App() {
 
   const handleDeleteSavingsGoal = (id: string) => {
     setSavingsGoals(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleAddDiscretionaryCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDiscretionaryName.trim()) return;
+    const limit = parseFloat(newDiscretionaryLimit) || 0;
+    
+    handleAddCategory({
+      name: newDiscretionaryName.trim(),
+      icon: 'Sparkles',
+      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      textColor: 'text-emerald-400',
+      limit: limit
+    });
+    
+    setNewDiscretionaryName('');
+    setNewDiscretionaryLimit('');
   };
 
   // Feedback & Support states
@@ -752,6 +779,17 @@ Date: ${new Date().toLocaleString()}
   useEffect(() => {
     loadDatabaseState(selectedMonth);
   }, [selectedMonth]);
+
+  // Sync total budget target in standard MonthlyBudgets system when category limits sum changes
+  const totalCalculatedLimit = useMemo(() => {
+    return categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+  }, [categories]);
+
+  useEffect(() => {
+    if (currentBudget.month && totalCalculatedLimit !== currentBudget.limitAmount) {
+      handleUpdateBudget(totalCalculatedLimit, currentBudget.categoryLimits || {});
+    }
+  }, [totalCalculatedLimit, currentBudget]);
 
 
 
@@ -1186,7 +1224,9 @@ Date: ${new Date().toLocaleString()}
     // The Total Budget limit should be the total of individual category budgets (excluding business expenses)
     const limit = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
     
-    const percent = limit > 0 ? Math.round((totalSpent / limit) * 100) : 0;
+    const percent = limit > 0 
+      ? Math.round((totalSpent / limit) * 100) 
+      : (totalSpent > 0 ? 100 : 0);
     const remaining = limit - totalSpent;
  
     // Parse month name elegantly
@@ -1360,7 +1400,9 @@ Date: ${new Date().toLocaleString()}
     if (totals.percent >= 100) {
       return {
         title: "Over Budget Limit!",
-        desc: "Discretionary expenses have exceeded set goals. Limit your expenditures immediately.",
+        desc: totals.limit === 0 
+          ? "No budget limits set, but expenses exist. Create a budget to stay on track." 
+          : "Discretionary expenses have exceeded set goals. Limit your expenditures immediately.",
         color: "text-rose-400 border-rose-500/20 bg-rose-500/5",
         pillColor: "bg-rose-500 text-white",
         ringColor: "border-rose-500"
@@ -2648,72 +2690,6 @@ Date: ${new Date().toLocaleString()}
                     <span>Warning: Budget allocations & savings exceed total income by {currencySymbol}{Math.abs(overallSurplus).toLocaleString()}!</span>
                   </div>
                 )}
-
-                {/* 2. UNIFIED QUICK ADD FORM WITH SECTION SELECTION */}
-                <form onSubmit={handleQuickAddSubmit} className="bg-[#111111] rounded-2xl p-4 border border-white/5 space-y-3.5">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <div className="p-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
-                      <Plus size={12} className="stroke-[2.5]" />
-                    </div>
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Quick Add Budget Item</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Item Name */}
-                    <div className="space-y-1">
-                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Item Name</label>
-                      <input 
-                        type="text"
-                        placeholder="e.g. Salary, Electricity, Gym"
-                        value={quickAddName}
-                        onChange={(e) => setQuickAddName(e.target.value)}
-                        className="w-full px-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs text-white transition-all placeholder:text-gray-600"
-                        required
-                      />
-                    </div>
-
-                    {/* Section Selector */}
-                    <div className="space-y-1">
-                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Section Category</label>
-                      <select
-                        value={quickAddSection}
-                        onChange={(e) => setQuickAddSection(e.target.value as any)}
-                        className="w-full px-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs text-white transition-all cursor-pointer"
-                      >
-                        <option value="income" className="bg-[#111111] text-white">Income Streams</option>
-                        <option value="fixed" className="bg-[#111111] text-white">Fixed Expenses</option>
-                        <option value="discretionary" className="bg-[#111111] text-white">Discretionary Limits</option>
-                        <option value="savings" className="bg-[#111111] text-white">Savings Goals</option>
-                      </select>
-                    </div>
-
-                    {/* Budget Amount */}
-                    <div className="space-y-1">
-                      <label className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest block">Budget Amount ({currencySymbol})</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">{currencySymbol}</span>
-                        <input 
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          value={quickAddAmount}
-                          onChange={(e) => setQuickAddAmount(e.target.value)}
-                          className="w-full pl-6.5 pr-3 py-2 bg-black/45 border border-white/10 focus:border-emerald-500/40 outline-none rounded-xl text-xs font-mono font-bold text-white transition-all text-right"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    className="w-full py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer text-center active:scale-98 flex items-center justify-center gap-1.5"
-                  >
-                    <Plus size={12} className="stroke-[2.5]" />
-                    <span>Add Item to Budget</span>
-                  </button>
-                </form>
-
-                {/* ACCORDION 0: INCOME STREAMS */}
                 <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
                   <button 
                     onClick={() => toggleAccordion('income')}
@@ -2725,7 +2701,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Income Streams</span>
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Income</span>
                           <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 py-0.2 rounded font-mono">
                             {incomeStreams.length} SOURCES
                           </span>
@@ -2767,8 +2743,8 @@ Date: ${new Date().toLocaleString()}
                                 />
                               </div>
                               <button 
-                                onClick={() => handleDeleteIncomeStream(item.id)}
-                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                onClick={() => setItemToDelete({ type: 'income', id: item.id, name: item.label })}
+                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
                                 title="Remove Income Source"
                               >
                                 <Trash2 size={12} />
@@ -2782,27 +2758,28 @@ Date: ${new Date().toLocaleString()}
                       <form onSubmit={handleAddIncomeStream} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add other (e.g. Side Hustle)"
+                          placeholder="Add Custom Income Budget Category"
                           value={newIncomeName}
                           onChange={(e) => setNewIncomeName(e.target.value)}
-                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-white"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
                           <input 
                             type="number"
                             min="0"
-                            placeholder="Amount"
+                            placeholder="0"
                             value={newIncomeAmount}
                             onChange={(e) => setNewIncomeAmount(e.target.value)}
-                            className="w-16 pl-4.5 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-right font-mono text-white"
+                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
                           type="submit"
-                          className="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                          className="p-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center shrink-0"
+                          title="Add item"
                         >
-                          Add
+                          <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
 
@@ -2864,8 +2841,8 @@ Date: ${new Date().toLocaleString()}
                                 />
                               </div>
                               <button 
-                                onClick={() => handleDeleteFixedExpense(item.id)}
-                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                onClick={() => setItemToDelete({ type: 'fixed', id: item.id, name: item.label })}
+                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
                                 title="Remove Fixed Expense"
                               >
                                 <Trash2 size={12} />
@@ -2879,34 +2856,35 @@ Date: ${new Date().toLocaleString()}
                       <form onSubmit={handleAddFixedExpense} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add other (e.g. Gym)"
+                          placeholder="Add Custom Fixed Budget Category"
                           value={newFixedName}
                           onChange={(e) => setNewFixedName(e.target.value)}
-                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-sky-500/30 outline-none rounded-lg text-[10px] text-white"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
                           <input 
                             type="number"
                             placeholder="0"
                             min="0"
                             value={newFixedAmount}
                             onChange={(e) => setNewFixedAmount(e.target.value)}
-                            className="w-16 pl-4 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-sky-500/30 outline-none rounded-lg text-[10px] font-mono text-right text-white"
+                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
                           type="submit"
-                          className="p-1 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/25 hover:border-sky-500/45 text-sky-400 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                          className="p-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center shrink-0"
+                          title="Add item"
                         >
-                          <Plus size={13} />
+                          <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
                     </div>
                   )}
                 </div>
 
-                {/* ACCORDION 2: DISCRETIONARY EXPENSES */}
+                 {/* ACCORDION 2: DISCRETIONARY EXPENSES */}
                 <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
                   <button 
                     onClick={() => toggleAccordion('discretionary')}
@@ -2934,16 +2912,36 @@ Date: ${new Date().toLocaleString()}
                     </div>
                   </button>
 
+                  {/* Budget Balance Line right below header */}
+                  <div className="px-3.5 py-2 bg-white/2 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider">Budget Balance</span>
+                    <span className={`text-[10px] font-black font-mono px-2 py-0.5 rounded-lg ${
+                      overallSurplus >= 0 
+                        ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                        : 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
+                    }`}>
+                      {overallSurplus >= 0 ? '+' : ''}{currencySymbol}{overallSurplus.toLocaleString()}
+                    </span>
+                  </div>
+
                   {accordionOpen.discretionary && (
                     <div className="p-3 border-t border-white/5 bg-black/20 space-y-2">
                       <p className="text-[9px] text-gray-400 italic mb-1">
                         Tip: Changing the limits here updates your active category budget goals instantly across the entire app.
                       </p>
 
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryManager(true)}
+                        className="w-full mb-3.5 py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[10px] font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+                      >
+                        <Sparkles size={11} className="animate-pulse shrink-0 text-emerald-400" /> Add/Edit Discretionary Budget Categories
+                      </button>
+
                       {/* Column Header: Budget */}
                       <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
                         <span>Discretionary Category</span>
-                        <span className="pr-1.5">Budget</span>
+                        <span className="pr-6.5">Budget</span>
                       </div>
                       
                       <div className="divide-y divide-white/5 space-y-1.5 pt-1">
@@ -2960,24 +2958,64 @@ Date: ${new Date().toLocaleString()}
                                   {isBusiness && <span className="text-[7.5px] bg-slate-500/20 text-slate-400 ml-1.5 px-1 rounded font-mono font-bold uppercase">Tax Deductible</span>}
                                 </span>
                               </div>
-                              <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
-                                <input 
-                                  type="number"
-                                  min="0"
-                                  placeholder="0"
-                                  value={cat.limit || ''}
-                                  onChange={(e) => {
-                                    const val = Math.max(0, parseFloat(e.target.value) || 0);
-                                    handleUpdateCategory({ ...cat, limit: val });
-                                  }}
-                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
-                                />
+                              <div className="flex items-center gap-1.5">
+                                <div className="relative">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={cat.limit || ''}
+                                    onChange={(e) => {
+                                      const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                      handleUpdateCategory({ ...cat, limit: val });
+                                    }}
+                                    className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                  />
+                                </div>
+                                {!isBusiness && (
+                                  <button 
+                                    onClick={() => setItemToDelete({ type: 'category', id: cat.id, name: cat.name })}
+                                    className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
+                                    title="Remove Category"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
                         })}
                       </div>
+
+                      {/* Add Custom Discretionary Budget Category Mini Form */}
+                      <form onSubmit={handleAddDiscretionaryCategory} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
+                        <input 
+                          type="text"
+                          placeholder="Add Custom Discretionary Budget Category"
+                          value={newDiscretionaryName}
+                          onChange={(e) => setNewDiscretionaryName(e.target.value)}
+                          className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
+                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={newDiscretionaryLimit}
+                            onChange={(e) => setNewDiscretionaryLimit(e.target.value)}
+                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
+                          />
+                        </div>
+                        <button 
+                          type="submit"
+                          className="p-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center shrink-0"
+                          title="Add Category"
+                        >
+                          <Plus size={13} className="stroke-[2.5]" />
+                        </button>
+                      </form>
                     </div>
                   )}
                 </div>
@@ -3036,8 +3074,8 @@ Date: ${new Date().toLocaleString()}
                                 />
                               </div>
                               <button 
-                                onClick={() => handleDeleteSavingsGoal(item.id)}
-                                className="p-1 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
+                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
                                 title="Remove Savings Goal"
                               >
                                 <Trash2 size={12} />
@@ -3051,27 +3089,28 @@ Date: ${new Date().toLocaleString()}
                       <form onSubmit={handleAddSavingsGoal} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add other (e.g. New Car)"
+                          placeholder="Add Custom Savings Budget Category"
                           value={newSavingsName}
                           onChange={(e) => setNewSavingsName(e.target.value)}
-                          className="flex-1 min-w-0 px-2.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] text-white"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-500">{currencySymbol}</span>
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
                           <input 
                             type="number"
                             placeholder="0"
                             min="0"
                             value={newSavingsAmount}
                             onChange={(e) => setNewSavingsAmount(e.target.value)}
-                            className="w-16 pl-4 pr-1.5 py-1 bg-black/40 border border-white/5 focus:border-emerald-500/30 outline-none rounded-lg text-[10px] font-mono text-right text-white"
+                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
                           type="submit"
-                          className="p-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 hover:border-emerald-500/45 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                          className="p-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center shrink-0"
+                          title="Add item"
                         >
-                          <Plus size={13} />
+                          <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
                     </div>
@@ -3473,6 +3512,68 @@ Date: ${new Date().toLocaleString()}
             </button>
           </div>
         </div>,
+        document.body
+      )}
+
+      {itemToDelete && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-[#121212] border border-white/10 rounded-2xl p-5 max-w-xs w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-xl">
+                <Trash2 size={20} />
+              </div>
+              <h3 className="font-bold text-sm tracking-tight text-white">Confirm Deletion</h3>
+            </div>
+            
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              Are you sure you want to delete <span className="text-white font-bold">"{itemToDelete.name}"</span>? 
+              This will remove it from your budget planner list. Historical data in previous months will remain intact.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setItemToDelete(null)}
+                className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-semibold border-0 cursor-pointer transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (itemToDelete.type === 'income') {
+                    handleDeleteIncomeStream(itemToDelete.id);
+                  } else if (itemToDelete.type === 'fixed') {
+                    handleDeleteFixedExpense(itemToDelete.id);
+                  } else if (itemToDelete.type === 'savings') {
+                    handleDeleteSavingsGoal(itemToDelete.id);
+                  } else if (itemToDelete.type === 'category') {
+                    handleDeleteCategory(itemToDelete.id);
+                  }
+                  setItemToDelete(null);
+                }}
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold border-0 cursor-pointer transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showCategoryManager && createPortal(
+        <CategoryManager
+          categories={categories}
+          currentBudget={currentBudget}
+          onCategoryAdded={handleAddCategory}
+          onCategoryUpdated={handleUpdateCategory}
+          onCategoryDeleted={handleDeleteCategory}
+          defaultCategoryId={defaultCategoryId}
+          currencySymbol={currencySymbol}
+          isOpen={showCategoryManager}
+          onClose={() => setShowCategoryManager(false)}
+        />,
         document.body
       )}
     </AndroidFrame>
