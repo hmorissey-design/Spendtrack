@@ -86,6 +86,83 @@ const getLocalDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
+interface DirectAmountInputProps {
+  initialValue: number;
+  onUpdate: (val: number) => void;
+  currencySymbol?: string;
+  isPercent?: boolean;
+  className?: string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+}
+
+function DirectAmountInput({
+  initialValue,
+  onUpdate,
+  currencySymbol,
+  isPercent,
+  className,
+  placeholder = "0",
+  min = 0,
+  max
+}: DirectAmountInputProps) {
+  const [localValue, setLocalValue] = useState<string>(
+    initialValue !== undefined && initialValue !== null ? initialValue.toString() : ''
+  );
+
+  useEffect(() => {
+    setLocalValue(initialValue !== undefined && initialValue !== null ? initialValue.toString() : '');
+  }, [initialValue]);
+
+  const handleBlurOrSubmit = () => {
+    let parsed = parseFloat(localValue);
+    if (isNaN(parsed)) parsed = 0;
+    
+    let finalVal = Math.max(min || 0, parsed);
+    if (max !== undefined) {
+      finalVal = Math.min(max, finalVal);
+    }
+    
+    finalVal = Math.round(finalVal * 100) / 100;
+    
+    if (finalVal !== initialValue) {
+      onUpdate(finalVal);
+    } else {
+      setLocalValue(initialValue !== undefined && initialValue !== null ? initialValue.toString() : '');
+    }
+  };
+
+  return (
+    <div className="relative">
+      {currencySymbol && (
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">
+          {currencySymbol}
+        </span>
+      )}
+      <input
+        type="number"
+        min={min}
+        max={max}
+        step="0.01"
+        placeholder={placeholder}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={handleBlurOrSubmit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.currentTarget.blur();
+          }
+        }}
+        className={className}
+      />
+      {isPercent && (
+        <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
+      )}
+    </div>
+  );
+}
+
 export function resolveColorHex(colorClass: string): string {
   const lower = (colorClass || '').toLowerCase();
   if (lower.includes('emerald')) return '#10b981';
@@ -2890,18 +2967,12 @@ Date: ${new Date().toLocaleString()}
                               </div>
                             )}
                             <div className="flex items-center gap-1.5">
-                              <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
-                                <input 
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  placeholder="0"
-                                  value={item.amount || ''}
-                                  onChange={(e) => handleUpdateIncomeStream(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
-                                />
-                              </div>
+                              <DirectAmountInput 
+                                initialValue={item.amount}
+                                onUpdate={(val) => handleUpdateIncomeStream(item.id, val)}
+                                currencySymbol={currencySymbol}
+                                className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                              />
                               <button 
                                 onClick={() => setItemToDelete({ type: 'income', id: item.id, name: item.label })}
                                 className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
@@ -3028,18 +3099,12 @@ Date: ${new Date().toLocaleString()}
                               </div>
                             )}
                             <div className="flex items-center gap-1.5">
-                              <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
-                                <input 
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  placeholder="0"
-                                  value={item.amount || ''}
-                                  onChange={(e) => handleUpdateFixedExpense(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
-                                />
-                              </div>
+                              <DirectAmountInput 
+                                initialValue={item.amount}
+                                onUpdate={(val) => handleUpdateFixedExpense(item.id, val)}
+                                currencySymbol={currencySymbol}
+                                className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                              />
                               <button 
                                 onClick={() => setItemToDelete({ type: 'fixed', id: item.id, name: item.label })}
                                 className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
@@ -3202,21 +3267,12 @@ Date: ${new Date().toLocaleString()}
                                 )}
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <div className="relative">
-                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">{currencySymbol}</span>
-                                  <input 
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0"
-                                    value={cat.limit || ''}
-                                    onChange={(e) => {
-                                      const val = Math.max(0, parseFloat(e.target.value) || 0);
-                                      handleUpdateCategory({ ...cat, limit: val });
-                                    }}
-                                    className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
-                                  />
-                                </div>
+                                <DirectAmountInput 
+                                  initialValue={cat.limit || 0}
+                                  onUpdate={(val) => handleUpdateCategory({ ...cat, limit: val })}
+                                  currencySymbol={currencySymbol}
+                                  className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                />
                                 {!isBusiness && (
                                   <button 
                                     onClick={() => setItemToDelete({ type: 'category', id: cat.id, name: cat.name })}
@@ -3408,80 +3464,47 @@ Date: ${new Date().toLocaleString()}
                                 {/* Desired target input */}
                                 <div className="space-y-0.5 text-left">
                                   <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Target Total</label>
-                                  <div className="relative">
-                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">{currencySymbol}</span>
-                                    <input 
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      value={item.targetAmount || ''}
-                                      onChange={(e) => {
-                                        const val = Math.max(0, parseFloat(e.target.value) || 0);
-                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x));
-                                      }}
-                                      className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
-                                    />
-                                  </div>
+                                  <DirectAmountInput 
+                                    initialValue={item.targetAmount || 0}
+                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x))}
+                                    currencySymbol={currencySymbol}
+                                    className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                  />
                                 </div>
 
                                 {/* Current amount input */}
                                 <div className="space-y-0.5 text-left">
                                   <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Current Saved</label>
-                                  <div className="relative">
-                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">{currencySymbol}</span>
-                                    <input 
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      value={item.currentAmount || ''}
-                                      onChange={(e) => {
-                                        const val = Math.max(0, parseFloat(e.target.value) || 0);
-                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x));
-                                      }}
-                                      className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
-                                    />
-                                  </div>
+                                  <DirectAmountInput 
+                                    initialValue={item.currentAmount || 0}
+                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x))}
+                                    currencySymbol={currencySymbol}
+                                    className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                  />
                                 </div>
 
                                 {/* Allocation percent input */}
                                 <div className="space-y-0.5 text-left">
                                   <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Allocation %</label>
-                                  <div className="relative">
-                                    <input 
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      step="0.01"
-                                      placeholder="0"
-                                      value={item.allocationPercent || ''}
-                                      onChange={(e) => {
-                                        const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
-                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x));
-                                      }}
-                                      className="w-full pl-1.5 pr-3.5 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
-                                    />
-                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
-                                  </div>
+                                  <DirectAmountInput 
+                                    initialValue={item.allocationPercent || 0}
+                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x))}
+                                    isPercent={true}
+                                    max={100}
+                                    className="w-full pl-1.5 pr-3.5 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                  />
                                 </div>
                               </div>
 
                               {/* Row 4: Monthly Budget Goal */}
                               <div className="pt-1.5 flex items-center justify-between text-[9px] border-t border-white/5">
                                 <span className="text-gray-400 font-medium">Monthly Target Budget Goal:</span>
-                                <div className="relative text-left">
-                                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">{currencySymbol}</span>
-                                  <input 
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0"
-                                    value={item.amount || ''}
-                                    onChange={(e) => handleUpdateSavingsGoal(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                    className="w-28 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
-                                  />
-                                </div>
+                                <DirectAmountInput 
+                                  initialValue={item.amount || 0}
+                                  onUpdate={(val) => handleUpdateSavingsGoal(item.id, val)}
+                                  currencySymbol={currencySymbol}
+                                  className="w-28 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
+                                />
                               </div>
                             </div>
                           );

@@ -156,11 +156,12 @@ export function CategoryManager({
       setErrorMsg('Please enter a category name.');
       return;
     }
-    const parsedLimit = parseFloat(formLimit);
+    let parsedLimit = parseFloat(formLimit);
     if (isNaN(parsedLimit) || parsedLimit < 0) {
       setErrorMsg('Please enter a valid positive numeric limit.');
       return;
     }
+    parsedLimit = Math.round(parsedLimit * 100) / 100;
 
     const selectedPreset = COLOR_PRESETS.find(p => p.value === formColor) || COLOR_PRESETS[0];
 

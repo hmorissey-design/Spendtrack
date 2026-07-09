@@ -61,7 +61,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400', isDefault: true, limit: 0 },
   { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400', isDefault: true, limit: 0 },
   { id: 'cat_gas_auto', name: 'Gas auto', icon: 'Car', color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', textColor: 'text-blue-400', isDefault: true, limit: 0 },
-  { id: 'cat_public_transport', name: 'Public transport', icon: 'Train', color: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20', textColor: 'text-cyan-400', isDefault: true, limit: 0 },
   { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 
@@ -112,7 +111,6 @@ export const LocalDb = {
           'cat_smoking': 0,
           'cat_entertainment': 0,
           'cat_gas_auto': 0,
-          'cat_public_transport': 0,
           'cat_business_expense': 0,
         },
       };
@@ -145,7 +143,6 @@ export const LocalDb = {
         'cat_smoking': 0,
         'cat_entertainment': 0,
         'cat_gas_auto': 0,
-        'cat_public_transport': 0,
         'cat_business_expense': 0,
       },
     };
@@ -239,6 +236,8 @@ export const LocalDb = {
       modified = true;
     }
     
+    const hasMigratedLimits = localStorage.getItem('expensetrack_legacy_limits_migrated') === 'true';
+
     const migrated = parsed.map(cat => {
       let updated = { ...cat };
       if (cat.limit === undefined || cat.limit === null) {
@@ -247,39 +246,39 @@ export const LocalDb = {
         updated.limit = matchingDefault?.limit !== undefined ? matchingDefault.limit : 0;
       }
 
-      // Auto-migrate legacy non-zero default category limits to 0 (based on ID or name)
-      const legacyIdDefaults: Record<string, number> = {
-        'cat_groceries': 300,
-        'cat_restaurants': 200,
-        'cat_bars': 150,
-        'cat_coffee_shops': 100,
-        'cat_smoking': 100,
-        'cat_entertainment': 100,
-        'cat_gas_auto': 150,
-        'cat_public_transport': 100,
-      };
-      const legacyNameDefaults: Record<string, number> = {
-        'groceries': 300,
-        'restaurants': 200,
-        'bar': 150,
-        'bars': 150,
-        'coffee shops': 100,
-        'coffee & snacks': 100,
-        'smoking': 100,
-        'entertainment': 100,
-        'gas auto': 150,
-        'public transport': 100,
-        'charity': 100,
-      };
+      if (!hasMigratedLimits) {
+        // Auto-migrate legacy non-zero default category limits to 0 (based on ID or name)
+        const legacyIdDefaults: Record<string, number> = {
+          'cat_groceries': 300,
+          'cat_restaurants': 200,
+          'cat_bars': 150,
+          'cat_coffee_shops': 100,
+          'cat_smoking': 100,
+          'cat_entertainment': 100,
+          'cat_gas_auto': 150,
+        };
+        const legacyNameDefaults: Record<string, number> = {
+          'groceries': 300,
+          'restaurants': 200,
+          'bar': 150,
+          'bars': 150,
+          'coffee shops': 100,
+          'coffee & snacks': 100,
+          'smoking': 100,
+          'entertainment': 100,
+          'gas auto': 150,
+          'charity': 100,
+        };
 
-      const normName = updated.name ? updated.name.toLowerCase().trim() : '';
-      const matchedLegacyDefault = legacyIdDefaults[updated.id] !== undefined
-        ? legacyIdDefaults[updated.id]
-        : legacyNameDefaults[normName];
+        const normName = updated.name ? updated.name.toLowerCase().trim() : '';
+        const matchedLegacyDefault = legacyIdDefaults[updated.id] !== undefined
+          ? legacyIdDefaults[updated.id]
+          : legacyNameDefaults[normName];
 
-      if (updated.limit !== undefined && matchedLegacyDefault !== undefined && updated.limit === matchedLegacyDefault) {
-        updated.limit = 0;
-        modified = true;
+        if (updated.limit !== undefined && matchedLegacyDefault !== undefined && updated.limit === matchedLegacyDefault) {
+          updated.limit = 0;
+          modified = true;
+        }
       }
 
       // Auto-migrate legacy light theme default colors to premium translucent dark theme ones
@@ -300,6 +299,11 @@ export const LocalDb = {
 
       return updated;
     });
+
+    if (!hasMigratedLimits) {
+      localStorage.setItem('expensetrack_legacy_limits_migrated', 'true');
+    }
+
     if (modified) {
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(migrated));
     }
@@ -429,6 +433,11 @@ export const LocalDb = {
     if (!data) return [];
     try {
       const parsed: MonthlyBudget[] = JSON.parse(data);
+      const hasMigratedLimits = localStorage.getItem('expensetrack_legacy_limits_migrated') === 'true';
+
+      if (hasMigratedLimits) {
+        return parsed;
+      }
       
       const legacyIdDefaults: Record<string, number> = {
         'cat_groceries': 300,
@@ -438,7 +447,6 @@ export const LocalDb = {
         'cat_smoking': 100,
         'cat_entertainment': 100,
         'cat_gas_auto': 150,
-        'cat_public_transport': 100,
       };
       const legacyNameDefaults: Record<string, number> = {
         'groceries': 300,
@@ -450,7 +458,6 @@ export const LocalDb = {
         'smoking': 100,
         'entertainment': 100,
         'gas auto': 150,
-        'public transport': 100,
         'charity': 100,
       };
 
