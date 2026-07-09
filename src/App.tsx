@@ -148,6 +148,16 @@ function DirectAmountInput({
         placeholder={placeholder}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
+        onFocus={(e) => {
+          if (localValue === '0' || localValue === '0.00' || parseFloat(localValue) === 0) {
+            setLocalValue('');
+          }
+          const input = e.currentTarget;
+          input.select();
+          try {
+            input.setSelectionRange(0, input.value.length);
+          } catch (err) {}
+        }}
         onBlur={handleBlurOrSubmit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -512,16 +522,42 @@ export default function App() {
     return false;
   });
 
+  const currentReconciliationMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const hasRunReconciliationThisMonth = (() => {
+    try {
+      return localStorage.getItem('last_reconciliation_month') === currentReconciliationMonthKey;
+    } catch (e) {
+      return false;
+    }
+  })();
+
   useEffect(() => {
     if (showReconciliationModal) {
-      setTempSavingsGoals(savingsGoals.map(g => ({
-        ...g,
-        allocationPercent: g.allocationPercent || 0,
-        currentAmount: g.currentAmount || 0,
-        targetAmount: g.targetAmount || 0
-      })));
+      let baselines: Record<string, number> = {};
+      if (hasRunReconciliationThisMonth) {
+        try {
+          const storedBaselines = localStorage.getItem('reconciliation_baseline_goals');
+          if (storedBaselines) {
+            baselines = JSON.parse(storedBaselines);
+          }
+        } catch (e) {
+          console.error('Error loading baselines', e);
+        }
+      }
+
+      setTempSavingsGoals(savingsGoals.map(g => {
+        const baselineAmount = (hasRunReconciliationThisMonth && baselines[g.id] !== undefined)
+          ? baselines[g.id]
+          : (g.currentAmount || 0);
+        return {
+          ...g,
+          allocationPercent: g.allocationPercent || 0,
+          currentAmount: baselineAmount,
+          targetAmount: g.targetAmount || 0
+        };
+      }));
     }
-  }, [showReconciliationModal, savingsGoals]);
+  }, [showReconciliationModal, savingsGoals, hasRunReconciliationThisMonth]);
 
   // Inline editing of names / labels states
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -1721,6 +1757,19 @@ Date: ${new Date().toLocaleString()}
                     <span>Settings</span>
                   </button>
 
+                  {/* Account Reconciliation link */}
+                  <button
+                    onClick={() => {
+                      setReconciliationStep(1);
+                      setShowReconciliationModal(true);
+                      setShowGlobalMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <RefreshCw size={14} className="stroke-[2.5] text-emerald-400" />
+                    <span>Account Reconciliation 🔄</span>
+                  </button>
+
                   {/* Help & Guide link */}
                   <button
                     onClick={() => { setActiveTab('help'); setShowGlobalMenu(false); }}
@@ -2099,7 +2148,7 @@ Date: ${new Date().toLocaleString()}
               )}
 
               {/* Reconciliation Reminder Banner */}
-              {new Date().getDate() === 1 && !dismissedReconciliationBanner && (
+              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
@@ -2110,7 +2159,9 @@ Date: ${new Date().toLocaleString()}
                         📅 Monthly Reconciliation Due
                       </p>
                       <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
-                        Today is the first day of the month! It's time to run your account reconciliation process.
+                        {new Date().getDate() === 1 
+                          ? "Today is the first day of the month! It's time to run your account reconciliation process."
+                          : "It is time to run your monthly account reconciliation process."}
                       </p>
                       <p className="text-[9.5px] text-gray-400 leading-normal">
                         Reconcile your actual cash balances from chequing, savings, and cash to calculate your surplus and distribute it to your savings goals.
@@ -3211,7 +3262,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       
                       <div className="divide-y divide-white/5 space-y-1.5 pt-1">
-                        {categories.map((cat) => {
+                        {categories.filter(c => c.id !== 'cat_business_expense').map((cat) => {
                           const isBusiness = cat.id === 'cat_business_expense';
                           return (
                             <div key={cat.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
@@ -3352,32 +3403,6 @@ Date: ${new Date().toLocaleString()}
                   {accordionOpen.savings && (
                     <div className="p-3 border-t border-white/5 bg-black/20 space-y-3.5">
                       
-                      {/* Monthly Reconciliation Tool Card */}
-                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl space-y-1.5 text-left">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <RefreshCw size={11} className="text-emerald-400 shrink-0" />
-                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#eeeeee]">Surplus Allocation Tool</span>
-                          </div>
-                          <span className="text-[7.5px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold px-1 rounded font-mono">
-                            RECONCILIATION
-                          </span>
-                        </div>
-                        <p className="text-[8.5px] text-gray-400 leading-normal">
-                          Reconcile your actual cash balances from chequing, savings, and cash to calculate your surplus and distribute it to your savings goals based on allocation percentages.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReconciliationStep(1);
-                            setShowReconciliationModal(true);
-                          }}
-                          className="w-full mt-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-extrabold tracking-wider uppercase rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 shadow-xs border-0"
-                        >
-                          <RefreshCw size={10} className="stroke-[2.5]" /> Run Account Reconciliation
-                        </button>
-                      </div>
-
                       <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1 text-left">
                         Savings Targets & Progress
                       </div>
@@ -4532,17 +4557,40 @@ Date: ${new Date().toLocaleString()}
                       onClick={() => {
                         if (isOverAllocated) return;
                         
-                        // Apply distributed amounts to actual savingsGoals
+                        // Apply distributed amounts to actual savingsGoals with baseline tracking
+                        let baselines: Record<string, number> = {};
+                        if (hasRunReconciliationThisMonth) {
+                          try {
+                            const stored = localStorage.getItem('reconciliation_baseline_goals');
+                            if (stored) baselines = JSON.parse(stored);
+                          } catch (e) {}
+                        } else {
+                          // First run of the month: current savingsGoals are the baseline!
+                          savingsGoals.forEach(g => {
+                            baselines[g.id] = g.currentAmount || 0;
+                          });
+                          try {
+                            localStorage.setItem('reconciliation_baseline_goals', JSON.stringify(baselines));
+                            localStorage.setItem('last_reconciliation_month', currentReconciliationMonthKey);
+                          } catch (e) {}
+                        }
+
                         setSavingsGoals(prev => prev.map(originalGoal => {
                           const tempGoal = tempSavingsGoals.find(t => t.id === originalGoal.id);
                           if (!tempGoal) return originalGoal;
                           
                           const percent = parseFloat(tempGoal.allocationPercent) || 0;
                           const allocatedPortion = reconciledSurplus * (percent / 100);
+                          
+                          // Use the saved baseline as the starting point!
+                          const baseAmount = baselines[originalGoal.id] !== undefined 
+                            ? baselines[originalGoal.id] 
+                            : (originalGoal.currentAmount || 0);
+
                           return {
                             ...originalGoal,
                             allocationPercent: percent,
-                            currentAmount: (originalGoal.currentAmount || 0) + allocatedPortion
+                            currentAmount: baseAmount + allocatedPortion
                           };
                         }));
 

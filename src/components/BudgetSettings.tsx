@@ -1087,7 +1087,7 @@ function RenderBudgetsCurrencyLive({
           <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#eeeeee]">Category Budgets</span>
         </div>
 
-        {categories.map((cat, idx) => (
+        {categories.filter(c => c.id !== 'cat_business_expense').map((cat, idx) => (
           <div key={idx} className="flex items-center justify-between text-[10px] bg-black/30 p-2 rounded-xl border border-white/5 leading-none">
             <div className="flex items-center gap-1.5">
               <span className="text-xs">{cat.icon === 'Utensils' ? '🍔' : cat.icon === 'ShoppingBag' ? '🛒' : cat.icon === 'Film' ? '🍿' : cat.icon === 'Car' ? '🚗' : '📁'}</span>
