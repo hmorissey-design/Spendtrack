@@ -446,10 +446,16 @@ export default function App() {
           }
           return updated;
         });
-        if (modified) {
-          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(migrated));
+        const filtered = migrated.filter((item: any) => {
+          const isCoreGoal = item.id === 'emergency_fund' || item.id === 'vacation_fund';
+          if (isCoreGoal) return true;
+          // Keep custom or legacy goals only if the user has actually saved money in them
+          return (item.currentAmount || 0) > 0;
+        });
+        if (modified || filtered.length !== parsed.length) {
+          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(filtered));
         }
-        return migrated;
+        return filtered;
       }
     } catch (e) {}
     return [
@@ -1332,37 +1338,33 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleResetDatabase = () => {
-    LocalDb.resetToFreshInstall();
+    // Complete, destructive storage clear to resolve any version mismatches
     try {
-      localStorage.removeItem('expensetrack_welcome_dismissed');
-      localStorage.removeItem('expensetrack_income_streams');
-      localStorage.removeItem('expensetrack_fixed_expenses');
-      localStorage.removeItem('expensetrack_savings_goals');
+      window.localStorage.clear();
+      window.sessionStorage.clear();
     } catch (e) {}
-    setIncomeStreams([
-      { id: 'net_salary', label: 'Primary Income', amount: 0 },
-      { id: 'side_income', label: 'Side Income', amount: 0 }
-    ]);
-    setFixedExpenses([
-      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
-      { id: 'property_tax', label: 'Property Tax', amount: 0 },
-      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
-      { id: 'electricity', label: 'Electricity', amount: 0 },
-      { id: 'water', label: 'Water', amount: 0 },
-      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
-      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
-      { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
-      { id: 'internet', label: 'Internet', amount: 0 },
-      { id: 'phone', label: 'Phone', amount: 0 },
-      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
-    ]);
-    setSavingsGoals([
-      { id: 'emergency_fund', label: 'Emergency Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
-      { id: 'vacation_fund', label: 'Vacation Goal', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 }
-    ]);
-    setShowWelcomeBanner(true);
-    loadDatabaseState(selectedMonth);
-    setActiveTab('dashboard');
+
+    // Unregister service workers and purge caches to break persistent caching on mobile phones
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (let reg of registrations) {
+            reg.unregister();
+          }
+        });
+      }
+    } catch (e) {}
+
+    try {
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+    } catch (e) {}
+
+    // Force immediate hard reload of the page to download pristine bundle and re-initialize the empty database
+    window.location.reload();
   };
 
   const handleLoadDemoData = () => {
