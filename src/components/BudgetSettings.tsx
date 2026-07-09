@@ -810,17 +810,17 @@ function RenderActiveDashboardLive({
           <div className="col-span-7 space-y-1.5">
             <div>
               <span className="text-[9px] font-semibold text-gray-400 block">Spent this month</span>
-              <span className="text-2xl font-mono font-extrabold text-white block leading-none">{currencySymbol}{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span className="text-2xl font-mono font-extrabold text-white block leading-none">{currencySymbol}{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex gap-3 border-t border-[#1C1C1C] pt-1.5">
               <div>
                 <span className="text-[8px] font-bold text-gray-550 uppercase tracking-tight block">Budget Limit</span>
-                <span className="text-[10px] font-bold text-gray-300 font-mono">{currencySymbol}{totalLimit.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-gray-300 font-mono">{currencySymbol}{totalLimit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div>
                 <span className="text-[8px] font-bold text-gray-555 uppercase tracking-tight block">Available</span>
                 <span className={`text-[10px] font-extrabold font-mono ${remainingAmount >= 0 ? 'text-emerald-404' : 'text-rose-404'}`}>
-                  {currencySymbol}{remainingAmount.toLocaleString()}
+                  {currencySymbol}{remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
@@ -856,7 +856,7 @@ function RenderActiveDashboardLive({
                 <div className="flex justify-between text-[10px] leading-none">
                   <span className="font-bold text-gray-200">{stat.name}</span>
                   <span className="font-mono text-gray-400 font-medium">
-                    {currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-650 font-bold">/ {currencySymbol}{stat.limit.toFixed(0)}</span>
+                    {currencySymbol}{stat.total.toFixed(2)} <span className="text-gray-650 font-bold">/ {currencySymbol}{stat.limit.toFixed(2)}</span>
                   </span>
                 </div>
                 <div className="w-full bg-black/50 border border-white/5 h-1.5 rounded-full overflow-hidden">
@@ -1024,7 +1024,7 @@ function RenderAnalyticsTrendsLive({
               <div key={idx} className="flex items-center gap-1.5 text-[9px] leading-none">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                 <span className="font-semibold text-gray-300 truncate w-20 block">{item.name}</span>
-                <span className="font-mono text-gray-500 font-bold ml-auto">{currencySymbol}{item.value.toFixed(0)}</span>
+                <span className="font-mono text-gray-500 font-bold ml-auto">{currencySymbol}{item.value.toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -1094,7 +1094,7 @@ function RenderBudgetsCurrencyLive({
               <span className="font-bold text-gray-300">{cat.name}</span>
             </div>
             <span className="font-mono font-extrabold text-emerald-400">
-              {currencySymbol}{cat.limit ? cat.limit.toLocaleString() : '0'}
+              {currencySymbol}{cat.limit ? cat.limit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
             </span>
           </div>
         ))}

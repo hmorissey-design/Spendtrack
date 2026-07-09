@@ -367,6 +367,7 @@ export function CategoryManager({
                     type="number" 
                     value={formLimit}
                     min="0"
+                    step="0.01"
                     onChange={(e) => setFormLimit(e.target.value)}
                     placeholder="0"
                     className="w-full pl-7.5 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] text-right font-bold"

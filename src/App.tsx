@@ -320,7 +320,7 @@ export default function App() {
       { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
       { id: 'internet', label: 'Internet', amount: 0 },
       { id: 'phone', label: 'Phone', amount: 0 },
-      { id: 'bank_fee', label: 'Bank fee', amount: 0 }
+      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
     ];
   });
 
@@ -1241,7 +1241,7 @@ Date: ${new Date().toLocaleString()}
       { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
       { id: 'internet', label: 'Internet', amount: 0 },
       { id: 'phone', label: 'Phone', amount: 0 },
-      { id: 'bank_fee', label: 'Bank fee', amount: 0 }
+      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
     ]);
     setSavingsGoals([
       { id: 'emergency_fund', label: 'Emergency Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
@@ -2174,7 +2174,7 @@ Date: ${new Date().toLocaleString()}
                         <div className="h-[110px] w-full" />
                       )}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(0)}</span>
+                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(2)}</span>
                         <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
                       </div>
                     </div>
@@ -2198,7 +2198,7 @@ Date: ${new Date().toLocaleString()}
                               }} />
                               <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                             </div>
-                            <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(0)} →</span>
+                            <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(2)} →</span>
                           </div>
                         ))}
                       </div>
@@ -2674,11 +2674,11 @@ Date: ${new Date().toLocaleString()}
                             <div className="min-w-0">
                               <span className="font-semibold text-gray-200 block truncate group-hover:text-green-400 transition-colors">{stat.label}</span>
                               <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-green-400' : 'text-rose-450'}`}>
-                                {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(0)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(0)} over limit`}
+                                {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(2)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(2)} over limit`}
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(0)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(0)}</span></span>
+                              <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(2)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(2)}</span></span>
                               <span className="text-[10px] text-gray-500 font-bold block group-hover:text-green-400 font-sans transition-colors">({share}%) →</span>
                             </div>
                           </div>
@@ -2895,10 +2895,11 @@ Date: ${new Date().toLocaleString()}
                                 <input 
                                   type="number"
                                   min="0"
+                                  step="0.01"
                                   placeholder="0"
                                   value={item.amount || ''}
                                   onChange={(e) => handleUpdateIncomeStream(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                  className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
                                 />
                               </div>
                               <button 
@@ -2927,10 +2928,11 @@ Date: ${new Date().toLocaleString()}
                           <input 
                             type="number"
                             min="0"
-                            placeholder="0"
+                            step="0.01"
+                            placeholder="0.00"
                             value={newIncomeAmount}
                             onChange={(e) => setNewIncomeAmount(e.target.value)}
-                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
+                            className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
@@ -3031,10 +3033,11 @@ Date: ${new Date().toLocaleString()}
                                 <input 
                                   type="number"
                                   min="0"
+                                  step="0.01"
                                   placeholder="0"
                                   value={item.amount || ''}
                                   onChange={(e) => handleUpdateFixedExpense(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                  className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
                                 />
                               </div>
                               <button 
@@ -3064,9 +3067,10 @@ Date: ${new Date().toLocaleString()}
                             type="number"
                             placeholder="0"
                             min="0"
+                            step="0.01"
                             value={newFixedAmount}
                             onChange={(e) => setNewFixedAmount(e.target.value)}
-                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
+                            className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
@@ -3203,13 +3207,14 @@ Date: ${new Date().toLocaleString()}
                                   <input 
                                     type="number"
                                     min="0"
+                                    step="0.01"
                                     placeholder="0"
                                     value={cat.limit || ''}
                                     onChange={(e) => {
                                       const val = Math.max(0, parseFloat(e.target.value) || 0);
                                       handleUpdateCategory({ ...cat, limit: val });
                                     }}
-                                    className="w-20 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
+                                    className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
                                   />
                                 </div>
                                 {!isBusiness && (
@@ -3241,10 +3246,11 @@ Date: ${new Date().toLocaleString()}
                           <input 
                             type="number"
                             min="0"
+                            step="0.01"
                             placeholder="0"
                             value={newDiscretionaryLimit}
                             onChange={(e) => setNewDiscretionaryLimit(e.target.value)}
-                            className="w-16 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
+                            className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
                         <button 
@@ -3407,7 +3413,8 @@ Date: ${new Date().toLocaleString()}
                                     <input 
                                       type="number"
                                       min="0"
-                                      placeholder="0"
+                                      step="0.01"
+                                      placeholder="0.00"
                                       value={item.targetAmount || ''}
                                       onChange={(e) => {
                                         const val = Math.max(0, parseFloat(e.target.value) || 0);
@@ -3426,7 +3433,8 @@ Date: ${new Date().toLocaleString()}
                                     <input 
                                       type="number"
                                       min="0"
-                                      placeholder="0"
+                                      step="0.01"
+                                      placeholder="0.00"
                                       value={item.currentAmount || ''}
                                       onChange={(e) => {
                                         const val = Math.max(0, parseFloat(e.target.value) || 0);
@@ -3445,6 +3453,7 @@ Date: ${new Date().toLocaleString()}
                                       type="number"
                                       min="0"
                                       max="100"
+                                      step="0.01"
                                       placeholder="0"
                                       value={item.allocationPercent || ''}
                                       onChange={(e) => {
@@ -3466,10 +3475,11 @@ Date: ${new Date().toLocaleString()}
                                   <input 
                                     type="number"
                                     min="0"
+                                    step="0.01"
                                     placeholder="0"
                                     value={item.amount || ''}
                                     onChange={(e) => handleUpdateSavingsGoal(item.id, Math.max(0, parseFloat(e.target.value) || 0))}
-                                    className="w-20 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
+                                    className="w-28 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
                                   />
                                 </div>
                               </div>
@@ -3505,6 +3515,7 @@ Date: ${new Date().toLocaleString()}
                                 type="number"
                                 placeholder="5000"
                                 min="0"
+                                step="0.01"
                                 value={newSavingsTarget}
                                 onChange={(e) => setNewSavingsTarget(e.target.value)}
                                 className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
@@ -3520,6 +3531,7 @@ Date: ${new Date().toLocaleString()}
                                 type="number"
                                 placeholder="150"
                                 min="0"
+                                step="0.01"
                                 value={newSavingsCurrent}
                                 onChange={(e) => setNewSavingsCurrent(e.target.value)}
                                 className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
@@ -3535,6 +3547,7 @@ Date: ${new Date().toLocaleString()}
                                 placeholder="25"
                                 min="0"
                                 max="100"
+                                step="0.01"
                                 value={newSavingsPercent}
                                 onChange={(e) => setNewSavingsPercent(e.target.value)}
                                 className="w-full pl-2.5 pr-5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
@@ -3551,6 +3564,7 @@ Date: ${new Date().toLocaleString()}
                                 type="number"
                                 placeholder="200"
                                 min="0"
+                                step="0.01"
                                 value={newSavingsAmount}
                                 onChange={(e) => setNewSavingsAmount(e.target.value)}
                                 className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
