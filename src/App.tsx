@@ -341,11 +341,9 @@ export default function App() {
               updated.targetAmount = item.amount;
               updated.amount = 0;
             } else {
-              updated.targetAmount = item.id === 'emergency_fund' ? 10000 
-                : item.id === 'retirement' ? 50000 
-                : item.id === 'investment' ? 20000 
-                : item.id === 'vacation_fund' ? 5000 
-                : 1000;
+              updated.targetAmount = item.id === 'emergency_fund' ? 500 
+                : item.id === 'vacation_fund' ? 500 
+                : 500;
             }
             modified = true;
           }
@@ -354,11 +352,9 @@ export default function App() {
             modified = true;
           }
           if (updated.allocationPercent === undefined) {
-            updated.allocationPercent = item.id === 'emergency_fund' ? 40 
-              : item.id === 'retirement' ? 30 
-              : item.id === 'investment' ? 20 
-              : item.id === 'vacation_fund' ? 10 
-              : 25;
+            updated.allocationPercent = item.id === 'emergency_fund' ? 50 
+              : item.id === 'vacation_fund' ? 50 
+              : 50;
             modified = true;
           }
           return updated;
@@ -370,10 +366,8 @@ export default function App() {
       }
     } catch (e) {}
     return [
-      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0, targetAmount: 10000, currentAmount: 0, allocationPercent: 40 },
-      { id: 'retirement', label: 'Retirement', amount: 0, targetAmount: 50000, currentAmount: 0, allocationPercent: 30 },
-      { id: 'investment', label: 'Investment', amount: 0, targetAmount: 20000, currentAmount: 0, allocationPercent: 20 },
-      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0, targetAmount: 5000, currentAmount: 0, allocationPercent: 10 }
+      { id: 'emergency_fund', label: 'Emergency Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
+      { id: 'vacation_fund', label: 'Vacation Goal', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 }
     ];
   });
 
@@ -1250,10 +1244,8 @@ Date: ${new Date().toLocaleString()}
       { id: 'bank_fee', label: 'Bank fee', amount: 0 }
     ]);
     setSavingsGoals([
-      { id: 'emergency_fund', label: 'Emergency Fund', amount: 0 },
-      { id: 'retirement', label: 'Retirement', amount: 0 },
-      { id: 'investment', label: 'Investment', amount: 0 },
-      { id: 'vacation_fund', label: 'Vacation Fund', amount: 0 }
+      { id: 'emergency_fund', label: 'Emergency Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
+      { id: 'vacation_fund', label: 'Vacation Goal', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 }
     ]);
     setShowWelcomeBanner(true);
     loadDatabaseState(selectedMonth);
