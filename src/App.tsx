@@ -3410,12 +3410,20 @@ Date: ${new Date().toLocaleString()}
                       </div>
 
                       <div className="space-y-3">
-                        {savingsGoals.map((item) => {
+                        {savingsGoals.map((item, index) => {
                           const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.round(((item.currentAmount || 0) / (item.targetAmount || 0)) * 100)) : 0;
+                          const isEven = index % 2 === 0;
                           return (
-                            <div key={item.id} className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 group">
-                              {/* Row 1: Name, Edit pencil, delete */}
-                              <div className="flex items-center justify-between">
+                            <div 
+                              key={item.id} 
+                              className={`p-2 px-2.5 rounded-xl flex items-center justify-between gap-3 border transition-all duration-200 group ${
+                                isEven 
+                                  ? 'bg-slate-900/40 border-slate-800/60 hover:bg-slate-900/60 hover:border-slate-800' 
+                                  : 'bg-emerald-950/20 border-emerald-900/20 hover:bg-emerald-950/35 hover:border-emerald-900/40'
+                              }`}
+                            >
+                              {/* Left side: Name and actions */}
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   {editingItemId === item.id ? (
                                     <input 
@@ -3438,12 +3446,14 @@ Date: ${new Date().toLocaleString()}
                                         }
                                         setEditingItemId(null);
                                       }}
-                                      className="px-2 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-40 font-medium font-sans"
+                                      className="px-1.5 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-24 font-medium font-sans"
                                       autoFocus
                                     />
                                   ) : (
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                      <span className="text-xs text-white font-extrabold truncate">{item.label}</span>
+                                    <div className="flex items-center gap-1 min-w-0">
+                                      <span className="text-xs text-white font-extrabold truncate max-w-[85px] sm:max-w-[120px]" title={item.label}>
+                                        {item.label}
+                                      </span>
                                       <button 
                                         onClick={() => {
                                           setEditingItemId(item.id);
@@ -3452,14 +3462,14 @@ Date: ${new Date().toLocaleString()}
                                         className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0 bg-transparent border-0"
                                         title="Edit Name"
                                       >
-                                        <Pencil size={10} />
+                                        <Pencil size={9} />
                                       </button>
                                     </div>
                                   )}
                                 </div>
                                 
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold">
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 px-1 py-0.2 rounded font-mono font-bold">
                                     {percentSaved}% Saved
                                   </span>
                                   <button 
@@ -3467,71 +3477,46 @@ Date: ${new Date().toLocaleString()}
                                     className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
                                     title="Remove Savings Goal"
                                   >
-                                    <Trash2 size={11} />
+                                    <Trash2 size={10} />
                                   </button>
                                 </div>
                               </div>
 
-                              {/* Row 2: Progress Bar */}
-                              <div className="space-y-1">
-                                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                                  <div 
-                                    className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
-                                    style={{ width: `${percentSaved}%` }}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-[9px] text-gray-400 font-mono">
-                                  <span>Saved: <strong className="text-gray-200">{currencySymbol}{(item.currentAmount || 0).toLocaleString()}</strong></span>
-                                  <span>Target: <strong className="text-gray-200">{currencySymbol}{(item.targetAmount || 0).toLocaleString()}</strong></span>
-                                </div>
-                              </div>
-
-                              {/* Row 3: Adjustable Values */}
-                              <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/5 text-[9px]">
+                              {/* Right side: Three fields on the same line */}
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 {/* Desired target input */}
-                                <div className="space-y-0.5 text-left">
-                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Target Total</label>
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Target</span>
                                   <DirectAmountInput 
                                     initialValue={item.targetAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x))}
                                     currencySymbol={currencySymbol}
-                                    className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    className="w-16 pl-3.5 pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
                                 </div>
 
                                 {/* Current amount input */}
-                                <div className="space-y-0.5 text-left">
-                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Current Saved</label>
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Saved</span>
                                   <DirectAmountInput 
                                     initialValue={item.currentAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x))}
                                     currencySymbol={currencySymbol}
-                                    className="w-full pl-3.5 pr-1 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    className="w-16 pl-3.5 pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
                                 </div>
 
                                 {/* Allocation percent input */}
-                                <div className="space-y-0.5 text-left">
-                                  <label className="text-gray-500 font-bold uppercase tracking-wider block text-[7.5px]">Allocation %</label>
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Alloc %</span>
                                   <DirectAmountInput 
                                     initialValue={item.allocationPercent || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x))}
                                     isPercent={true}
                                     max={100}
-                                    className="w-full pl-1.5 pr-3.5 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-left font-bold text-white"
+                                    className="w-11 pl-1.5 pr-3 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
                                 </div>
-                              </div>
-
-                              {/* Row 4: Monthly Budget Goal */}
-                              <div className="pt-1.5 flex items-center justify-between text-[9px] border-t border-white/5">
-                                <span className="text-gray-400 font-medium">Monthly Target Budget Goal:</span>
-                                <DirectAmountInput 
-                                  initialValue={item.amount || 0}
-                                  onUpdate={(val) => handleUpdateSavingsGoal(item.id, val)}
-                                  currencySymbol={currencySymbol}
-                                  className="w-28 pl-4.5 pr-1 py-0.5 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-md text-[10px] font-mono text-right font-bold text-white"
-                                />
                               </div>
                             </div>
                           );
