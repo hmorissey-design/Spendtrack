@@ -136,7 +136,7 @@ function DirectAmountInput({
   return (
     <div className="relative">
       {currencySymbol && (
-        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500">
+        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-500">
           {currencySymbol}
         </span>
       )}
@@ -3418,8 +3418,8 @@ Date: ${new Date().toLocaleString()}
                               key={item.id} 
                               className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
                                 isEven 
-                                  ? 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10' 
-                                  : 'bg-emerald-500/[0.05] border-emerald-500/15 hover:bg-emerald-500/[0.08] hover:border-emerald-500/25'
+                                  ? 'bg-slate-900/95 border-slate-800 hover:bg-slate-900 hover:border-slate-700' 
+                                  : 'bg-emerald-950/30 border-emerald-500/20 hover:bg-emerald-950/45 hover:border-emerald-500/30'
                               }`}
                             >
                               {/* Line 1: Goal name and actions (full-width header) */}
@@ -3491,7 +3491,7 @@ Date: ${new Date().toLocaleString()}
                                     initialValue={item.targetAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x))}
                                     currencySymbol={currencySymbol}
-                                    className="w-16 pl-3.5 pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                                    className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
                                 </div>
 
@@ -3502,7 +3502,7 @@ Date: ${new Date().toLocaleString()}
                                     initialValue={item.currentAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x))}
                                     currencySymbol={currencySymbol}
-                                    className="w-16 pl-3.5 pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                                    className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
                                 </div>
 
