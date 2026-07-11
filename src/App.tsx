@@ -419,6 +419,10 @@ export default function App() {
         let modified = false;
         const migrated = parsed.map((item: any) => {
           let updated = { ...item };
+          if (updated.id === 'emergency_fund' && (updated.label === 'Emergency Reserve' || !updated.label)) {
+            updated.label = 'Reserve';
+            modified = true;
+          }
           if (updated.amount === undefined) {
             updated.amount = 0;
             modified = true;
@@ -444,6 +448,24 @@ export default function App() {
               : 50;
             modified = true;
           }
+
+          // Enforce business rules
+          const isAchieved = (updated.targetAmount || 0) > 0 && (updated.currentAmount || 0) >= (updated.targetAmount || 0);
+          if (isAchieved) {
+            if (updated.allocationPercent !== 0) {
+              updated.allocationPercent = 0;
+              modified = true;
+            }
+          } else {
+            if (updated.id === 'emergency_fund' && (updated.allocationPercent || 0) < 10) {
+              updated.allocationPercent = 10;
+              modified = true;
+            } else if ((updated.allocationPercent || 0) <= 0) {
+              updated.allocationPercent = 10; // Default to 10% if unentered
+              modified = true;
+            }
+          }
+
           return updated;
         });
         const filtered = migrated.filter((item: any) => {
@@ -459,7 +481,7 @@ export default function App() {
       }
     } catch (e) {}
     return [
-      { id: 'emergency_fund', label: 'Emergency Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
+      { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
       { id: 'vacation_fund', label: 'Vacation Goal', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 }
     ];
   });
@@ -676,13 +698,24 @@ export default function App() {
     const currentAmount = parseFloat(newSavingsCurrent) || 0;
     const allocationPercent = parseFloat(newSavingsPercent) || 0;
 
+    const isAchieved = targetAmount > 0 && currentAmount >= targetAmount;
+    let finalAlloc = allocationPercent;
+    if (isAchieved) {
+      finalAlloc = 0;
+    } else {
+      if (finalAlloc <= 0) {
+        alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
+        return;
+      }
+    }
+
     const newItem = {
       id: `savings_${Date.now()}`,
       label: newSavingsName.trim(),
       amount,
       targetAmount,
       currentAmount,
-      allocationPercent
+      allocationPercent: finalAlloc
     };
     setSavingsGoals(prev => [...prev, newItem]);
     setNewSavingsName('');
@@ -3084,7 +3117,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Fixed Expenses</span>
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Known Expenses</span>
                           <span className="text-[8px] bg-sky-500/10 text-sky-400 font-bold px-1 py-0.2 rounded font-mono">
                             {fixedExpenses.length} ITEMS
                           </span>
@@ -3105,7 +3138,7 @@ Date: ${new Date().toLocaleString()}
                       
                       {/* Column Header: Budget */}
                       <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
-                        <span>Fixed Commitment</span>
+                        <span>Known Commitment</span>
                         <span className="pr-6.5">Budget</span>
                       </div>
 
@@ -3161,7 +3194,7 @@ Date: ${new Date().toLocaleString()}
                               <button 
                                 onClick={() => setItemToDelete({ type: 'fixed', id: item.id, name: item.label })}
                                 className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                title="Remove Fixed Expense"
+                                title="Remove Known Expense"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -3170,11 +3203,11 @@ Date: ${new Date().toLocaleString()}
                         ))}
                       </div>
 
-                      {/* Add Custom Fixed Expense Mini Form */}
+                      {/* Add Custom Known Expense Mini Form */}
                       <form onSubmit={handleAddFixedExpense} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add Custom Fixed Budget Category"
+                          placeholder="Add Custom Known Budget Category"
                           value={newFixedName}
                           onChange={(e) => setNewFixedName(e.target.value)}
                           className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
@@ -3395,9 +3428,6 @@ Date: ${new Date().toLocaleString()}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-extrabold font-mono text-emerald-400">
-                        {currencySymbol}{totalSavings.toLocaleString()}
-                      </span>
                       {accordionOpen.savings ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
                     </div>
                   </button>
@@ -3489,7 +3519,18 @@ Date: ${new Date().toLocaleString()}
                                   <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Target:</span>
                                   <DirectAmountInput 
                                     initialValue={item.targetAmount || 0}
-                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x))}
+                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
+                                      if (x.id === item.id) {
+                                        const isAchieved = val > 0 && (x.currentAmount || 0) >= val;
+                                        const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
+                                        return { 
+                                          ...x, 
+                                          targetAmount: val, 
+                                          allocationPercent: isAchieved ? 0 : currentPercent
+                                        };
+                                      }
+                                      return x;
+                                    }))}
                                     currencySymbol={currencySymbol}
                                     className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
@@ -3500,7 +3541,18 @@ Date: ${new Date().toLocaleString()}
                                   <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Saved:</span>
                                   <DirectAmountInput 
                                     initialValue={item.currentAmount || 0}
-                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x))}
+                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
+                                      if (x.id === item.id) {
+                                        const isAchieved = (x.targetAmount || 0) > 0 && val >= (x.targetAmount || 0);
+                                        const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
+                                        return { 
+                                          ...x, 
+                                          currentAmount: val, 
+                                          allocationPercent: isAchieved ? 0 : currentPercent
+                                        };
+                                      }
+                                      return x;
+                                    }))}
                                     currencySymbol={currencySymbol}
                                     className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
                                   />
@@ -3511,7 +3563,24 @@ Date: ${new Date().toLocaleString()}
                                   <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Alloc:</span>
                                   <DirectAmountInput 
                                     initialValue={item.allocationPercent || 0}
-                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x))}
+                                    onUpdate={(val) => {
+                                      const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
+                                      if (isAchieved) {
+                                        alert("This goal is fully saved! Its allocation percent is locked to 0%.");
+                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: 0 } : x));
+                                        return;
+                                      }
+                                      let finalVal = val;
+                                      if (finalVal <= 0) {
+                                        alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
+                                        finalVal = Math.max(1, item.allocationPercent || 10);
+                                      }
+                                      if (item.id === 'emergency_fund' && finalVal < 10) {
+                                        alert("The Reserve goal must have a minimum allocation percentage of 10%.");
+                                        finalVal = 10;
+                                      }
+                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: finalVal } : x));
+                                    }}
                                     isPercent={true}
                                     max={100}
                                     className="w-11 pl-1.5 pr-3 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
@@ -3522,6 +3591,23 @@ Date: ${new Date().toLocaleString()}
                           );
                         })}
                       </div>
+
+                      {(() => {
+                        const activeGoals = savingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
+                        const totalPercent = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
+                        if (activeGoals.length > 0 && totalPercent !== 100) {
+                          return (
+                            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[10px] rounded-xl leading-normal text-left font-sans flex items-start gap-1.5 mt-1">
+                              <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
+                              <div>
+                                <span className="font-bold block text-rose-200">Combined Allocation must equal 100% (currently: {totalPercent}%)</span>
+                                Please adjust the percentages of your active goals until their sum is exactly 100%.
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
 
                       {/* Add Custom Savings Goal Mini Form */}
                       <form onSubmit={handleAddSavingsGoal} className="bg-black/30 p-3 rounded-xl border border-white/5 space-y-2.5">
@@ -3631,7 +3717,7 @@ Date: ${new Date().toLocaleString()}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
                       <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🗂️ Envelopes</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for fixed expense payments.</p>
+                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for known expense payments.</p>
                     </div>
                     <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
                       <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">📅 Bills Calendar</span>
@@ -4361,22 +4447,47 @@ Date: ${new Date().toLocaleString()}
 
                         return (
                           <div key={item.id} className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                            <div className="flex items-center justify-between text-xs">
+                             <div className="flex items-center justify-between text-xs">
                               <span className="font-bold text-[#eeeeee]">{item.label}</span>
                               <div className="flex items-center gap-1.5">
                                 <label className="text-[8px] text-gray-500 uppercase font-black">Allocation</label>
                                 <div className="relative">
-                                  <input 
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    value={item.allocationPercent}
-                                    onChange={(e) => {
-                                      const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
-                                      setTempSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x));
-                                    }}
-                                    className={`w-14 pl-1.5 pr-4 py-0.5 bg-[#121212] border border-white/10 focus:border-emerald-500/50 outline-none rounded text-[10px] font-mono text-left font-bold ${reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
-                                  />
+                                  {(() => {
+                                    const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
+                                    return (
+                                      <input 
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        disabled={isAchieved}
+                                        value={isAchieved ? 0 : item.allocationPercent}
+                                        onChange={(e) => {
+                                          if (isAchieved) return;
+                                          const rawVal = parseFloat(e.target.value) || 0;
+                                          let val = Math.max(0, Math.min(100, rawVal));
+                                          
+                                          setTempSavingsGoals(prev => prev.map(x => {
+                                            if (x.id === item.id) {
+                                              let finalVal = val;
+                                              if (finalVal <= 0) {
+                                                finalVal = 1;
+                                              }
+                                              if (x.id === 'emergency_fund' && finalVal < 10) {
+                                                finalVal = 10;
+                                              }
+                                              return { ...x, allocationPercent: finalVal };
+                                            }
+                                            return x;
+                                          }));
+                                        }}
+                                        className={`w-14 pl-1.5 pr-4 py-0.5 bg-[#121212] border border-white/10 focus:border-emerald-500/50 outline-none rounded text-[10px] font-mono text-left font-bold ${
+                                          isAchieved 
+                                            ? 'opacity-40 cursor-not-allowed text-gray-500' 
+                                            : (reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400')
+                                        }`}
+                                      />
+                                    );
+                                  })()}
                                   <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-500 font-bold">%</span>
                                 </div>
                               </div>
@@ -4412,39 +4523,39 @@ Date: ${new Date().toLocaleString()}
                     </div>
 
                     {/* Allocation validation bar */}
-                    <div className={`p-2.5 rounded-xl border text-[9.5px] leading-relaxed space-y-1 ${
-                      isOverAllocated
-                        ? 'bg-rose-550/10 border-rose-500/20 text-rose-400'
-                        : totalAllocatedPercent === 100
-                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                          : 'bg-indigo-950/10 border-indigo-500/20 text-indigo-400'
-                    }`}>
-                      <div className="flex justify-between font-bold">
-                        <span>Total Allocation Percentage:</span>
-                        <span>{totalAllocatedPercent}% / 100%</span>
-                      </div>
-                      {isOverAllocated ? (
-                        <p className="text-gray-400 font-medium">
-                          ⚠️ Total allocation exceeds 100% ({totalAllocatedPercent}%). Please decrease percentages before continuing.
-                        </p>
-                      ) : totalAllocatedPercent === 100 ? (
-                        <p className="text-gray-400 font-medium font-sans">
-                          {reconciledSurplus >= 0 ? (
-                            <>✅ Perfectly matched! 100% of the reconciled surplus will be distributed fully to your savings goals.</>
+                    {(() => {
+                      const activeGoals = tempSavingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
+                      const isAllocationInvalid = activeGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
+
+                      return (
+                        <div className={`p-2.5 rounded-xl border text-[9.5px] leading-relaxed space-y-1 ${
+                          isAllocationInvalid
+                            ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        }`}>
+                          <div className="flex justify-between font-bold">
+                            <span>Total Allocation Percentage:</span>
+                            <span>{totalAllocatedPercent}% / 100%</span>
+                          </div>
+                          {isAllocationInvalid ? (
+                            <p className="text-gray-400 font-medium font-sans">
+                              {totalAllocatedPercent < 100 
+                                ? "⚠️ Combined allocation percentage must equal exactly 100%. Please increase percentages of your active goals."
+                                : "⚠️ Combined allocation percentage must equal exactly 100%. Please decrease percentages of your active goals."
+                              }
+                            </p>
                           ) : (
-                            <>✅ Perfectly matched! 100% of the reconciled deficit will be subtracted fully from your savings goals.</>
+                            <p className="text-gray-400 font-medium font-sans">
+                              {reconciledSurplus >= 0 ? (
+                                <>✅ Perfectly matched! 100% of the reconciled surplus will be distributed fully to your savings goals.</>
+                              ) : (
+                                <>✅ Perfectly matched! 100% of the reconciled deficit will be subtracted fully from your savings goals.</>
+                              )}
+                            </p>
                           )}
-                        </p>
-                      ) : (
-                        <p className="text-gray-400 font-medium font-sans">
-                          {reconciledSurplus >= 0 ? (
-                            <>ℹ️ Remaining <strong className="text-white font-bold">{bufferPercent}%</strong> (<strong className="text-white font-bold">{currencySymbol}{bufferAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>) will remain in liquid accounts as unallocated cushion.</>
-                          ) : (
-                            <>ℹ️ Remaining <strong className="text-white font-bold">{bufferPercent}%</strong> (<strong className="text-white font-bold">{currencySymbol}{Math.abs(bufferAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>) will remain as unallocated liquid deficit.</>
-                          )}
-                        </p>
-                      )}
-                    </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}
@@ -4534,15 +4645,16 @@ Date: ${new Date().toLocaleString()}
                     );
                   }
 
+                  const activeGoals = tempSavingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
                   const totalAllocatedPercent = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent) || 0), 0);
-                  const isOverAllocated = totalAllocatedPercent > 100;
+                  const isAllocationInvalid = activeGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
 
                   return (
                     <button
                       type="button"
-                      disabled={isOverAllocated}
+                      disabled={isAllocationInvalid}
                       onClick={() => {
-                        if (isOverAllocated) return;
+                        if (isAllocationInvalid) return;
                         
                         // Apply distributed amounts to actual savingsGoals with baseline tracking
                         let baselines: Record<string, number> = {};
@@ -4574,10 +4686,13 @@ Date: ${new Date().toLocaleString()}
                             ? baselines[originalGoal.id] 
                             : (originalGoal.currentAmount || 0);
 
+                          const updatedAmount = baseAmount + allocatedPortion;
+                          const isAchieved = (originalGoal.targetAmount || 0) > 0 && updatedAmount >= (originalGoal.targetAmount || 0);
+
                           return {
                             ...originalGoal,
-                            allocationPercent: percent,
-                            currentAmount: baseAmount + allocatedPortion
+                            allocationPercent: isAchieved ? 0 : percent,
+                            currentAmount: updatedAmount
                           };
                         }));
 
@@ -4591,8 +4706,8 @@ Date: ${new Date().toLocaleString()}
                         }
                       }}
                       className={`py-2 px-4 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all border-0 ${
-                        isOverAllocated
-                          ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                        isAllocationInvalid
+                          ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
                           : reconciledSurplus >= 0 
                             ? 'bg-emerald-600 hover:bg-emerald-500 active:scale-95 cursor-pointer'
                             : 'bg-rose-600 hover:bg-rose-500 active:scale-95 cursor-pointer'

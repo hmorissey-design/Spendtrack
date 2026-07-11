@@ -646,7 +646,10 @@ export const LocalDb = {
       expenses: this.getExpenses(),
       categories: this.getCategories(),
       budgets: this.getBudgets(),
-      version: '1.0.0',
+      incomeStreams: JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]'),
+      fixedExpenses: JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]'),
+      savingsGoals: JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]'),
+      version: '1.0.1',
       exportedAt: Date.now(),
     };
     return JSON.stringify(data, null, 2);
@@ -660,6 +663,18 @@ export const LocalDb = {
         localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data.categories));
         if (Array.isArray(data.budgets)) {
           localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(data.budgets));
+        }
+        if (Array.isArray(data.incomeStreams)) {
+          localStorage.setItem('expensetrack_income_streams', JSON.stringify(data.incomeStreams));
+        }
+        if (Array.isArray(data.fixedExpenses)) {
+          localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(data.fixedExpenses));
+        } else if (Array.isArray(data.knownExpenses)) {
+          // Backward compatibility for knownExpenses naming in future versions
+          localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(data.knownExpenses));
+        }
+        if (Array.isArray(data.savingsGoals)) {
+          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(data.savingsGoals));
         }
         localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
         return true;

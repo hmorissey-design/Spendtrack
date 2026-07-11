@@ -24,12 +24,6 @@ interface FinancialTip {
 
 const GENERAL_TIPS: FinancialTip[] = [
   {
-    id: 'rule_50_30_20',
-    title: "The 50/30/20 Budgeting Rule",
-    description: "Allocate 50% of income to Needs (rent, bills), 30% to Wants (dining out, hobbies), and 20% to Savings or paying off debt.",
-    iconType: 'wallet'
-  },
-  {
     id: 'rule_24_hour',
     title: "The 24-Hour Purchase Rule",
     description: "Wait 24 hours before buying non-essential items over $50. This cooling-off period eliminates impulsive online shopping.",
