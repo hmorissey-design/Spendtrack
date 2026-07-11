@@ -3416,14 +3416,14 @@ Date: ${new Date().toLocaleString()}
                           return (
                             <div 
                               key={item.id} 
-                              className={`p-2 px-2.5 rounded-xl flex items-center justify-between gap-3 border transition-all duration-200 group ${
+                              className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
                                 isEven 
-                                  ? 'bg-slate-900/40 border-slate-800/60 hover:bg-slate-900/60 hover:border-slate-800' 
-                                  : 'bg-emerald-950/20 border-emerald-900/20 hover:bg-emerald-950/35 hover:border-emerald-900/40'
+                                  ? 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10' 
+                                  : 'bg-emerald-500/[0.05] border-emerald-500/15 hover:bg-emerald-500/[0.08] hover:border-emerald-500/25'
                               }`}
                             >
-                              {/* Left side: Name and actions */}
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {/* Line 1: Goal name and actions (full-width header) */}
+                              <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   {editingItemId === item.id ? (
                                     <input 
@@ -3446,12 +3446,12 @@ Date: ${new Date().toLocaleString()}
                                         }
                                         setEditingItemId(null);
                                       }}
-                                      className="px-1.5 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-24 font-medium font-sans"
+                                      className="px-1.5 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-28 font-medium font-sans"
                                       autoFocus
                                     />
                                   ) : (
                                     <div className="flex items-center gap-1 min-w-0">
-                                      <span className="text-xs text-white font-extrabold truncate max-w-[85px] sm:max-w-[120px]" title={item.label}>
+                                      <span className="text-xs text-white font-extrabold truncate max-w-[150px] sm:max-w-[200px]" title={item.label}>
                                         {item.label}
                                       </span>
                                       <button 
@@ -3468,8 +3468,8 @@ Date: ${new Date().toLocaleString()}
                                   )}
                                 </div>
                                 
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 px-1 py-0.2 rounded font-mono font-bold">
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
                                     {percentSaved}% Saved
                                   </span>
                                   <button 
@@ -3482,11 +3482,11 @@ Date: ${new Date().toLocaleString()}
                                 </div>
                               </div>
 
-                              {/* Right side: Three fields on the same line */}
-                              <div className="flex items-center gap-1.5 shrink-0">
+                              {/* Line 2: Three adjustable value fields next to each other */}
+                              <div className="flex items-center justify-between w-full gap-2 pt-0.5">
                                 {/* Desired target input */}
-                                <div className="flex flex-col items-start gap-0.5">
-                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Target</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Target:</span>
                                   <DirectAmountInput 
                                     initialValue={item.targetAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, targetAmount: val } : x))}
@@ -3496,8 +3496,8 @@ Date: ${new Date().toLocaleString()}
                                 </div>
 
                                 {/* Current amount input */}
-                                <div className="flex flex-col items-start gap-0.5">
-                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Saved</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Saved:</span>
                                   <DirectAmountInput 
                                     initialValue={item.currentAmount || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, currentAmount: val } : x))}
@@ -3507,8 +3507,8 @@ Date: ${new Date().toLocaleString()}
                                 </div>
 
                                 {/* Allocation percent input */}
-                                <div className="flex flex-col items-start gap-0.5">
-                                  <span className="text-[7px] text-gray-500 font-bold uppercase tracking-wider">Alloc %</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Alloc:</span>
                                   <DirectAmountInput 
                                     initialValue={item.allocationPercent || 0}
                                     onUpdate={(val) => setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: val } : x))}
