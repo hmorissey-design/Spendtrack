@@ -10,7 +10,7 @@ import {
   Plus, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
   Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
-  Beer, Flame, Train
+  Beer, Flame, Train, PiggyBank
 } from 'lucide-react';
 
 import {
@@ -93,6 +93,7 @@ const ICON_PRESETS = [
 
 export function renderCategoryIcon(iconName: string, size = 16) {
   switch (iconName) {
+    case 'PiggyBank': return <PiggyBank size={size} />;
     case 'Utensils': return <Utensils size={size} />;
     case 'ShoppingBag': return <ShoppingBag size={size} />;
     case 'Film': return <Film size={size} />;
@@ -136,6 +137,16 @@ export function BudgetSettings({
   onBackupCompleted
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
+  const [renderCharts, setRenderCharts] = useState(false);
+
+  useEffect(() => {
+    setRenderCharts(false);
+    const t = setTimeout(() => {
+      setRenderCharts(true);
+    }, 150);
+    return () => clearTimeout(t);
+  }, []);
+
   const [downloadingAsset, setDownloadingAsset] = useState<boolean>(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
@@ -221,9 +232,9 @@ export function BudgetSettings({
     percentSpentVal,
     remainingAmountVal
   } = useMemo(() => {
-    const expensesInMonth = localExpenses.filter(e => e.date.startsWith(currentMonthPrefixVal) && e.category !== 'cat_business_expense');
+    const expensesInMonth = localExpenses.filter(e => e.date.startsWith(currentMonthPrefixVal) && e.category !== 'cat_business_expense' && !e.category.startsWith('SAVINGS_'));
     const spentObj = expensesInMonth.reduce((sum, e) => sum + e.amount, 0);
-    const limitObj = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+    const limitObj = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
     const percentObj = limitObj > 0 ? Math.round((spentObj / limitObj) * 100) : 0;
     const remainingObj = limitObj - spentObj;
     return {
@@ -889,6 +900,16 @@ function RenderAnalyticsTrendsLive({
   currentMonthExpenses,
   monthName
 }: AnalyticsTrendsLiveProps) {
+  const [renderCharts, setRenderCharts] = useState(false);
+
+  useEffect(() => {
+    setRenderCharts(false);
+    const t = setTimeout(() => {
+      setRenderCharts(true);
+    }, 150);
+    return () => clearTimeout(t);
+  }, []);
+
   // Compute line graph data
   const trendData = useMemo(() => {
     const daysInMonth = 30;
@@ -971,26 +992,30 @@ function RenderAnalyticsTrendsLive({
           Cumulative Spending
         </h4>
         <div className="h-32 w-full text-slate-100 font-mono text-[8px]">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-            <LineChart data={trendData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-              <XAxis dataKey="label" stroke="#64748b" tickSize={4} />
-              <YAxis stroke="#64748b" tickSize={4} />
-              <ReTooltip 
-                contentStyle={{ backgroundColor: '#0A0A0A', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
-                labelStyle={{ fontSize: '9px', fontWeight: 'bold' }}
-                itemStyle={{ fontSize: '9px', color: '#10b981' }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="Amount" 
-                stroke="#10b981" 
-                strokeWidth={2.5} 
-                dot={{ r: 1.5, fill: '#34d399', strokeWidth: 0 }} 
-                activeDot={{ r: 3 }} 
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {renderCharts ? (
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <LineChart data={trendData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                <XAxis dataKey="label" stroke="#64748b" tickSize={4} />
+                <YAxis stroke="#64748b" tickSize={4} />
+                <ReTooltip 
+                  contentStyle={{ backgroundColor: '#0A0A0A', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
+                  labelStyle={{ fontSize: '9px', fontWeight: 'bold' }}
+                  itemStyle={{ fontSize: '9px', color: '#10b981' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Amount" 
+                  stroke="#10b981" 
+                  strokeWidth={2.5} 
+                  dot={{ r: 1.5, fill: '#34d399', strokeWidth: 0 }} 
+                  activeDot={{ r: 3 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-32 w-full" />
+          )}
         </div>
       </div>
 
@@ -1001,23 +1026,27 @@ function RenderAnalyticsTrendsLive({
         </h4>
         <div className="grid grid-cols-12 gap-3 items-center">
           <div className="col-span-4 h-24 relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-              <RePieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={18}
-                  outerRadius={32}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </RePieChart>
-            </ResponsiveContainer>
+            {renderCharts ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <RePieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={18}
+                    outerRadius={32}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </RePieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-24 w-full" />
+            )}
           </div>
           <div className="col-span-8 space-y-1.5 overflow-y-auto max-h-24">
             {pieData.map((item, idx) => (
@@ -1120,7 +1149,7 @@ function RenderFinancePDFReportLive({
 }: FinancePDFReportLiveProps) {
   // Grab current month expenses, or use fallback mock database if none logged
   const activeReportRows = useMemo(() => {
-    let list = localExpenses.filter(e => e.date.startsWith(currentMonthPrefix));
+    let list = localExpenses.filter(e => e.date.startsWith(currentMonthPrefix) && !e.category.startsWith('SAVINGS_'));
     if (list.length === 0) {
       list = [
         { id: '1', date: `${currentMonthPrefix}-02`, note: 'Acme General Store Purchase', category: 'cat_groceries', paymentMethod: 'card', amount: 98.45 },

@@ -326,12 +326,60 @@ export const LocalDb = {
     const expenses = this.getExpenses();
     const monthExpenses = expenses.filter(e => e.date.substring(0, 7) === activeMonth);
 
-    return mapped.filter(cat => {
+    const filtered = mapped.filter(cat => {
       if (!cat.isHidden) return true;
       const hasExpenses = monthExpenses.some(e => e.category === cat.id);
       const hasLimit = (cat.limit || 0) > 0;
       return hasExpenses || hasLimit;
     });
+
+    // Dynamically append savings goals categories!
+    const savingsStored = localStorage.getItem('expensetrack_savings_goals');
+    let savingsCats: Category[] = [];
+    if (savingsStored) {
+      try {
+        const goals = JSON.parse(savingsStored);
+        if (Array.isArray(goals)) {
+          savingsCats = goals.map(goal => ({
+            id: `SAVINGS_${goal.id}`,
+            name: `SAVINGS - ${goal.label}`,
+            icon: 'PiggyBank',
+            color: 'bg-pink-500/20 text-pink-450 border border-pink-500/35',
+            textColor: 'text-pink-450',
+            isDefault: false,
+            limit: 0
+          }));
+        }
+      } catch (e) {}
+    }
+
+    // Also scan for any historical SAVINGS_ category used in expenses to prevent them from showing as uncategorized or blank
+    expenses.forEach(exp => {
+      if (exp.category.startsWith('SAVINGS_')) {
+        const goalId = exp.category.substring(8);
+        const alreadyExists = savingsCats.some(c => c.id === exp.category);
+        if (!alreadyExists) {
+          // Fallback for deleted goals
+          let label = goalId;
+          if (goalId === 'emergency_fund') label = 'Reserve';
+          else if (goalId === 'vacation_fund') label = 'Vacation Goal';
+          else if (goalId.startsWith('savings_')) {
+            label = 'Deleted Goal';
+          }
+          savingsCats.push({
+            id: exp.category,
+            name: `SAVINGS - ${label}`,
+            icon: 'PiggyBank',
+            color: 'bg-pink-500/20 text-pink-450 border border-pink-500/35',
+            textColor: 'text-pink-450',
+            isDefault: false,
+            limit: 0
+          });
+        }
+      }
+    });
+
+    return [...filtered, ...savingsCats];
   },
 
   getAllCategoriesWithLimits(month: string): Category[] {
@@ -676,6 +724,7 @@ export const LocalDb = {
         if (Array.isArray(data.savingsGoals)) {
           localStorage.setItem('expensetrack_savings_goals', JSON.stringify(data.savingsGoals));
         }
+        localStorage.setItem('expensetrack_fixed_defaults_cleaned', 'true');
         localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
         return true;
       }

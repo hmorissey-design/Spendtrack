@@ -3,7 +3,7 @@ import {
   DollarSign, X, CheckCircle, Plus, Edit, Trash2, Eye, Tag,
   Utensils, ShoppingBag, Film, Car, Sparkles, Coffee, Briefcase, 
   Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, 
-  HelpCircle, Beer, Flame, Train 
+  HelpCircle, Beer, Flame, Train, PiggyBank
 } from 'lucide-react';
 import { LocalDb } from '../utils/db';
 import { Category, MonthlyBudget } from '../types';
@@ -46,6 +46,7 @@ const ICON_PRESETS = [
 
 export function renderCategoryIcon(iconName: string, size = 16) {
   switch (iconName) {
+    case 'PiggyBank': return <PiggyBank size={size} />;
     case 'Utensils': return <Utensils size={size} />;
     case 'ShoppingBag': return <ShoppingBag size={size} />;
     case 'Film': return <Film size={size} />;
@@ -154,6 +155,10 @@ export function CategoryManager({
     e.preventDefault();
     if (!formName.trim()) {
       setErrorMsg('Please enter a category name.');
+      return;
+    }
+    if (formName.toLowerCase().includes('savings')) {
+      setErrorMsg("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
       return;
     }
     let parsedLimit = parseFloat(formLimit);

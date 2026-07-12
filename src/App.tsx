@@ -382,7 +382,10 @@ export default function App() {
           bank_fee: [15]
         };
         let modified = false;
+        const hasMigrated = localStorage.getItem('expensetrack_fixed_defaults_cleaned') === 'true';
+        
         const migrated = parsed.map((item: any) => {
+          if (hasMigrated) return item;
           const possibleDefaults = legacyDefaults[item.id];
           if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
             modified = true;
@@ -390,6 +393,12 @@ export default function App() {
           }
           return item;
         });
+        
+        if (!hasMigrated) {
+          localStorage.setItem('expensetrack_fixed_defaults_cleaned', 'true');
+          modified = true;
+        }
+        
         if (modified) {
           localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(migrated));
         }
@@ -468,16 +477,10 @@ export default function App() {
 
           return updated;
         });
-        const filtered = migrated.filter((item: any) => {
-          const isCoreGoal = item.id === 'emergency_fund' || item.id === 'vacation_fund';
-          if (isCoreGoal) return true;
-          // Keep custom or legacy goals only if the user has actually saved money in them
-          return (item.currentAmount || 0) > 0;
-        });
-        if (modified || filtered.length !== parsed.length) {
-          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(filtered));
+        if (modified) {
+          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(migrated));
         }
-        return filtered;
+        return migrated;
       }
     } catch (e) {}
     return [
@@ -513,8 +516,9 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
+      setCategories(LocalDb.getCategories(selectedMonth));
     } catch (e) {}
-  }, [savingsGoals]);
+  }, [savingsGoals, selectedMonth]);
 
   const getPreviousMonthName = () => {
     const date = new Date();
@@ -679,6 +683,10 @@ export default function App() {
   const handleAddFixedExpense = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFixedName.trim()) return;
+    if (newFixedName.toLowerCase().includes('savings')) {
+      alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+      return;
+    }
     const amount = parseFloat(newFixedAmount) || 0;
     const newItem = {
       id: `fixed_${Date.now()}`,
@@ -1020,6 +1028,16 @@ Date: ${new Date().toLocaleString()}
   };
   const handleAddExpense = (newExpenseData: Omit<Expense, 'id' | 'createdAt'>) => {
     LocalDb.addExpense(newExpenseData);
+    if (newExpenseData.category.startsWith('SAVINGS_')) {
+      const goalId = newExpenseData.category.substring(8);
+      setSavingsGoals(prev => prev.map(goal => {
+        if (goal.id === goalId) {
+          const updatedAmount = Math.max(0, (goal.currentAmount || 0) - newExpenseData.amount);
+          return { ...goal, currentAmount: updatedAmount };
+        }
+        return goal;
+      }));
+    }
     const dateMonth = newExpenseData.date.substring(0, 7); // Get "YYYY-MM"
     if (dateMonth !== selectedMonth) {
       setSelectedMonth(dateMonth);
@@ -1031,10 +1049,44 @@ Date: ${new Date().toLocaleString()}
 
   const handleSaveEditedExpense = (updatedData: Omit<Expense, 'id' | 'createdAt'>) => {
     if (editingExpense) {
+      const prevExpense = editingExpense;
       const fullUpdatedExpense: Expense = {
         ...editingExpense,
         ...updatedData
       };
+
+      // Revert previous expense if it was a savings category (add back the money)
+      let goalsUpdated = false;
+      let newGoals = [...savingsGoals];
+
+      if (prevExpense.category.startsWith('SAVINGS_')) {
+        const prevGoalId = prevExpense.category.substring(8);
+        newGoals = newGoals.map(goal => {
+          if (goal.id === prevGoalId) {
+            goalsUpdated = true;
+            return { ...goal, currentAmount: (goal.currentAmount || 0) + prevExpense.amount };
+          }
+          return goal;
+        });
+      }
+
+      // Apply new expense if it is a savings category (deduct the money)
+      if (updatedData.category.startsWith('SAVINGS_')) {
+        const newGoalId = updatedData.category.substring(8);
+        newGoals = newGoals.map(goal => {
+          if (goal.id === newGoalId) {
+            goalsUpdated = true;
+            const updatedAmount = Math.max(0, (goal.currentAmount || 0) - updatedData.amount);
+            return { ...goal, currentAmount: updatedAmount };
+          }
+          return goal;
+        });
+      }
+
+      if (goalsUpdated) {
+        setSavingsGoals(newGoals);
+      }
+
       LocalDb.updateExpense(fullUpdatedExpense);
       const dateMonth = updatedData.date.substring(0, 7); // Get "YYYY-MM"
       if (dateMonth !== selectedMonth) {
@@ -1047,6 +1099,18 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleDeleteExpense = (id: string) => {
+    // Revert savings goal if it was a SAVINGS category
+    const expenseToDeleteObj = expenses.find(e => e.id === id);
+    if (expenseToDeleteObj && expenseToDeleteObj.category.startsWith('SAVINGS_')) {
+      const goalId = expenseToDeleteObj.category.substring(8);
+      setSavingsGoals(prev => prev.map(goal => {
+        if (goal.id === goalId) {
+          return { ...goal, currentAmount: (goal.currentAmount || 0) + expenseToDeleteObj.amount };
+        }
+        return goal;
+      }));
+    }
+
     LocalDb.deleteExpense(id);
     loadDatabaseState(selectedMonth);
     setExpenseToDelete(null);
@@ -1407,6 +1471,10 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleAddCategory = (catData: Omit<Category, 'id'>, isDefault?: boolean) => {
+    if (catData.name.toLowerCase().includes('savings')) {
+      alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+      return;
+    }
     const created = LocalDb.addCategory(catData, selectedMonth);
     if (isDefault) {
       LocalDb.setDefaultCategoryId(created.id);
@@ -1415,6 +1483,10 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleUpdateCategory = (cat: Category, isDefault?: boolean) => {
+    if (cat.name.toLowerCase().includes('savings')) {
+      alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+      return;
+    }
     LocalDb.updateCategory(cat, selectedMonth);
     if (isDefault) {
       LocalDb.setDefaultCategoryId(cat.id);
@@ -1431,12 +1503,12 @@ Date: ${new Date().toLocaleString()}
   const totals = useMemo(() => {
     const currentMonthPrefix = selectedMonth; // use selectedMonth prefix
     
-    // Filter expenses in the current month to show true budgeting outcomes, excluding Business Expense completely from any computations
-    const currentMonthExpenses = expenses.filter(e => e.date.startsWith(currentMonthPrefix) && e.category !== 'cat_business_expense');
+    // Filter expenses in the current month to show true budgeting outcomes, excluding Business Expense and Savings expenses completely from any computations
+    const currentMonthExpenses = expenses.filter(e => e.date.startsWith(currentMonthPrefix) && e.category !== 'cat_business_expense' && !e.category.startsWith('SAVINGS_'));
     const totalSpent = currentMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
     
-    // The Total Budget limit should be the total of individual category budgets (excluding business expenses)
-    const limit = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+    // The Total Budget limit should be the total of individual category budgets (excluding business and savings expenses)
+    const limit = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
     
     const percent = limit > 0 
       ? Math.round((totalSpent / limit) * 100) 
@@ -1471,8 +1543,8 @@ Date: ${new Date().toLocaleString()}
   const categoryStats = useMemo(() => {
     const stats: Record<string, { total: number; count: number; color: string; label: string; limit: number }> = {};
     
-    // Initialize stats and exclude Business Expense from budget stats report
-    categories.filter(c => c.id !== 'cat_business_expense').forEach(c => {
+    // Initialize stats and exclude Business Expense and Savings from budget stats report
+    categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).forEach(c => {
       stats[c.id] = { total: 0, count: 0, color: c.color, label: c.name, limit: c.limit || 0 };
     });
 
@@ -1928,7 +2000,11 @@ Date: ${new Date().toLocaleString()}
                     </div>
                     <div className="min-w-0 text-left">
                       <p className="text-xs font-bold text-gray-100 truncate">
-                        {expenseToDelete.note || categories.find(c => c.id === expenseToDelete.category)?.name || 'Uncategorized'}
+                        {expenseToDelete.note || 
+                          (() => {
+                            const cat = categories.find(c => c.id === expenseToDelete.category);
+                            return cat?.id.startsWith('SAVINGS_') ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : (cat?.name || 'Uncategorized');
+                          })()}
                       </p>
                       <p className="text-[10px] text-gray-500">
                         {expenseToDelete.date} • {expenseToDelete.paymentMethod.replace('_', ' ')}
@@ -2435,7 +2511,9 @@ Date: ${new Date().toLocaleString()}
                       >
                         <option value="all">📁 All Categories</option>
                         {categories.map(c => (
-                          <option key={c.id} value={c.id} className="bg-black text-white">{c.name}</option>
+                          <option key={c.id} value={c.id} className="bg-black text-white">
+                            {c.id.startsWith('SAVINGS_') ? `🐷 [Savings] ${c.name.replace(/^SAVINGS\s*-\s*/i, '')}` : c.name}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -2760,7 +2838,7 @@ Date: ${new Date().toLocaleString()}
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate leading-tight flex items-center gap-1.5 flex-wrap">
-                                <span>{exp.note || cat?.name || 'Uncategorized'}</span>
+                                <span>{exp.note || (cat?.id.startsWith('SAVINGS_') ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat?.name) || 'Uncategorized'}</span>
                                 {isBusiness && (
                                   <span className="px-1 py-0.5 text-[7px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase font-mono tracking-wider leading-none shrink-0">
                                     Business (Export-Only)
@@ -3153,6 +3231,11 @@ Date: ${new Date().toLocaleString()}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     if (editingItemValue.trim()) {
+                                      if (editingItemValue.toLowerCase().includes('savings')) {
+                                        alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+                                        setEditingItemId(null);
+                                        return;
+                                      }
                                       setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                     }
                                     setEditingItemId(null);
@@ -3162,6 +3245,11 @@ Date: ${new Date().toLocaleString()}
                                 }}
                                 onBlur={() => {
                                   if (editingItemValue.trim()) {
+                                    if (editingItemValue.toLowerCase().includes('savings')) {
+                                      alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+                                      setEditingItemId(null);
+                                      return;
+                                    }
                                     setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                   }
                                   setEditingItemId(null);

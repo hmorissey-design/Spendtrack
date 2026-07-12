@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Category, Expense } from '../types';
 import { Plus, X, Calendar, DollarSign, MessageSquare, CreditCard, Sparkles, Check } from 'lucide-react';
-import { AdMobBanner } from './AdMobBanner';
+import { renderCategoryIcon } from './BudgetSettings';
 
 interface ExpenseFormProps {
   categories: Category[];
@@ -33,6 +33,7 @@ const getDarkTextColor = (colorStr: string) => {
   if (s.includes('blue')) return 'text-blue-800';
   if (s.includes('slate')) return 'text-slate-800';
   if (s.includes('indigo')) return 'text-indigo-800';
+  if (s.includes('pink')) return 'text-pink-600';
   return 'text-slate-800';
 };
 
@@ -270,6 +271,12 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       return;
     }
 
+    // Prevent standard daily expenses from containing "savings" in the note/description
+    if (!selectedCategory.startsWith('SAVINGS_') && note.toLowerCase().includes('savings')) {
+      setErrorCode("Daily expenses cannot contain the word 'savings' in their description. Use a Savings category for savings goals.");
+      return;
+    }
+
     // Business Expenses require a description/note validation
     const catObj = categories.find(c => c.id === selectedCategory);
     const isBusinessCat = catObj && (
@@ -461,10 +468,20 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                   />
                 ) : null}
 
-                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-black tracking-wider bg-white ${getDarkTextColor(cat.color)} select-none pointer-events-none shadow-xs border border-white/5`}>
-                  {cat.name.substring(0, 2).toUpperCase()}
+                <div className={`p-1 px-2 rounded-md mb-1 text-[10px] uppercase font-black tracking-wider select-none pointer-events-none shadow-xs flex items-center justify-center min-w-[24px] min-h-[22px] ${
+                  cat.id.startsWith('SAVINGS_')
+                    ? 'bg-pink-500 text-white border border-pink-400/30'
+                    : `bg-white border border-white/5 ${getDarkTextColor(cat.color)}`
+                }`}>
+                  {cat.id.startsWith('SAVINGS_') ? (
+                    renderCategoryIcon('PiggyBank', 12)
+                  ) : (
+                    cat.name.substring(0, 2).toUpperCase()
+                  )}
                 </div>
-                <span className={`text-[10.5px] font-semibold truncate w-full tracking-tight select-none pointer-events-none transition-colors ${selectedCategory === cat.id ? 'text-white font-extrabold' : 'text-gray-200'}`}>{cat.name}</span>
+                <span className={`text-[10.5px] font-semibold truncate w-full tracking-tight select-none pointer-events-none transition-colors ${selectedCategory === cat.id ? 'text-white font-extrabold' : 'text-gray-200'}`}>
+                  {cat.id.startsWith('SAVINGS_') ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name}
+                </span>
 
                 {isReordering && (
                   <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded mt-1.5 pointer-events-none select-none animate-pulse">
@@ -643,11 +660,6 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
         </div>
 
       </form>
-
-      {/* Dynamic AdMob Slot on the new log screen */}
-      <div className="mt-4 pt-4 border-t border-white/5">
-        <AdMobBanner />
-      </div>
 
       {/* Custom Popup Modal for Business Expense Validation */}
       {showBusinessPopup && (
