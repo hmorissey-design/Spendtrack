@@ -336,6 +336,12 @@ export default function App() {
 
   // Simulated Full Budget Monthly Planner states (under construction preview)
   const [incomeStreams, setIncomeStreams] = useState<{ id: string; label: string; amount: number }[]>(() => {
+    const defaultList = [
+      { id: 'net_salary', label: 'Salary', amount: 0 },
+      { id: 'side_income', label: 'Govt Pensions', amount: 0 },
+      { id: 'private_pension', label: 'Private Pension', amount: 0 }
+    ];
+
     try {
       const stored = localStorage.getItem('expensetrack_income_streams');
       if (stored) {
@@ -345,26 +351,71 @@ export default function App() {
           side_income: 500
         };
         let modified = false;
-        const migrated = parsed.map((item: any) => {
+        const cleaned = parsed.map((item: any) => {
           if (legacyDefaults[item.id] !== undefined && item.amount === legacyDefaults[item.id]) {
             modified = true;
             return { ...item, amount: 0 };
           }
           return item;
         });
+
+        const existingMap = new Map<string, { id: string; label: string; amount: number }>();
+        cleaned.forEach((item: any) => {
+          if (item && item.id) {
+            existingMap.set(item.id, item);
+          }
+        });
+
+        const mergedList: { id: string; label: string; amount: number }[] = [];
+        defaultList.forEach(defItem => {
+          if (existingMap.has(defItem.id)) {
+            const existing = existingMap.get(defItem.id)!;
+            if (existing.label !== defItem.label) {
+              modified = true;
+            }
+            mergedList.push({
+              id: defItem.id,
+              label: defItem.label,
+              amount: existing.amount
+            });
+            existingMap.delete(defItem.id);
+          } else {
+            modified = true;
+            mergedList.push({ ...defItem });
+          }
+        });
+
+        existingMap.forEach(customItem => {
+          mergedList.push(customItem);
+        });
+
         if (modified) {
-          localStorage.setItem('expensetrack_income_streams', JSON.stringify(migrated));
+          localStorage.setItem('expensetrack_income_streams', JSON.stringify(mergedList));
         }
-        return migrated;
+        return mergedList;
       }
     } catch (e) {}
-    return [
-      { id: 'net_salary', label: 'Primary Income', amount: 0 },
-      { id: 'side_income', label: 'Side Income', amount: 0 }
-    ];
+    return defaultList;
   });
 
   const [fixedExpenses, setFixedExpenses] = useState<{ id: string; label: string; amount: number }[]>(() => {
+    const defaultList = [
+      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
+      { id: 'property_tax', label: 'Property Tax', amount: 0 },
+      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
+      { id: 'electricity', label: 'Electricity', amount: 0 },
+      { id: 'water', label: 'Water', amount: 0 },
+      { id: 'phone', label: 'Home Phone', amount: 0 },
+      { id: 'mobile_phone', label: 'Mobile Phone', amount: 0 },
+      { id: 'cable', label: 'Cable', amount: 0 },
+      { id: 'internet', label: 'Internet', amount: 0 },
+      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+      { id: 'auto_insurance', label: 'Auto Insurance', amount: 0 },
+      { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
+      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
+      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
+    ];
+
     try {
       const stored = localStorage.getItem('expensetrack_fixed_expenses');
       if (stored) {
@@ -385,7 +436,7 @@ export default function App() {
         let modified = false;
         const hasMigrated = localStorage.getItem('expensetrack_fixed_defaults_cleaned') === 'true';
         
-        const migrated = parsed.map((item: any) => {
+        const cleaned = parsed.map((item: any) => {
           if (hasMigrated) return item;
           const possibleDefaults = legacyDefaults[item.id];
           if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
@@ -399,26 +450,44 @@ export default function App() {
           localStorage.setItem('expensetrack_fixed_defaults_cleaned', 'true');
           modified = true;
         }
+
+        const existingMap = new Map<string, { id: string; label: string; amount: number }>();
+        cleaned.forEach((item: any) => {
+          if (item && item.id) {
+            existingMap.set(item.id, item);
+          }
+        });
+
+        const mergedList: { id: string; label: string; amount: number }[] = [];
+        defaultList.forEach(defItem => {
+          if (existingMap.has(defItem.id)) {
+            const existing = existingMap.get(defItem.id)!;
+            if (existing.label !== defItem.label) {
+              modified = true;
+            }
+            mergedList.push({
+              id: defItem.id,
+              label: defItem.label,
+              amount: existing.amount
+            });
+            existingMap.delete(defItem.id);
+          } else {
+            modified = true;
+            mergedList.push({ ...defItem });
+          }
+        });
+
+        existingMap.forEach(customItem => {
+          mergedList.push(customItem);
+        });
         
         if (modified) {
-          localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(migrated));
+          localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(mergedList));
         }
-        return migrated;
+        return mergedList;
       }
     } catch (e) {}
-    return [
-      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
-      { id: 'property_tax', label: 'Property Tax', amount: 0 },
-      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
-      { id: 'electricity', label: 'Electricity', amount: 0 },
-      { id: 'water', label: 'Water', amount: 0 },
-      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
-      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
-      { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
-      { id: 'internet', label: 'Internet', amount: 0 },
-      { id: 'phone', label: 'Phone', amount: 0 },
-      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
-    ];
+    return defaultList;
   });
 
   const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number }[]>(() => {
@@ -460,20 +529,9 @@ export default function App() {
           }
 
           // Enforce business rules
-          const isAchieved = (updated.targetAmount || 0) > 0 && (updated.currentAmount || 0) >= (updated.targetAmount || 0);
-          if (isAchieved) {
-            if (updated.allocationPercent !== 0) {
-              updated.allocationPercent = 0;
-              modified = true;
-            }
-          } else {
-            if (updated.id === 'emergency_fund' && (updated.allocationPercent || 0) < 10) {
-              updated.allocationPercent = 10;
-              modified = true;
-            } else if ((updated.allocationPercent || 0) <= 0) {
-              updated.allocationPercent = 10; // Default to 10% if unentered
-              modified = true;
-            }
+          if (updated.id === 'emergency_fund' && (updated.allocationPercent || 0) > 0 && (updated.allocationPercent || 0) < 10) {
+            updated.allocationPercent = 10;
+            modified = true;
           }
 
           return updated;
@@ -500,6 +558,33 @@ export default function App() {
 
   const toggleAccordion = (key: string) => {
     setAccordionOpen(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const isDuplicateName = (name: string, excludeId?: string): boolean => {
+    const cleanName = name.trim().toLowerCase();
+    if (!cleanName) return false;
+
+    // Check incomeStreams
+    if (incomeStreams.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
+      return true;
+    }
+
+    // Check fixedExpenses
+    if (fixedExpenses.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
+      return true;
+    }
+
+    // Check spending categories (discretionary)
+    if (categories.some(item => item.id !== excludeId && !item.isHidden && item.name.trim().toLowerCase() === cleanName)) {
+      return true;
+    }
+
+    // Check savingsGoals
+    if (savingsGoals.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
+      return true;
+    }
+
+    return false;
   };
 
   useEffect(() => {
@@ -613,6 +698,11 @@ export default function App() {
     const amount = parseFloat(quickAddAmount) || 0;
     const label = quickAddName.trim();
 
+    if (isDuplicateName(label)) {
+      alert(`The name "${label}" is already in use in another section or category. Please choose a unique name.`);
+      return;
+    }
+
     if (quickAddSection === 'income') {
       const newItem = {
         id: `income_${Date.now()}`,
@@ -621,6 +711,10 @@ export default function App() {
       };
       setIncomeStreams(prev => [...prev, newItem]);
     } else if (quickAddSection === 'fixed') {
+      if (label.toLowerCase().includes('savings')) {
+        alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+        return;
+      }
       const newItem = {
         id: `fixed_${Date.now()}`,
         label,
@@ -662,6 +756,10 @@ export default function App() {
   const handleAddIncomeStream = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newIncomeName.trim()) return;
+    if (isDuplicateName(newIncomeName)) {
+      alert(`The name "${newIncomeName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return;
+    }
     const amount = parseFloat(newIncomeAmount) || 0;
     const newItem = {
       id: `income_${Date.now()}`,
@@ -688,6 +786,10 @@ export default function App() {
       alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
       return;
     }
+    if (isDuplicateName(newFixedName)) {
+      alert(`The name "${newFixedName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return;
+    }
     const amount = parseFloat(newFixedAmount) || 0;
     const newItem = {
       id: `fixed_${Date.now()}`,
@@ -702,21 +804,20 @@ export default function App() {
   const handleAddSavingsGoal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSavingsName.trim()) return;
+    if (isDuplicateName(newSavingsName)) {
+      alert(`The name "${newSavingsName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return;
+    }
     const amount = parseFloat(newSavingsAmount) || 0;
     const targetAmount = parseFloat(newSavingsTarget) || 0;
     const currentAmount = parseFloat(newSavingsCurrent) || 0;
     const allocationPercent = parseFloat(newSavingsPercent) || 0;
 
-    const isAchieved = targetAmount > 0 && currentAmount >= targetAmount;
-    let finalAlloc = allocationPercent;
-    if (isAchieved) {
-      finalAlloc = 0;
-    } else {
-      if (finalAlloc <= 0) {
-        alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
-        return;
-      }
+    if (allocationPercent <= 0) {
+      alert("A newly entered savings goal must have an allocation percentage greater than 0%.");
+      return;
     }
+    let finalAlloc = allocationPercent;
 
     const newItem = {
       id: `savings_${Date.now()}`,
@@ -745,6 +846,10 @@ export default function App() {
   const handleAddDiscretionaryCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDiscretionaryName.trim()) return;
+    if (isDuplicateName(newDiscretionaryName)) {
+      alert(`The name "${newDiscretionaryName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return;
+    }
     const limit = parseFloat(newDiscretionaryLimit) || 0;
     
     handleAddCategory({
@@ -1471,28 +1576,38 @@ Date: ${new Date().toLocaleString()}
     setActiveTab('dashboard');
   };
 
-  const handleAddCategory = (catData: Omit<Category, 'id'>, isDefault?: boolean) => {
+  const handleAddCategory = (catData: Omit<Category, 'id'>, isDefault?: boolean): boolean => {
     if (catData.name.toLowerCase().includes('savings')) {
       alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
-      return;
+      return false;
+    }
+    if (isDuplicateName(catData.name)) {
+      alert(`The name "${catData.name.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return false;
     }
     const created = LocalDb.addCategory(catData, selectedMonth);
     if (isDefault) {
       LocalDb.setDefaultCategoryId(created.id);
     }
     loadDatabaseState(selectedMonth);
+    return true;
   };
 
-  const handleUpdateCategory = (cat: Category, isDefault?: boolean) => {
+  const handleUpdateCategory = (cat: Category, isDefault?: boolean): boolean => {
     if (cat.name.toLowerCase().includes('savings')) {
       alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
-      return;
+      return false;
+    }
+    if (isDuplicateName(cat.name, cat.id)) {
+      alert(`The name "${cat.name.trim()}" is already in use in another section or category. Please choose a unique name.`);
+      return false;
     }
     LocalDb.updateCategory(cat, selectedMonth);
     if (isDefault) {
       LocalDb.setDefaultCategoryId(cat.id);
     }
     loadDatabaseState(selectedMonth);
+    return true;
   };
 
   const handleDeleteCategory = (id: string) => {
@@ -3113,6 +3228,11 @@ Date: ${new Date().toLocaleString()}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     if (editingItemValue.trim()) {
+                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                        alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                        setEditingItemId(null);
+                                        return;
+                                      }
                                       setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                     }
                                     setEditingItemId(null);
@@ -3122,6 +3242,11 @@ Date: ${new Date().toLocaleString()}
                                 }}
                                 onBlur={() => {
                                   if (editingItemValue.trim()) {
+                                    if (isDuplicateName(editingItemValue, item.id)) {
+                                      alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                      setEditingItemId(null);
+                                      return;
+                                    }
                                     setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                   }
                                   setEditingItemId(null);
@@ -3250,6 +3375,11 @@ Date: ${new Date().toLocaleString()}
                                         setEditingItemId(null);
                                         return;
                                       }
+                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                        alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                        setEditingItemId(null);
+                                        return;
+                                      }
                                       setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                     }
                                     setEditingItemId(null);
@@ -3261,6 +3391,11 @@ Date: ${new Date().toLocaleString()}
                                   if (editingItemValue.trim()) {
                                     if (editingItemValue.toLowerCase().includes('savings')) {
                                       alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+                                      setEditingItemId(null);
+                                      return;
+                                    }
+                                    if (isDuplicateName(editingItemValue, item.id)) {
+                                      alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                       setEditingItemId(null);
                                       return;
                                     }
@@ -3415,6 +3550,11 @@ Date: ${new Date().toLocaleString()}
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') {
                                         if (editingItemValue.trim()) {
+                                          if (isDuplicateName(editingItemValue, cat.id)) {
+                                            alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                            setEditingItemId(null);
+                                            return;
+                                          }
                                           handleUpdateCategory({ ...cat, name: editingItemValue.trim() });
                                         }
                                         setEditingItemId(null);
@@ -3424,6 +3564,11 @@ Date: ${new Date().toLocaleString()}
                                     }}
                                     onBlur={() => {
                                       if (editingItemValue.trim() && editingItemValue.trim() !== cat.name) {
+                                        if (isDuplicateName(editingItemValue, cat.id)) {
+                                          alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                          setEditingItemId(null);
+                                          return;
+                                        }
                                         handleUpdateCategory({ ...cat, name: editingItemValue.trim() });
                                       }
                                       setEditingItemId(null);
@@ -3839,6 +3984,11 @@ Date: ${new Date().toLocaleString()}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                       if (editingItemValue.trim()) {
+                                        if (isDuplicateName(editingItemValue, item.id)) {
+                                          alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                          setEditingItemId(null);
+                                          return;
+                                        }
                                         setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                       }
                                       setEditingItemId(null);
@@ -3848,6 +3998,11 @@ Date: ${new Date().toLocaleString()}
                                   }}
                                   onBlur={() => {
                                     if (editingItemValue.trim()) {
+                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                        alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                        setEditingItemId(null);
+                                        return;
+                                      }
                                       setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
                                     }
                                     setEditingItemId(null);
@@ -3897,12 +4052,9 @@ Date: ${new Date().toLocaleString()}
                                 initialValue={item.targetAmount || 0}
                                 onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
                                   if (x.id === item.id) {
-                                    const isAchieved = val > 0 && (x.currentAmount || 0) >= val;
-                                    const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
                                     return { 
                                       ...x, 
-                                      targetAmount: val, 
-                                      allocationPercent: isAchieved ? 0 : currentPercent
+                                      targetAmount: val
                                     };
                                   }
                                   return x;
@@ -3919,12 +4071,9 @@ Date: ${new Date().toLocaleString()}
                                 initialValue={item.currentAmount || 0}
                                 onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
                                   if (x.id === item.id) {
-                                    const isAchieved = (x.targetAmount || 0) > 0 && val >= (x.targetAmount || 0);
-                                    const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
                                     return { 
                                       ...x, 
-                                      currentAmount: val, 
-                                      allocationPercent: isAchieved ? 0 : currentPercent
+                                      currentAmount: val
                                     };
                                   }
                                   return x;
@@ -3940,19 +4089,13 @@ Date: ${new Date().toLocaleString()}
                               <DirectAmountInput 
                                 initialValue={item.allocationPercent || 0}
                                 onUpdate={(val) => {
-                                  const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
-                                  if (isAchieved) {
-                                    alert("This goal is fully saved! Its allocation percent is locked to 0%.");
-                                    setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: 0 } : x));
-                                    return;
-                                  }
                                   let finalVal = val;
-                                  if (finalVal <= 0) {
-                                    alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
-                                    finalVal = Math.max(1, item.allocationPercent || 10);
+                                  if (finalVal < 0) {
+                                    alert("Allocation percentage cannot be negative.");
+                                    finalVal = Math.max(0, item.allocationPercent || 0);
                                   }
-                                  if (item.id === 'emergency_fund' && finalVal < 10) {
-                                    alert("The Reserve goal must have a minimum allocation percentage of 10%.");
+                                  if (item.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
+                                    alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");
                                     finalVal = 10;
                                   }
                                   setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: finalVal } : x));
@@ -3969,8 +4112,7 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   {(() => {
-                    const activeGoals = savingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
-                    if (activeGoals.length > 0 && totalAllocationPercent !== 100) {
+                    if (savingsGoals.length > 0 && totalAllocationPercent !== 100) {
                       return (
                         <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[10px] rounded-xl leading-normal text-left font-sans flex items-start gap-1.5 mt-1">
                           <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
@@ -4669,8 +4811,7 @@ Date: ${new Date().toLocaleString()}
 
                     {/* Allocation validation bar */}
                     {(() => {
-                      const activeGoals = tempSavingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
-                      const isAllocationInvalid = activeGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
+                      const isAllocationInvalid = tempSavingsGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
 
                       return (
                         <div className={`p-2.5 rounded-xl border text-[9.5px] leading-relaxed space-y-1 ${
@@ -4685,8 +4826,8 @@ Date: ${new Date().toLocaleString()}
                           {isAllocationInvalid ? (
                             <p className="text-gray-400 font-medium font-sans">
                               {totalAllocatedPercent < 100 
-                                ? "⚠️ Combined allocation percentage must equal exactly 100%. Please increase percentages of your active goals."
-                                : "⚠️ Combined allocation percentage must equal exactly 100%. Please decrease percentages of your active goals."
+                                ? "⚠️ Combined allocation percentage must equal exactly 100%. Please increase percentages of your savings goals."
+                                : "⚠️ Combined allocation percentage must equal exactly 100%. Please decrease percentages of your savings goals."
                               }
                             </p>
                           ) : (
@@ -4790,9 +4931,8 @@ Date: ${new Date().toLocaleString()}
                     );
                   }
 
-                  const activeGoals = tempSavingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
                   const totalAllocatedPercent = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent) || 0), 0);
-                  const isAllocationInvalid = activeGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
+                  const isAllocationInvalid = tempSavingsGoals.length > 0 ? (totalAllocatedPercent !== 100) : false;
 
                   return (
                     <button
@@ -4832,11 +4972,10 @@ Date: ${new Date().toLocaleString()}
                             : (originalGoal.currentAmount || 0);
 
                           const updatedAmount = baseAmount + allocatedPortion;
-                          const isAchieved = (originalGoal.targetAmount || 0) > 0 && updatedAmount >= (originalGoal.targetAmount || 0);
 
                           return {
                             ...originalGoal,
-                            allocationPercent: isAchieved ? 0 : percent,
+                            allocationPercent: percent,
                             currentAmount: updatedAmount
                           };
                         }));

@@ -73,8 +73,8 @@ export function renderCategoryIcon(iconName: string, size = 16) {
 interface CategoryManagerProps {
   categories: Category[];
   currentBudget: MonthlyBudget;
-  onCategoryAdded: (catData: Omit<Category, 'id'>, isDefault?: boolean) => void;
-  onCategoryUpdated: (cat: Category, isDefault?: boolean) => void;
+  onCategoryAdded: (catData: Omit<Category, 'id'>, isDefault?: boolean) => boolean | void;
+  onCategoryUpdated: (cat: Category, isDefault?: boolean) => boolean | void;
   onCategoryDeleted: (id: string) => void;
   defaultCategoryId: string;
   currencySymbol: string;
@@ -179,7 +179,8 @@ export function CategoryManager({
         textColor: selectedPreset.textClass,
         isHidden: formIsHidden,
       };
-      onCategoryAdded(newCatData, formIsDefault);
+      const success = onCategoryAdded(newCatData, formIsDefault);
+      if (success === false) return;
       setSuccessMsg('Created custom budget category.');
     } else if (editingCategory) {
       const updatedCat: Category = {
@@ -191,7 +192,8 @@ export function CategoryManager({
         textColor: selectedPreset.textClass,
         isHidden: formIsHidden,
       };
-      onCategoryUpdated(updatedCat, formIsDefault);
+      const success = onCategoryUpdated(updatedCat, formIsDefault);
+      if (success === false) return;
       setSuccessMsg('Updated category budget limit.');
     }
 
