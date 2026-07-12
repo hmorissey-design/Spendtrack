@@ -22,6 +22,7 @@ import {
   ShieldCheck, 
   Wallet,
   Calendar,
+  PiggyBank,
   X,
   CreditCard,
   Building,
@@ -1851,6 +1852,19 @@ Date: ${new Date().toLocaleString()}
                     <span>Monthly Budget (Beta)</span>
                   </button>
 
+                  {/* Savings Goals link */}
+                  <button
+                    onClick={() => { setActiveTab('savings'); setShowGlobalMenu(false); }}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      activeTab === 'savings'
+                        ? 'bg-pink-500/10 text-pink-400 font-extrabold'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <PiggyBank size={14} className={activeTab === 'savings' ? 'stroke-[2.5] text-pink-400' : 'stroke-[1.5]'} />
+                    <span>Savings Goals</span>
+                  </button>
+
                   {/* Settings link */}
                   <button
                     onClick={() => { setActiveTab('budget_plan'); setShowGlobalMenu(false); }}
@@ -3495,303 +3509,7 @@ Date: ${new Date().toLocaleString()}
                   )}
                 </div>
 
-                {/* ACCORDION 3: SAVINGS GOALS */}
-                <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
-                  <button 
-                    onClick={() => toggleAccordion('savings')}
-                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-white/2 transition-all cursor-pointer border-none bg-transparent"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1 bg-emerald-500/15 border border-emerald-500/25 rounded-lg text-emerald-400">
-                        <TrendingUp size={14} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Savings Targets</span>
-                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 py-0.2 rounded font-mono">
-                            {savingsGoals.length} GOALS
-                          </span>
-                        </div>
-                        <p className="text-[9px] text-gray-400 mt-0.5">Emergency funds, investing & dreams</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {accordionOpen.savings ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
-                    </div>
-                  </button>
-
-                  {accordionOpen.savings && (
-                    <div className="p-3 border-t border-white/5 bg-black/20 space-y-3.5">
-                      
-                      <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1 text-left">
-                        Savings Targets & Progress
-                      </div>
-
-                      <div className="space-y-3">
-                        {savingsGoals.map((item, index) => {
-                          const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.round(((item.currentAmount || 0) / (item.targetAmount || 0)) * 100)) : 0;
-                          const isEven = index % 2 === 0;
-                          return (
-                            <div 
-                              key={item.id} 
-                              className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
-                                isEven 
-                                  ? 'bg-slate-900/95 border-slate-800 hover:bg-slate-900 hover:border-slate-700' 
-                                  : 'bg-emerald-950/30 border-emerald-500/20 hover:bg-emerald-950/45 hover:border-emerald-500/30'
-                              }`}
-                            >
-                              {/* Line 1: Goal name and actions (full-width header) */}
-                              <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-1.5">
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  {editingItemId === item.id ? (
-                                    <input 
-                                      type="text"
-                                      value={editingItemValue}
-                                      onChange={(e) => setEditingItemValue(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          if (editingItemValue.trim()) {
-                                            setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
-                                          }
-                                          setEditingItemId(null);
-                                        } else if (e.key === 'Escape') {
-                                          setEditingItemId(null);
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (editingItemValue.trim()) {
-                                          setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
-                                        }
-                                        setEditingItemId(null);
-                                      }}
-                                      className="px-1.5 py-0.5 bg-black/60 border border-emerald-500/30 text-xs text-white rounded-lg outline-none w-28 font-medium font-sans"
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <div className="flex items-center gap-1 min-w-0">
-                                      <span className="text-xs text-white font-extrabold truncate max-w-[150px] sm:max-w-[200px]" title={item.label}>
-                                        {item.label}
-                                      </span>
-                                      <button 
-                                        onClick={() => {
-                                          setEditingItemId(item.id);
-                                          setEditingItemValue(item.label);
-                                        }}
-                                        className="p-0.5 text-gray-500 hover:text-emerald-400 transition-all cursor-pointer rounded shrink-0 bg-transparent border-0"
-                                        title="Edit Name"
-                                      >
-                                        <Pencil size={9} />
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
-                                    {percentSaved}% Saved
-                                  </span>
-                                  <button 
-                                    onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
-                                    className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                    title="Remove Savings Goal"
-                                  >
-                                    <Trash2 size={10} />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Line 2: Three adjustable value fields next to each other */}
-                              <div className="flex items-center justify-between w-full gap-2 pt-0.5">
-                                {/* Desired target input */}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Target:</span>
-                                  <DirectAmountInput 
-                                    initialValue={item.targetAmount || 0}
-                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
-                                      if (x.id === item.id) {
-                                        const isAchieved = val > 0 && (x.currentAmount || 0) >= val;
-                                        const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
-                                        return { 
-                                          ...x, 
-                                          targetAmount: val, 
-                                          allocationPercent: isAchieved ? 0 : currentPercent
-                                        };
-                                      }
-                                      return x;
-                                    }))}
-                                    currencySymbol={currencySymbol}
-                                    className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
-                                  />
-                                </div>
-
-                                {/* Current amount input */}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Saved:</span>
-                                  <DirectAmountInput 
-                                    initialValue={item.currentAmount || 0}
-                                    onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
-                                      if (x.id === item.id) {
-                                        const isAchieved = (x.targetAmount || 0) > 0 && val >= (x.targetAmount || 0);
-                                        const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
-                                        return { 
-                                          ...x, 
-                                          currentAmount: val, 
-                                          allocationPercent: isAchieved ? 0 : currentPercent
-                                        };
-                                      }
-                                      return x;
-                                    }))}
-                                    currencySymbol={currencySymbol}
-                                    className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
-                                  />
-                                </div>
-
-                                {/* Allocation percent input */}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Alloc:</span>
-                                  <DirectAmountInput 
-                                    initialValue={item.allocationPercent || 0}
-                                    onUpdate={(val) => {
-                                      const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
-                                      if (isAchieved) {
-                                        alert("This goal is fully saved! Its allocation percent is locked to 0%.");
-                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: 0 } : x));
-                                        return;
-                                      }
-                                      let finalVal = val;
-                                      if (finalVal <= 0) {
-                                        alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
-                                        finalVal = Math.max(1, item.allocationPercent || 10);
-                                      }
-                                      if (item.id === 'emergency_fund' && finalVal < 10) {
-                                        alert("The Reserve goal must have a minimum allocation percentage of 10%.");
-                                        finalVal = 10;
-                                      }
-                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: finalVal } : x));
-                                    }}
-                                    isPercent={true}
-                                    max={100}
-                                    className="w-11 pl-1.5 pr-3 py-0.5 bg-black/45 border border-white/5 focus:border-emerald-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {(() => {
-                        const activeGoals = savingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
-                        const totalPercent = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
-                        if (activeGoals.length > 0 && totalPercent !== 100) {
-                          return (
-                            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[10px] rounded-xl leading-normal text-left font-sans flex items-start gap-1.5 mt-1">
-                              <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
-                              <div>
-                                <span className="font-bold block text-rose-200">Combined Allocation must equal 100% (currently: {totalPercent}%)</span>
-                                Please adjust the percentages of your active goals until their sum is exactly 100%.
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-
-                      {/* Add Custom Savings Goal Mini Form */}
-                      <form onSubmit={handleAddSavingsGoal} className="bg-black/30 p-3 rounded-xl border border-white/5 space-y-2.5">
-                        <p className="text-[9.5px] font-extrabold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                          <Plus size={11} /> Create New Savings Goal
-                        </p>
-                        
-                        <div className="grid grid-cols-2 gap-2 text-left">
-                          <div className="space-y-1 col-span-2">
-                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Goal Name</label>
-                            <input 
-                              type="text"
-                              placeholder="e.g. Dream Home, New Car"
-                              value={newSavingsName}
-                              onChange={(e) => setNewSavingsName(e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-[#121212] border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400/40 font-medium font-sans"
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Target Saved Amt</label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
-                              <input 
-                                type="number"
-                                placeholder="5000"
-                                min="0"
-                                step="0.01"
-                                value={newSavingsTarget}
-                                onChange={(e) => setNewSavingsTarget(e.target.value)}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Current Saved Amt</label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
-                              <input 
-                                type="number"
-                                placeholder="150"
-                                min="0"
-                                step="0.01"
-                                value={newSavingsCurrent}
-                                onChange={(e) => setNewSavingsCurrent(e.target.value)}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Allocation %</label>
-                            <div className="relative">
-                              <input 
-                                type="number"
-                                placeholder="25"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                value={newSavingsPercent}
-                                onChange={(e) => setNewSavingsPercent(e.target.value)}
-                                className="w-full pl-2.5 pr-5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
-                              />
-                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">%</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Mo. Target Budget</label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 font-bold">{currencySymbol}</span>
-                              <input 
-                                type="number"
-                                placeholder="200"
-                                min="0"
-                                step="0.01"
-                                value={newSavingsAmount}
-                                onChange={(e) => setNewSavingsAmount(e.target.value)}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-left font-bold"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <button 
-                          type="submit"
-                          className="w-full py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider"
-                        >
-                          <Plus size={12} className="stroke-[2.5]" /> Add Savings Goal
-                        </button>
-                      </form>
-                    </div>
-                  )}
-                </div>
+                {/* Savings Goals have been promoted to their own dedicated tab for better separation! */}
 
                 {/* Blueprint Map */}
                 <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3">
@@ -4019,6 +3737,334 @@ Date: ${new Date().toLocaleString()}
             </div>
           )}
 
+          {/* TAB 7: SAVINGS GOALS (DEDICATED VIEW) */}
+          {activeTab === 'savings' && (() => {
+            const totalSavedAmt = savingsGoals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
+            const totalTargetAmt = savingsGoals.reduce((sum, g) => sum + (g.targetAmount || 0), 0);
+            const overallSavingsPercent = totalTargetAmt > 0 ? Math.min(100, Math.round((totalSavedAmt / totalTargetAmt) * 100)) : 0;
+            const totalAllocationPercent = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
+
+            return (
+              <div className="space-y-4 animate-in fade-in duration-200" id="tab_savings">
+                {/* Visual Header / Dashboard summary card */}
+                <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 relative overflow-hidden shadow-md">
+                  <div className="absolute right-0 top-0 translate-x-3 -translate-y-3 opacity-[0.03] select-none pointer-events-none">
+                    <PiggyBank size={140} className="text-pink-400" />
+                  </div>
+                  
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="p-1.5 bg-pink-500/15 border border-pink-500/25 rounded-xl text-pink-400">
+                      <PiggyBank size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-[#eeeeee] text-xs uppercase tracking-wider">Savings Dashboard</h3>
+                      <p className="text-[9px] text-gray-400 mt-0.5">Emergency funds, investing & milestones</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3.5 pt-1">
+                    <div className="p-2.5 rounded-xl bg-white/2 border border-white/5 text-left">
+                      <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Saved</span>
+                      <span className="text-sm font-black text-pink-400 font-mono">{currencySymbol}{totalSavedAmt.toLocaleString()}</span>
+                      <span className="block text-[8px] text-gray-400 mt-0.5">Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white/2 border border-white/5 text-left">
+                      <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Combined Allocations</span>
+                      <span className={`text-sm font-black font-mono ${totalAllocationPercent === 100 ? "text-emerald-400" : "text-rose-400"}`}>{totalAllocationPercent}%</span>
+                      <span className="block text-[8px] text-gray-400 mt-0.5">
+                        {totalAllocationPercent === 100 ? "✅ Perfectly balanced" : "⚠️ Must equal 100%"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conceptual Clarification Card */}
+                <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 text-left space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles size={11} className="text-pink-400" />
+                    <span className="text-[9px] font-black text-pink-400 uppercase tracking-wider">How savings work</span>
+                  </div>
+                  <p className="text-[9.5px] text-gray-300 font-medium leading-normal">
+                    Unlike the Monthly Budget which sets strict spend limits, Savings are funded dynamically through your **End-of-Month Account Reconciliation** 🔄.
+                  </p>
+                  <p className="text-[9px] text-gray-400 leading-normal font-sans">
+                    When you reconcile your real chequing/savings accounts at month-end, any actual cash surplus will be distributed across these active targets using their allocation percentage.
+                  </p>
+                  <div className="pt-1.5">
+                    <button
+                      onClick={() => {
+                        setReconciliationStep(1);
+                        setShowReconciliationModal(true);
+                      }}
+                      className="w-full py-2 bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/20 text-pink-400 font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    >
+                      <RefreshCw size={11} className="stroke-[2.5]" /> Run Monthly Reconciliation Now
+                    </button>
+                  </div>
+                </div>
+
+                {/* Savings Goals List */}
+                <div className="bg-[#111111] rounded-2xl border border-white/5 p-3.5 text-left space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Active Targets</span>
+                      <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 font-bold px-1.5 py-0.2 rounded font-mono">
+                        {savingsGoals.length} GOALS
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {savingsGoals.map((item, index) => {
+                      const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.round(((item.currentAmount || 0) / (item.targetAmount || 0)) * 100)) : 0;
+                      const isEven = index % 2 === 0;
+                      return (
+                        <div 
+                          key={item.id} 
+                          className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
+                            isEven 
+                              ? 'bg-slate-900/95 border-slate-800 hover:bg-slate-900 hover:border-slate-700' 
+                              : 'bg-pink-950/10 border-pink-500/10 hover:bg-pink-950/15 hover:border-pink-500/20'
+                          }`}
+                        >
+                          {/* Line 1: Goal name and actions (full-width header) */}
+                          <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {editingItemId === item.id ? (
+                                <input 
+                                  type="text"
+                                  value={editingItemValue}
+                                  onChange={(e) => setEditingItemValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      if (editingItemValue.trim()) {
+                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                      }
+                                      setEditingItemId(null);
+                                    } else if (e.key === 'Escape') {
+                                      setEditingItemId(null);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    if (editingItemValue.trim()) {
+                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    }
+                                    setEditingItemId(null);
+                                  }}
+                                  className="px-1.5 py-0.5 bg-black/60 border border-pink-500/30 text-xs text-white rounded-lg outline-none w-28 font-medium font-sans"
+                                  autoFocus
+                                />
+                              ) : (
+                                <div className="flex items-center gap-1 min-w-0">
+                                  <span className="text-xs text-white font-extrabold truncate max-w-[150px] sm:max-w-[200px]" title={item.label}>
+                                    {item.label}
+                                  </span>
+                                  <button 
+                                    onClick={() => {
+                                      setEditingItemId(item.id);
+                                      setEditingItemValue(item.label);
+                                    }}
+                                    className="p-0.5 text-gray-500 hover:text-pink-400 transition-all cursor-pointer rounded shrink-0 bg-transparent border-0"
+                                    title="Edit Name"
+                                  >
+                                    <Pencil size={9} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[8px] bg-pink-550/10 text-pink-400 border border-pink-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
+                                {percentSaved}% Saved
+                              </span>
+                              <button 
+                                onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
+                                className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
+                                title="Remove Savings Goal"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Line 2: Three adjustable value fields next to each other */}
+                          <div className="flex items-center justify-between w-full gap-2 pt-0.5">
+                            {/* Desired target input */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Target:</span>
+                              <DirectAmountInput 
+                                initialValue={item.targetAmount || 0}
+                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
+                                  if (x.id === item.id) {
+                                    const isAchieved = val > 0 && (x.currentAmount || 0) >= val;
+                                    const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
+                                    return { 
+                                      ...x, 
+                                      targetAmount: val, 
+                                      allocationPercent: isAchieved ? 0 : currentPercent
+                                    };
+                                  }
+                                  return x;
+                                }))}
+                                currencySymbol={currencySymbol}
+                                className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                              />
+                            </div>
+
+                            {/* Current amount input */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Saved:</span>
+                              <DirectAmountInput 
+                                initialValue={item.currentAmount || 0}
+                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
+                                  if (x.id === item.id) {
+                                    const isAchieved = (x.targetAmount || 0) > 0 && val >= (x.targetAmount || 0);
+                                    const currentPercent = x.allocationPercent || (x.id === 'emergency_fund' ? 10 : 10);
+                                    return { 
+                                      ...x, 
+                                      currentAmount: val, 
+                                      allocationPercent: isAchieved ? 0 : currentPercent
+                                    };
+                                  }
+                                  return x;
+                                }))}
+                                currencySymbol={currencySymbol}
+                                className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                              />
+                            </div>
+
+                            {/* Allocation percent input */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Alloc:</span>
+                              <DirectAmountInput 
+                                initialValue={item.allocationPercent || 0}
+                                onUpdate={(val) => {
+                                  const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
+                                  if (isAchieved) {
+                                    alert("This goal is fully saved! Its allocation percent is locked to 0%.");
+                                    setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: 0 } : x));
+                                    return;
+                                  }
+                                  let finalVal = val;
+                                  if (finalVal <= 0) {
+                                    alert("Active savings goals must have an allocation percentage greater than 0% unless they are fully saved.");
+                                    finalVal = Math.max(1, item.allocationPercent || 10);
+                                  }
+                                  if (item.id === 'emergency_fund' && finalVal < 10) {
+                                    alert("The Reserve goal must have a minimum allocation percentage of 10%.");
+                                    finalVal = 10;
+                                  }
+                                  setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: finalVal } : x));
+                                }}
+                                isPercent={true}
+                                max={100}
+                                className="w-11 pl-1.5 pr-3 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {(() => {
+                    const activeGoals = savingsGoals.filter(g => !((g.targetAmount || 0) > 0 && (g.currentAmount || 0) >= (g.targetAmount || 0)));
+                    if (activeGoals.length > 0 && totalAllocationPercent !== 100) {
+                      return (
+                        <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[10px] rounded-xl leading-normal text-left font-sans flex items-start gap-1.5 mt-1">
+                          <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
+                          <div>
+                            <span className="font-bold block text-rose-200">Combined Allocation must equal 100% (currently: {totalAllocationPercent}%)</span>
+                            Please adjust the percentages of your active goals until their sum is exactly 100%.
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Add Custom Savings Goal Mini Form */}
+                  <form onSubmit={handleAddSavingsGoal} className="bg-black/30 p-3 rounded-xl border border-white/5 space-y-2.5">
+                    <p className="text-[9.5px] font-extrabold text-pink-400 uppercase tracking-widest flex items-center gap-1">
+                      <Plus size={11} /> Create New Savings Goal
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-left">
+                      <div className="space-y-1 col-span-2">
+                        <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Goal Name</label>
+                        <input 
+                          type="text"
+                          placeholder="e.g. Dream Home, New Car"
+                          value={newSavingsName}
+                          onChange={(e) => setNewSavingsName(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-[#121212] border border-pink-500/30 focus:border-pink-500/60 outline-none rounded-lg text-[10px] text-pink-400 placeholder:text-pink-400/40 font-medium font-sans"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Target Saved Amt</label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-pink-400 font-bold">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="5000"
+                            min="0"
+                            step="0.01"
+                            value={newSavingsTarget}
+                            onChange={(e) => setNewSavingsTarget(e.target.value)}
+                            className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Current Saved Amt</label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-pink-400 font-bold">{currencySymbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="150"
+                            min="0"
+                            step="0.01"
+                            value={newSavingsCurrent}
+                            onChange={(e) => setNewSavingsCurrent(e.target.value)}
+                            className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 col-span-2">
+                        <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Allocation %</label>
+                        <div className="relative">
+                          <input 
+                            type="number"
+                            placeholder="25"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value={newSavingsPercent}
+                            onChange={(e) => setNewSavingsPercent(e.target.value)}
+                            className="w-full pl-2.5 pr-5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-pink-400 font-bold">%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full py-2 bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/20 text-pink-400 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider"
+                    >
+                      <Plus size={12} className="stroke-[2.5]" /> Add Savings Goal
+                    </button>
+                  </form>
+                </div>
+              </div>
+            );
+          })()}
+
         </div>
 
         {/* Dynamic bottom floating CTA trigger for quick accessibility */}
@@ -4088,6 +4134,17 @@ Date: ${new Date().toLocaleString()}
           >
             <Wallet size={17} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
             <span className="text-[8.5px] mt-0.5 font-sans">Budget</span>
+          </button>
+
+          {/* Nav Item: Savings Goals */}
+          <button
+            onClick={() => { setActiveTab('savings'); setShowAddForm(false); }}
+            className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
+              activeTab === 'savings' ? 'text-pink-400 scale-102 font-bold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+            }`}
+          >
+            <PiggyBank size={17} className={activeTab === 'savings' ? 'stroke-[2.5] text-pink-400' : 'stroke-[1.5]'} />
+            <span className="text-[8.5px] mt-0.5 font-sans">Savings</span>
           </button>
 
           {/* Nav Item: Local SQLite/Budget settings */}

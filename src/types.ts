@@ -30,7 +30,7 @@ export interface MonthlyBudget {
   categoryLimits?: Record<string, number>; // Optional category-specific limits
 }
 
-export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub' | 'budget_full';
+export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub' | 'budget_full' | 'savings';
 
 export interface AccentTheme {
   id: string;
