@@ -692,7 +692,7 @@ export const LocalDb = {
   exportDatabase(): string {
     const data = {
       expenses: this.getExpenses(),
-      categories: this.getCategories(),
+      categories: this.getCategoriesOnly(),
       budgets: this.getBudgets(),
       incomeStreams: JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]'),
       fixedExpenses: JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]'),
@@ -707,8 +707,10 @@ export const LocalDb = {
     try {
       const data = JSON.parse(jsonString);
       if (Array.isArray(data.expenses) && Array.isArray(data.categories)) {
+        // Clean out any categories that have SAVINGS_ prefix to avoid duplicates on load
+        const cleanedCategories = data.categories.filter((cat: any) => cat && cat.id && !cat.id.startsWith('SAVINGS_'));
         localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
-        localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data.categories));
+        localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(cleanedCategories));
         if (Array.isArray(data.budgets)) {
           localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(data.budgets));
         }
