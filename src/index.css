@@ -53,3 +53,16 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+/* Custom selection styles to ensure maximum contrast and legibility, particularly on dark backgrounds & mobile devices */
+input::selection,
+textarea::selection {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+::selection {
+  background-color: rgba(16, 185, 129, 0.4) !important;
+  color: #ffffff !important;
+}
+
+

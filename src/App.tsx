@@ -153,11 +153,15 @@ function DirectAmountInput({
           if (localValue === '0' || localValue === '0.00' || parseFloat(localValue) === 0) {
             setLocalValue('');
           }
-          const input = e.currentTarget;
-          input.select();
-          try {
-            input.setSelectionRange(0, input.value.length);
-          } catch (err) {}
+          // Avoid auto-selecting text on touch/mobile devices to prevent native copy popups & highlight visibility issues
+          const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+          if (!isTouchDevice) {
+            const input = e.currentTarget;
+            input.select();
+            try {
+              input.setSelectionRange(0, input.value.length);
+            } catch (err) {}
+          }
         }}
         onBlur={handleBlurOrSubmit}
         onKeyDown={(e) => {
@@ -505,10 +509,14 @@ export default function App() {
           if (updated.amount === undefined) {
             updated.amount = 0;
             modified = true;
+          } else if (typeof updated.amount !== 'number') {
+            updated.amount = parseFloat(updated.amount) || 0;
+            modified = true;
           }
           if (updated.targetAmount === undefined) {
-            if (item.amount > 1000) {
-              updated.targetAmount = item.amount;
+            const amtVal = parseFloat(item.amount) || 0;
+            if (amtVal > 1000) {
+              updated.targetAmount = amtVal;
               updated.amount = 0;
             } else {
               updated.targetAmount = item.id === 'emergency_fund' ? 500 
@@ -516,15 +524,24 @@ export default function App() {
                 : 500;
             }
             modified = true;
+          } else if (typeof updated.targetAmount !== 'number') {
+            updated.targetAmount = parseFloat(updated.targetAmount) || 0;
+            modified = true;
           }
           if (updated.currentAmount === undefined) {
             updated.currentAmount = 0;
+            modified = true;
+          } else if (typeof updated.currentAmount !== 'number') {
+            updated.currentAmount = parseFloat(updated.currentAmount) || 0;
             modified = true;
           }
           if (updated.allocationPercent === undefined) {
             updated.allocationPercent = item.id === 'emergency_fund' ? 50 
               : item.id === 'vacation_fund' ? 50 
               : 50;
+            modified = true;
+          } else if (typeof updated.allocationPercent !== 'number') {
+            updated.allocationPercent = parseFloat(updated.allocationPercent) || 0;
             modified = true;
           }
 
@@ -560,30 +577,22 @@ export default function App() {
     setAccordionOpen(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const isDuplicateName = (name: string, excludeId?: string): boolean => {
+  const isDuplicateName = (name: string, section: 'income' | 'fixed' | 'category' | 'savings', excludeId?: string): boolean => {
     const cleanName = name.trim().toLowerCase();
     if (!cleanName) return false;
 
-    // Check incomeStreams
-    if (incomeStreams.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
-      return true;
+    if (section === 'income') {
+      return incomeStreams.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName);
     }
-
-    // Check fixedExpenses
-    if (fixedExpenses.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
-      return true;
+    if (section === 'fixed') {
+      return fixedExpenses.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName);
     }
-
-    // Check spending categories (discretionary)
-    if (categories.some(item => item.id !== excludeId && !item.isHidden && item.name.trim().toLowerCase() === cleanName)) {
-      return true;
+    if (section === 'category') {
+      return categories.some(item => item.id !== excludeId && !item.isHidden && item.name.trim().toLowerCase() === cleanName);
     }
-
-    // Check savingsGoals
-    if (savingsGoals.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName)) {
-      return true;
+    if (section === 'savings') {
+      return savingsGoals.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName);
     }
-
     return false;
   };
 
@@ -624,6 +633,7 @@ export default function App() {
   const [newSavingsPercent, setNewSavingsPercent] = useState('');
   const [newDiscretionaryName, setNewDiscretionaryName] = useState('');
   const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
 
   // Reconciliation states
   const [showReconciliationModal, setShowReconciliationModal] = useState(false);
@@ -698,7 +708,8 @@ export default function App() {
     const amount = parseFloat(quickAddAmount) || 0;
     const label = quickAddName.trim();
 
-    if (isDuplicateName(label)) {
+    const mappedSection = quickAddSection === 'discretionary' ? 'category' : quickAddSection;
+    if (isDuplicateName(label, mappedSection)) {
       alert(`The name "${label}" is already in use in another section or category. Please choose a unique name.`);
       return;
     }
@@ -756,8 +767,8 @@ export default function App() {
   const handleAddIncomeStream = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newIncomeName.trim()) return;
-    if (isDuplicateName(newIncomeName)) {
-      alert(`The name "${newIncomeName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+    if (isDuplicateName(newIncomeName, 'income')) {
+      setFormErrors(prev => ({ ...prev, income: `The name "${newIncomeName.trim()}" is already in use for another income source.` }));
       return;
     }
     const amount = parseFloat(newIncomeAmount) || 0;
@@ -769,6 +780,7 @@ export default function App() {
     setIncomeStreams(prev => [...prev, newItem]);
     setNewIncomeName('');
     setNewIncomeAmount('');
+    setFormErrors(prev => ({ ...prev, income: null }));
   };
 
   const handleUpdateFixedExpense = (id: string, amount: number) => {
@@ -783,11 +795,11 @@ export default function App() {
     e.preventDefault();
     if (!newFixedName.trim()) return;
     if (newFixedName.toLowerCase().includes('savings')) {
-      alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+      setFormErrors(prev => ({ ...prev, fixed: "Fixed expense names cannot contain the word 'savings' to prevent conflict." }));
       return;
     }
-    if (isDuplicateName(newFixedName)) {
-      alert(`The name "${newFixedName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+    if (isDuplicateName(newFixedName, 'fixed')) {
+      setFormErrors(prev => ({ ...prev, fixed: `The name "${newFixedName.trim()}" is already in use for another fixed expense.` }));
       return;
     }
     const amount = parseFloat(newFixedAmount) || 0;
@@ -799,13 +811,14 @@ export default function App() {
     setFixedExpenses(prev => [...prev, newItem]);
     setNewFixedName('');
     setNewFixedAmount('');
+    setFormErrors(prev => ({ ...prev, fixed: null }));
   };
 
   const handleAddSavingsGoal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSavingsName.trim()) return;
-    if (isDuplicateName(newSavingsName)) {
-      alert(`The name "${newSavingsName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+    if (isDuplicateName(newSavingsName, 'savings')) {
+      setFormErrors(prev => ({ ...prev, savings: `The name "${newSavingsName.trim()}" is already in use for another savings goal.` }));
       return;
     }
     const amount = parseFloat(newSavingsAmount) || 0;
@@ -814,7 +827,7 @@ export default function App() {
     const allocationPercent = parseFloat(newSavingsPercent) || 0;
 
     if (allocationPercent <= 0) {
-      alert("A newly entered savings goal must have an allocation percentage greater than 0%.");
+      setFormErrors(prev => ({ ...prev, savings: "A newly entered savings goal must have an allocation percentage greater than 0%." }));
       return;
     }
     let finalAlloc = allocationPercent;
@@ -833,6 +846,7 @@ export default function App() {
     setNewSavingsTarget('');
     setNewSavingsCurrent('');
     setNewSavingsPercent('');
+    setFormErrors(prev => ({ ...prev, savings: null }));
   };
 
   const handleDeleteFixedExpense = (id: string) => {
@@ -846,8 +860,8 @@ export default function App() {
   const handleAddDiscretionaryCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDiscretionaryName.trim()) return;
-    if (isDuplicateName(newDiscretionaryName)) {
-      alert(`The name "${newDiscretionaryName.trim()}" is already in use in another section or category. Please choose a unique name.`);
+    if (isDuplicateName(newDiscretionaryName, 'category')) {
+      setFormErrors(prev => ({ ...prev, category: `The name "${newDiscretionaryName.trim()}" is already in use for another spending category.` }));
       return;
     }
     const limit = parseFloat(newDiscretionaryLimit) || 0;
@@ -862,6 +876,7 @@ export default function App() {
     
     setNewDiscretionaryName('');
     setNewDiscretionaryLimit('');
+    setFormErrors(prev => ({ ...prev, category: null }));
   };
 
   // Feedback & Support states
@@ -1581,7 +1596,7 @@ Date: ${new Date().toLocaleString()}
       alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
       return false;
     }
-    if (isDuplicateName(catData.name)) {
+    if (isDuplicateName(catData.name, 'category')) {
       alert(`The name "${catData.name.trim()}" is already in use in another section or category. Please choose a unique name.`);
       return false;
     }
@@ -1598,7 +1613,7 @@ Date: ${new Date().toLocaleString()}
       alert("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
       return false;
     }
-    if (isDuplicateName(cat.name, cat.id)) {
+    if (isDuplicateName(cat.name, 'category', cat.id)) {
       alert(`The name "${cat.name.trim()}" is already in use in another section or category. Please choose a unique name.`);
       return false;
     }
@@ -3294,7 +3309,10 @@ Date: ${new Date().toLocaleString()}
                           type="text"
                           placeholder="Add Custom Income Budget Category"
                           value={newIncomeName}
-                          onChange={(e) => setNewIncomeName(e.target.value)}
+                          onChange={(e) => {
+                            setNewIncomeName(e.target.value);
+                            setFormErrors(prev => ({ ...prev, income: null }));
+                          }}
                           className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
@@ -3305,7 +3323,10 @@ Date: ${new Date().toLocaleString()}
                             step="0.01"
                             placeholder="0.00"
                             value={newIncomeAmount}
-                            onChange={(e) => setNewIncomeAmount(e.target.value)}
+                            onChange={(e) => {
+                              setNewIncomeAmount(e.target.value);
+                              setFormErrors(prev => ({ ...prev, income: null }));
+                            }}
                             className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
@@ -3317,6 +3338,9 @@ Date: ${new Date().toLocaleString()}
                           <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
+                      {formErrors.income && (
+                        <p className="text-[9px] text-rose-400 font-bold mt-1.5 text-left bg-rose-500/10 border border-rose-500/20 rounded-lg px-2.5 py-1 animate-pulse">{formErrors.income}</p>
+                      )}
 
                     </div>
                   )}
@@ -3446,7 +3470,10 @@ Date: ${new Date().toLocaleString()}
                           type="text"
                           placeholder="Add Custom Known Budget Category"
                           value={newFixedName}
-                          onChange={(e) => setNewFixedName(e.target.value)}
+                          onChange={(e) => {
+                            setNewFixedName(e.target.value);
+                            setFormErrors(prev => ({ ...prev, fixed: null }));
+                          }}
                           className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
@@ -3457,7 +3484,10 @@ Date: ${new Date().toLocaleString()}
                             min="0"
                             step="0.01"
                             value={newFixedAmount}
-                            onChange={(e) => setNewFixedAmount(e.target.value)}
+                            onChange={(e) => {
+                              setNewFixedAmount(e.target.value);
+                              setFormErrors(prev => ({ ...prev, fixed: null }));
+                            }}
                             className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
@@ -3469,6 +3499,9 @@ Date: ${new Date().toLocaleString()}
                           <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
+                      {formErrors.fixed && (
+                        <p className="text-[9px] text-rose-400 font-bold mt-1.5 text-left bg-rose-500/10 border border-rose-500/20 rounded-lg px-2.5 py-1 animate-pulse">{formErrors.fixed}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -3627,7 +3660,10 @@ Date: ${new Date().toLocaleString()}
                           type="text"
                           placeholder="Add Custom Daily Spending Category"
                           value={newDiscretionaryName}
-                          onChange={(e) => setNewDiscretionaryName(e.target.value)}
+                          onChange={(e) => {
+                            setNewDiscretionaryName(e.target.value);
+                            setFormErrors(prev => ({ ...prev, category: null }));
+                          }}
                           className="flex-1 min-w-0 px-2.5 py-1.5 bg-black/40 border border-emerald-500/30 focus:border-emerald-500/60 outline-none rounded-lg text-[10px] text-emerald-400 placeholder:text-emerald-400 font-medium font-sans placeholder:opacity-100"
                         />
                         <div className="relative">
@@ -3638,7 +3674,10 @@ Date: ${new Date().toLocaleString()}
                             step="0.01"
                             placeholder="0"
                             value={newDiscretionaryLimit}
-                            onChange={(e) => setNewDiscretionaryLimit(e.target.value)}
+                            onChange={(e) => {
+                              setNewDiscretionaryLimit(e.target.value);
+                              setFormErrors(prev => ({ ...prev, category: null }));
+                            }}
                             className="w-24 pl-4.5 pr-1.5 py-1.5 bg-black/40 border border-emerald-500/20 focus:border-emerald-500/50 outline-none rounded-lg text-[10px] text-emerald-400 font-mono text-right font-bold"
                           />
                         </div>
@@ -3650,6 +3689,9 @@ Date: ${new Date().toLocaleString()}
                           <Plus size={13} className="stroke-[2.5]" />
                         </button>
                       </form>
+                      {formErrors.category && (
+                        <p className="text-[9px] text-rose-400 font-bold mt-1.5 text-left bg-rose-500/10 border border-rose-500/20 rounded-lg px-2.5 py-1 animate-pulse">{formErrors.category}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -3884,8 +3926,8 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 7: SAVINGS GOALS (DEDICATED VIEW) */}
           {activeTab === 'savings' && (() => {
-            const totalSavedAmt = savingsGoals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
-            const totalTargetAmt = savingsGoals.reduce((sum, g) => sum + (g.targetAmount || 0), 0);
+            const totalSavedAmt = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+            const totalTargetAmt = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.targetAmount as any) || 0), 0);
             const overallSavingsPercent = totalTargetAmt > 0 ? Math.min(100, Math.round((totalSavedAmt / totalTargetAmt) * 100)) : 0;
             const totalAllocationPercent = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
 
@@ -4139,7 +4181,10 @@ Date: ${new Date().toLocaleString()}
                           type="text"
                           placeholder="e.g. Dream Home, New Car"
                           value={newSavingsName}
-                          onChange={(e) => setNewSavingsName(e.target.value)}
+                          onChange={(e) => {
+                            setNewSavingsName(e.target.value);
+                            setFormErrors(prev => ({ ...prev, savings: null }));
+                          }}
                           className="w-full px-2.5 py-1.5 bg-[#121212] border border-pink-500/30 focus:border-pink-500/60 outline-none rounded-lg text-[10px] text-pink-400 placeholder:text-pink-400/40 font-medium font-sans"
                           required
                         />
@@ -4155,7 +4200,10 @@ Date: ${new Date().toLocaleString()}
                             min="0"
                             step="0.01"
                             value={newSavingsTarget}
-                            onChange={(e) => setNewSavingsTarget(e.target.value)}
+                            onChange={(e) => {
+                              setNewSavingsTarget(e.target.value);
+                              setFormErrors(prev => ({ ...prev, savings: null }));
+                            }}
                             className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
                           />
                         </div>
@@ -4171,7 +4219,10 @@ Date: ${new Date().toLocaleString()}
                             min="0"
                             step="0.01"
                             value={newSavingsCurrent}
-                            onChange={(e) => setNewSavingsCurrent(e.target.value)}
+                            onChange={(e) => {
+                              setNewSavingsCurrent(e.target.value);
+                              setFormErrors(prev => ({ ...prev, savings: null }));
+                            }}
                             className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
                           />
                         </div>
@@ -4187,13 +4238,20 @@ Date: ${new Date().toLocaleString()}
                             max="100"
                             step="0.01"
                             value={newSavingsPercent}
-                            onChange={(e) => setNewSavingsPercent(e.target.value)}
+                            onChange={(e) => {
+                              setNewSavingsPercent(e.target.value);
+                              setFormErrors(prev => ({ ...prev, savings: null }));
+                            }}
                             className="w-full pl-2.5 pr-5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-pink-400 font-bold">%</span>
                         </div>
                       </div>
                     </div>
+
+                    {formErrors.savings && (
+                      <p className="text-[9px] text-rose-400 font-bold mt-1 text-left bg-rose-500/10 border border-rose-500/20 rounded-lg px-2.5 py-1 animate-pulse">{formErrors.savings}</p>
+                    )}
 
                     <button 
                       type="submit"
@@ -4739,42 +4797,30 @@ Date: ${new Date().toLocaleString()}
                               <div className="flex items-center gap-1.5">
                                 <label className="text-[8px] text-gray-500 uppercase font-black">Allocation</label>
                                 <div className="relative">
-                                  {(() => {
-                                    const isAchieved = (item.targetAmount || 0) > 0 && (item.currentAmount || 0) >= (item.targetAmount || 0);
-                                    return (
-                                      <input 
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        disabled={isAchieved}
-                                        value={isAchieved ? 0 : item.allocationPercent}
-                                        onChange={(e) => {
-                                          if (isAchieved) return;
-                                          const rawVal = parseFloat(e.target.value) || 0;
-                                          let val = Math.max(0, Math.min(100, rawVal));
-                                          
-                                          setTempSavingsGoals(prev => prev.map(x => {
-                                            if (x.id === item.id) {
-                                              let finalVal = val;
-                                              if (finalVal <= 0) {
-                                                finalVal = 1;
-                                              }
-                                              if (x.id === 'emergency_fund' && finalVal < 10) {
-                                                finalVal = 10;
-                                              }
-                                              return { ...x, allocationPercent: finalVal };
-                                            }
-                                            return x;
-                                          }));
-                                        }}
-                                        className={`w-14 pl-1.5 pr-4 py-0.5 bg-[#121212] border border-white/10 focus:border-emerald-500/50 outline-none rounded text-[10px] font-mono text-left font-bold ${
-                                          isAchieved 
-                                            ? 'opacity-40 cursor-not-allowed text-gray-500' 
-                                            : (reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400')
-                                        }`}
-                                      />
-                                    );
-                                  })()}
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={item.allocationPercent}
+                                    onChange={(e) => {
+                                      const rawVal = parseFloat(e.target.value) || 0;
+                                      let val = Math.max(0, Math.min(100, rawVal));
+                                      
+                                      setTempSavingsGoals(prev => prev.map(x => {
+                                        if (x.id === item.id) {
+                                          let finalVal = val;
+                                          if (x.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
+                                            finalVal = 10;
+                                          }
+                                          return { ...x, allocationPercent: finalVal };
+                                        }
+                                        return x;
+                                      }));
+                                    }}
+                                    className={`w-14 pl-1.5 pr-4 py-0.5 bg-[#121212] border border-white/10 focus:border-emerald-500/50 outline-none rounded text-[10px] font-mono text-left font-bold ${
+                                      reconciledSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                    }`}
+                                  />
                                   <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-500 font-bold">%</span>
                                 </div>
                               </div>
