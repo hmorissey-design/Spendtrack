@@ -137,7 +137,7 @@ function DirectAmountInput({
   return (
     <div className="relative">
       {currencySymbol && (
-        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-500">
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 pointer-events-none select-none">
           {currencySymbol}
         </span>
       )}
@@ -172,7 +172,7 @@ function DirectAmountInput({
         className={className}
       />
       {isPercent && (
-        <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 pointer-events-none select-none">%</span>
       )}
     </div>
   );
@@ -4085,11 +4085,11 @@ Date: ${new Date().toLocaleString()}
                             </div>
                           </div>
 
-                          {/* Line 2: Three adjustable value fields next to each other */}
-                          <div className="flex items-center justify-between w-full gap-2 pt-0.5">
+                          {/* Line 2: Three adjustable value fields stacked vertically with names above */}
+                          <div className="grid grid-cols-3 gap-2.5 w-full pt-1.5">
                             {/* Desired target input */}
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Target:</span>
+                            <div className="flex flex-col gap-1 text-left">
+                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
                               <DirectAmountInput 
                                 initialValue={item.targetAmount || 0}
                                 onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
@@ -4102,13 +4102,13 @@ Date: ${new Date().toLocaleString()}
                                   return x;
                                 }))}
                                 currencySymbol={currencySymbol}
-                                className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
                               />
                             </div>
 
                             {/* Current amount input */}
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Saved:</span>
+                            <div className="flex flex-col gap-1 text-left">
+                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
                               <DirectAmountInput 
                                 initialValue={item.currentAmount || 0}
                                 onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
@@ -4121,13 +4121,13 @@ Date: ${new Date().toLocaleString()}
                                   return x;
                                 }))}
                                 currencySymbol={currencySymbol}
-                                className="w-16 pl-[17px] pr-1 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
                               />
                             </div>
 
                             {/* Allocation percent input */}
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Alloc:</span>
+                            <div className="flex flex-col gap-1 text-left">
+                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Alloc</span>
                               <DirectAmountInput 
                                 initialValue={item.allocationPercent || 0}
                                 onUpdate={(val) => {
@@ -4144,7 +4144,7 @@ Date: ${new Date().toLocaleString()}
                                 }}
                                 isPercent={true}
                                 max={100}
-                                className="w-11 pl-1.5 pr-3 py-0.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-md text-[9.5px] font-mono text-left font-bold text-white"
+                                className="w-full pl-2 pr-5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
                               />
                             </div>
                           </div>
