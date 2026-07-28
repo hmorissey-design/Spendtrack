@@ -1019,15 +1019,41 @@ Date: ${new Date().toLocaleString()}
 
   // Search & Filters state
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterPayment, setFilterPayment] = useState('all');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  const toggleCategoryFilter = (catId: string) => {
+    setFilterCategories(prev => {
+      if (prev.includes(catId)) {
+        return prev.filter(id => id !== catId);
+      } else {
+        return [...prev, catId];
+      }
+    });
+  };
+
+  // Close category dropdown popover on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setIsCategoryFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Reset category filter when leaving the history screen
   useEffect(() => {
     if (activeTab !== 'history') {
-      setFilterCategory('all');
+      setFilterCategories([]);
+      setIsCategoryFilterOpen(false);
     }
   }, [activeTab]);
 
@@ -1777,7 +1803,7 @@ Date: ${new Date().toLocaleString()}
         (e.note && e.note.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (categories.find(c => c.id === e.category)?.name.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      const matchesCategory = filterCategory === 'all' || e.category === filterCategory;
+      const matchesCategory = filterCategories.length === 0 || filterCategories.includes(e.category);
       const matchesPayment = filterPayment === 'all' || e.paymentMethod === filterPayment;
 
       const hasCustomDateRange = !!(filterStartDate || filterEndDate);
@@ -1788,7 +1814,7 @@ Date: ${new Date().toLocaleString()}
 
       return matchesSearch && matchesCategory && matchesPayment && matchesMonth && matchesStartDate && matchesEndDate;
     });
-  }, [expenses, searchQuery, filterCategory, filterPayment, filterStartDate, filterEndDate, selectedMonth, categories]);
+  }, [expenses, searchQuery, filterCategories, filterPayment, filterStartDate, filterEndDate, selectedMonth, categories]);
 
   // Dynamic status details
   const statusConfig = useMemo(() => {
@@ -2544,7 +2570,7 @@ Date: ${new Date().toLocaleString()}
                                   fill={entry.color} 
                                   className="cursor-pointer stroke-none outline-hidden hover:opacity-80 transition-opacity"
                                   onClick={() => {
-                                    setFilterCategory(entry.id);
+                                    setFilterCategories([entry.id]);
                                     setActiveTab('history');
                                   }}
                                 />
@@ -2570,7 +2596,7 @@ Date: ${new Date().toLocaleString()}
                             key={stat.id} 
                             className="flex items-center justify-between text-[9.5px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 rounded-md transition-all duration-150 group"
                             onClick={() => {
-                              setFilterCategory(stat.id);
+                              setFilterCategories([stat.id]);
                               setActiveTab('history');
                             }}
                             title={`Click to view all ${stat.label} transactions`}
@@ -2646,20 +2672,104 @@ Date: ${new Date().toLocaleString()}
 
                   {/* Dropdown Filters row */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider mb-0.5">Tag Category</label>
-                      <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="w-full py-1 px-1.5 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-300"
+                    <div className="relative" ref={categoryDropdownRef}>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="block text-[8px] font-bold text-slate-300 uppercase tracking-wider">Tag Category</label>
+                        {filterCategories.length > 0 && (
+                          <button 
+                            type="button" 
+                            onClick={() => setFilterCategories([])}
+                            className="text-[8px] text-emerald-400 hover:underline font-extrabold cursor-pointer"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)}
+                        className="w-full py-1 px-2 bg-black/40 text-[10px] border border-white/10 rounded-lg text-gray-200 flex items-center justify-between hover:bg-black/60 focus:border-emerald-500/50 transition-colors cursor-pointer"
                       >
-                        <option value="all">📁 All Categories</option>
-                        {categories.map(c => (
-                          <option key={c.id} value={c.id} className="bg-black text-white">
-                            {c.id.startsWith('SAVINGS_') ? `🐷 [Savings] ${c.name.replace(/^SAVINGS\s*-\s*/i, '')}` : c.name}
-                          </option>
-                        ))}
-                      </select>
+                        <span className="truncate pr-1 font-medium">
+                          {filterCategories.length === 0 && "📁 All Categories"}
+                          {filterCategories.length === 1 && (
+                            (() => {
+                              const cat = categories.find(c => c.id === filterCategories[0]);
+                              const isSavings = cat?.id.startsWith('SAVINGS_');
+                              const name = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat?.name;
+                              return cat ? (isSavings ? `🐷 ${name}` : `📁 ${name}`) : "📁 1 Selected";
+                            })()
+                          )}
+                          {filterCategories.length > 1 && `📁 ${filterCategories.length} Categories`}
+                        </span>
+                        {isCategoryFilterOpen ? <ChevronUp size={12} className="text-gray-400 shrink-0" /> : <ChevronDown size={12} className="text-gray-400 shrink-0" />}
+                      </button>
+
+                      {/* Multi-Category Selection Dropdown */}
+                      {isCategoryFilterOpen && (
+                        <div className="absolute left-0 top-full mt-1 z-30 w-64 bg-[#161616] border border-white/15 rounded-xl shadow-2xl p-2.5 animate-in fade-in zoom-in-95 duration-150">
+                          <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/10">
+                            <span className="text-[9px] font-extrabold text-gray-200 uppercase tracking-wider">Filter Categories</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setFilterCategories([])}
+                                className="text-[8.5px] px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-gray-300 font-bold cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setFilterCategories(categories.map(c => c.id))}
+                                className="text-[8.5px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-bold cursor-pointer"
+                              >
+                                Select All
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="max-h-52 overflow-y-auto space-y-1 pr-0.5 scrollbar-thin">
+                            {categories.map(c => {
+                              const isSelected = filterCategories.includes(c.id);
+                              const isSavings = c.id.startsWith('SAVINGS_');
+                              const catName = isSavings ? c.name.replace(/^SAVINGS\s*-\s*/i, '') : c.name;
+
+                              return (
+                                <label
+                                  key={c.id}
+                                  className={`flex items-center justify-between px-2 py-1 rounded-lg text-[10px] cursor-pointer transition-colors ${
+                                    isSelected ? 'bg-emerald-500/15 text-emerald-200 font-semibold border border-emerald-500/25' : 'hover:bg-white/5 text-gray-300 border border-transparent'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 pr-1">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleCategoryFilter(c.id)}
+                                      className="rounded border-white/20 bg-black text-emerald-500 focus:ring-0 cursor-pointer accent-emerald-500 shrink-0"
+                                    />
+                                    <span className="truncate">
+                                      {isSavings ? `🐷 [Savings] ${catName}` : catName}
+                                    </span>
+                                  </div>
+                                  {isSelected && <CheckCircle size={11} className="text-emerald-400 shrink-0 ml-1" />}
+                                </label>
+                              );
+                            })}
+                          </div>
+
+                          <div className="pt-2 mt-2 border-t border-white/10 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setIsCategoryFilterOpen(false)}
+                              className="w-full py-1 bg-emerald-500 text-black font-extrabold text-[10px] rounded-lg hover:bg-emerald-400 transition-colors cursor-pointer text-center"
+                            >
+                              Apply Filter
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -2677,6 +2787,45 @@ Date: ${new Date().toLocaleString()}
                       </select>
                     </div>
                   </div>
+
+                  {/* Selected Categories Active Filter Chips */}
+                  {filterCategories.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                      <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Filtered ({filterCategories.length}):</span>
+                      {filterCategories.map(catId => {
+                        const cat = categories.find(c => c.id === catId);
+                        if (!cat) return null;
+                        const isSavings = cat.id.startsWith('SAVINGS_');
+                        const name = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name;
+
+                        return (
+                          <span 
+                            key={catId}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-[9.5px] font-semibold"
+                          >
+                            <span>{isSavings ? `🐷 ${name}` : name}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleCategoryFilter(catId)}
+                              className="hover:text-white cursor-pointer ml-0.5 p-0.5 rounded-full hover:bg-emerald-500/30 transition-colors"
+                              title="Remove filter"
+                            >
+                              <X size={10} />
+                            </button>
+                          </span>
+                        );
+                      })}
+                      {filterCategories.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setFilterCategories([])}
+                          className="text-[8.5px] text-gray-400 hover:text-white font-bold ml-1 cursor-pointer underline"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {/* Date Range filters */}
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -3050,7 +3199,7 @@ Date: ${new Date().toLocaleString()}
                           key={stat.id} 
                           className="space-y-1.5 cursor-pointer hover:bg-white/5 p-2 -m-2 rounded-xl transition-all duration-150 relative group"
                           onClick={() => {
-                            setFilterCategory(stat.id);
+                            setFilterCategories([stat.id]);
                             setActiveTab('history');
                           }}
                           title={`Click to view all ${stat.label} transactions`}
