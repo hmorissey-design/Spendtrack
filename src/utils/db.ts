@@ -88,6 +88,107 @@ const getDefaultExpenses = (): Expense[] => {
 
 export const INITIAL_BUDGET = 0; // $0 starting layout (user customizable)
 
+const CURRENT_SCHEMA_VERSION = 'v2.6';
+
+function autoHealAndMigrateSchema(): void {
+  try {
+    // 1. Sanitize & repair Categories
+    const catData = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    if (catData) {
+      try {
+        let categories: Category[] = JSON.parse(catData);
+        if (Array.isArray(categories)) {
+          let catModified = false;
+          // Ensure all system default categories exist
+          DEFAULT_CATEGORIES.forEach(defCat => {
+            const exists = categories.some(c => c.id === defCat.id);
+            if (!exists) {
+              categories.push({ ...defCat });
+              catModified = true;
+            }
+          });
+          // Ensure every category has valid required properties
+          categories = categories.map(c => {
+            const updated = { ...c };
+            if (updated.limit === undefined || updated.limit === null || isNaN(Number(updated.limit))) {
+              updated.limit = 0;
+              catModified = true;
+            }
+            if (!updated.icon) {
+              updated.icon = 'Tag';
+              catModified = true;
+            }
+            return updated;
+          });
+          if (catModified) {
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Sanitize & repair Savings Goals
+    const savingsData = localStorage.getItem('expensetrack_savings_goals');
+    if (savingsData) {
+      try {
+        let goals = JSON.parse(savingsData);
+        if (Array.isArray(goals)) {
+          let goalsModified = false;
+          goals = goals.map((g: any) => {
+            const updated = { ...g };
+            if (typeof updated.targetAmount !== 'number' || isNaN(updated.targetAmount)) {
+              updated.targetAmount = Number(updated.targetAmount) || 0;
+              goalsModified = true;
+            }
+            if (typeof updated.currentAmount !== 'number' || isNaN(updated.currentAmount)) {
+              updated.currentAmount = Number(updated.currentAmount) || 0;
+              goalsModified = true;
+            }
+            if (typeof updated.allocationPercent !== 'number' || isNaN(updated.allocationPercent)) {
+              updated.allocationPercent = Number(updated.allocationPercent) || 0;
+              goalsModified = true;
+            }
+            return updated;
+          });
+          if (goalsModified) {
+            localStorage.setItem('expensetrack_savings_goals', JSON.stringify(goals));
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 3. Sanitize & repair Expenses
+    const expData = localStorage.getItem(STORAGE_KEYS.EXPENSES);
+    if (expData) {
+      try {
+        let expenses = JSON.parse(expData);
+        if (Array.isArray(expenses)) {
+          let expModified = false;
+          expenses = expenses.map((e: any) => {
+            const updated = { ...e };
+            if (typeof updated.amount !== 'number' || isNaN(updated.amount)) {
+              updated.amount = Number(updated.amount) || 0;
+              expModified = true;
+            }
+            if (!updated.category) {
+              updated.category = 'cat_uncategorized';
+              expModified = true;
+            }
+            return updated;
+          });
+          if (expModified) {
+            localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+          }
+        }
+      } catch (e) {}
+    }
+
+    localStorage.setItem('expensetrack_schema_version', CURRENT_SCHEMA_VERSION);
+  } catch (err) {
+    console.warn('Schema auto-heal check completed with fallback:', err);
+  }
+}
+
 export const LocalDb = {
   /**
    * Initializes the local private database.
@@ -117,6 +218,9 @@ export const LocalDb = {
       localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify([budget]));
       localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
     }
+
+    // Run auto-healing schema check to upgrade existing installations transparently
+    autoHealAndMigrateSchema();
   },
 
   /**

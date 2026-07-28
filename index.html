@@ -56,7 +56,34 @@
         } else {
           const registerSW = () => {
             navigator.serviceWorker.register('./sw.js')
-              .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+              .then(reg => {
+                console.log('Service Worker registered successfully:', reg.scope);
+
+                // Auto update check whenever user re-opens or focuses the app
+                const checkForUpdates = () => {
+                  reg.update().catch(() => {});
+                };
+                window.addEventListener('focus', checkForUpdates);
+                document.addEventListener('visibilitychange', () => {
+                  if (document.visibilityState === 'visible') checkForUpdates();
+                });
+
+                // Trigger skipWaiting when a new worker is waiting
+                if (reg.waiting) {
+                  reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+
+                reg.addEventListener('updatefound', () => {
+                  const newWorker = reg.installing;
+                  if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                      }
+                    });
+                  }
+                });
+              })
               .catch(err => console.log('Service Worker registration failed:', err));
           };
 

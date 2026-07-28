@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expensetrack-cache-v7';
+const CACHE_NAME = 'expensetrack-cache-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -35,6 +35,12 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') {
@@ -44,33 +50,23 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Only handle requests from our own origin
-  // This prevents caching external CDN or AdSense resources that might fail CORS
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached response instantly and fetch fresh in background to update cache (Stale-While-Revalidate)
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          })
-          .catch(() => { /* Soft fail background update */ });
+  const isHtmlOrScript = event.request.mode === 'navigate' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    event.request.destination === 'document' ||
+    event.request.destination === 'script';
 
-        return cachedResponse;
-      }
-
-      // If not cached, fetch from network
-      return fetch(event.request)
+  if (isHtmlOrScript) {
+    // Network First Strategy for HTML & JS: Always fetch fresh build when online, fallback to cache if offline
+    event.respondWith(
+      fetch(event.request)
         .then((networkResponse) => {
-          // Only cache successful basic responses
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
@@ -79,19 +75,48 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // Fallback: if we are offline and page navigation fails, return cached index
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) return cachedResponse;
           if (event.request.mode === 'navigate') {
             const cache = await caches.open(CACHE_NAME);
             const indexResponse = await cache.match('index.html') || await cache.match('./');
-            if (indexResponse) {
-              return indexResponse;
-            }
+            if (indexResponse) return indexResponse;
           }
           return new Response('Network error and offline content not available.', {
             status: 503,
             statusText: 'Service Unavailable'
           });
-        });
-    })
-  );
+        })
+    );
+  } else {
+    // Stale-While-Revalidate for images and media
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          fetch(event.request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, networkResponse);
+                });
+              }
+            })
+            .catch(() => {});
+          return cachedResponse;
+        }
+
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return networkResponse;
+          });
+      })
+    );
+  }
 });
+
