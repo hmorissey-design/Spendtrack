@@ -3696,43 +3696,7 @@ Date: ${new Date().toLocaleString()}
                   )}
                 </div>
 
-                {/* Savings Goals have been promoted to their own dedicated tab for better separation! */}
 
-                {/* Blueprint Map */}
-                <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <div className="p-1.5 bg-indigo-950/20 border border-indigo-500/20 rounded-lg text-indigo-400">
-                      <FileSpreadsheet size={15} />
-                    </div>
-                    <h3 className="font-extrabold text-[#eeeeee] text-xs uppercase tracking-wider">Planned Features Blueprint Map (v2.0)</h3>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
-                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🗂️ Envelopes</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Create customized envelopes for known expense payments.</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
-                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">📅 Bills Calendar</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Add auto-recurring bills to track upcoming due dates easily.</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
-                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🎯 Savings Goals</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Configure milestones and visual trackers for savings.</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/2 border border-dashed border-white/10 space-y-1">
-                      <span className="block text-[9px] font-black text-emerald-400 uppercase tracking-widest">🔗 Linked Sync</span>
-                      <p className="text-[8.5px] text-gray-400 leading-tight font-medium">Automatically tie daily spending funds directly into active gauges.</p>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => alert("Thank you for your feedback! The development team has logged your interest.")}
-                    className="w-full mt-1.5 py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-[#eeeeee] font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer text-center active:scale-98"
-                  >
-                    🚀 Vote for this Feature Release
-                  </button>
-                </div>
 
               </div>
             );
