@@ -1,50 +1,75 @@
-# 🚀 ExpenseTrack - Production Deployment & Monetization Roadmap
+# 🚀 LooseBudget (`loosebudget.com`) - Production Deployment, Subscription & PWA Roadmap
 
-> **Note for Future Reference:** This file records our strategic decisions regarding hosting, domain setup, global tax compliance (GST/HST), and monetization when you are ready to launch publicly.
-
----
-
-## 📌 1. Hosting Architecture & Domain Setup
-
-### **Where code lives:**
-* **GitHub Repository:** Primary source code host and automated deployment trigger.
-* **Hosting Provider (Vercel or Cloud Run):**
-  * **Vercel (Recommended for frontend/PWA):** Zero-maintenance, free tier, automatic SSL, direct GitHub sync.
-  * **Google Cloud Run:** Scale-to-zero container hosting, 2 million free requests/month, excellent reliability.
-
-### **DreamHost Domain & DNS Integration:**
-* **Recommended approach (CNAME Subdomain):**
-  * In DreamHost DNS, add a `CNAME` record pointing `app.yourdomain.com` directly to Vercel (`cname.vercel-dns.com`) or Cloud Run.
-  * **Why:** Running directly on your subdomain preserves full **PWA capabilities** (offline caching, "Add to Home Screen" prompt, service workers) and SSL security without URL masking or broken iframe headers.
+> **Note for Future Reference:** This document details the step-by-step rollout plan for launching LooseBudget on `loosebudget.com`, including the 35-day free trial, subscription plans, PWA phone installation, and DreamHost domain setup.
 
 ---
 
-## 💳 2. Monetization & Tax Compliance (GST/HST & Global VAT)
+## 📅 Step-by-Step Rollout Order
 
-### **Merchant of Record (MoR): Lemon Squeezy**
-* **Why Lemon Squeezy:** Acts as the official Merchant of Record.
-* **Tax Automation:** Automatically calculates, collects, and remits local taxes worldwide—including Canadian GST/HST, state sales taxes, and European VAT.
-* **Billing Models Supported:**
-  * One-time lifetime purchase key
-  * Monthly or annual recurring subscriptions
-* **Implementation:** Embed a simple Lemon Squeezy checkout popup/overlay or redirect user to a secure payment page upon sign-up.
-
----
-
-## 📱 3. Platform & Compliance Notes
-
-* **AI Studio `.ai.studio` URL:**
-  * Perfect for previewing and prototyping.
-  * Preview sharing has a 100-user limit, so public production traffic should run on Vercel or Cloud Run with your own domain.
-* **Google Play Android Target API Warning:**
-  * **Does NOT affect your app** if distributed as a web-based Progressive Web App (PWA) accessed via browser.
-  * Only applies if uploading compiled `.apk` / `.aab` bundles directly to the Google Play Store console.
+### **Step 1: Domain & Hosting Setup (`loosebudget.com`)**
+1. **Host Frontend:** Deploy code to **Vercel** or **Google Cloud Run** connected directly to your GitHub repo.
+2. **DreamHost DNS Configuration:**
+   * **Option A (Main Domain):** Set up `A` / `CNAME` records in DreamHost for `loosebudget.com` pointing to Vercel/Cloud Run.
+   * **Option B (App Subdomain - Recommended for web + app structure):** Set `app.loosebudget.com` via `CNAME` pointing to Vercel (`cname.vercel-dns.com`).
+3. **Verify SSL:** Ensure HTTPS is active (Vercel automatically issues free SSL certificates).
 
 ---
 
-## ✅ 4. Quick Execution Checklist (When Ready)
+## 🔒 Step 2: Authentication & 35-Day Free Trial Logic
+1. **Firebase / Auth Provider Integration:**
+   * Users register when first opening the app (e.g., Email/Password or Google Sign-In).
+2. **Persistent Login Sessions:**
+   * Store JWT / auth tokens in persistent storage (IndexedDB / LocalStorage) so users **stay logged in indefinitely** on their phone unless they explicitly log out or change devices.
+3. **35-Day Trial Engine:**
+   * On registration, set `trialStartDate = now()`.
+   * Grant 35 full days of access (allows user to track 1 full calendar month + perform end-of-month savings reconciliation).
+   * Display a subtle banner showing trial status (e.g., "Trial: 22 days left").
 
-1. [ ] **Deploy Repo:** Connect your GitHub repo to a Vercel project or Google Cloud Run.
-2. [ ] **Setup DNS:** In DreamHost, set up a `CNAME` record (`app.yourdomain.com`).
-3. [ ] **Setup Lemon Squeezy:** Create your product/subscription in Lemon Squeezy and copy the checkout link/script into the app.
-4. [ ] **Verify PWA:** Confirm manifest, service worker, and install prompt function smoothly on the custom domain.
+---
+
+## 💳 Step 3: Subscription & Billing Integration (Lemon Squeezy)
+1. **Configure Merchant of Record (Lemon Squeezy):**
+   * Set up products & tax settings (handles GST/HST/VAT automatically).
+   * **Tier Options:**
+     * **Monthly Subscription** (e.g., $4.99/mo)
+     * **Yearly Subscription** (e.g., $39.99/yr)
+     * **Lifetime License** (e.g., $99 one-time)
+2. **Post-Trial Paywall Gate:**
+   * When `currentDate > trialStartDate + 35 days` and `user.isSubscribed === false`, show the subscription modal.
+3. **Webhook Sync:**
+   * Connect Lemon Squeezy webhooks to mark `user.isSubscribed = true` in Firestore/Database upon purchase.
+
+---
+
+## 📱 Step 4: Phone App Experience (PWA & Installation)
+1. **Web-Based PWA Distribution:**
+   * Users navigate to `loosebudget.com` (or `app.loosebudget.com`) on iOS Safari or Android Chrome.
+2. **Install Prompt:**
+   * Android Chrome shows the **"Install App"** prompt directly or via the app's in-ui **Install App** button.
+   * iOS Safari users tap **Share → Add to Home Screen**.
+3. **Standalone App Feel:**
+   * Opens full-screen without browser URL bars, works offline, and keeps the user signed in continuously.
+
+---
+
+## 📋 Execution Checklist
+
+- [ ] Connect GitHub repo to Vercel / Cloud Run
+- [ ] Configure DreamHost DNS for `loosebudget.com` / `app.loosebudget.com`
+- [ ] Enable Firebase Auth / Persistent Session token storage
+- [ ] Implement 35-day trial expiration counter & database field
+- [ ] Set up Lemon Squeezy subscription products (Monthly, Annual, Lifetime)
+- [ ] Add post-trial Paywall overlay triggered on Day 36
+- [ ] Test PWA "Add to Home Screen" & offline caching on iOS and Android
+
+---
+
+## ❓ Frequently Asked Questions
+
+### **Is "Add to Home Screen" the same as the "Install App" button in the app?**
+**Yes, conceptually they achieve the exact same result!**
+
+* **On Android / Chrome:** When the browser supports PWA installation, clicking the in-app **Install App** button triggers Chrome's native install dialog. Accepting it creates a standalone app icon on the Android home screen/app drawer.
+* **On iOS / Safari (iPhone/iPad):** Apple restricts websites from automatically triggering an install modal with code. The in-app **Install App** button on iPhone opens a clean guide instructing the user to tap Safari's **Share** icon and select **"Add to Home Screen"**.
+* **Result in both cases:** The app runs as a **standalone, full-screen app** without browser address bars, loads quickly from offline cache, and keeps user credentials saved across app launches.
+

@@ -4223,14 +4223,23 @@ Date: ${new Date().toLocaleString()}
                               />
                             </div>
 
-                            {/* Current amount display (Read-only: populated via Monthly Reconciliation) */}
+                            {/* Current saved amount input (Editable - allow moving funds between goals) */}
                             <div className="flex flex-col gap-1 text-left">
-                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5 flex items-center gap-1" title="Managed via Monthly Account Reconciliation">
-                                Saved <Lock size={8} className="text-pink-400/80 shrink-0" />
-                              </span>
-                              <div className="w-full px-2.5 py-1.5 bg-black/30 border border-white/5 rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300">
-                                {currencySymbol}{curAmt.toFixed(2)}
-                              </div>
+                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
+                              <DirectAmountInput 
+                                initialValue={curAmt}
+                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
+                                  if (x.id === item.id) {
+                                    return { 
+                                      ...x, 
+                                      currentAmount: Math.max(0, val)
+                                    };
+                                  }
+                                  return x;
+                                }))}
+                                currencySymbol={currencySymbol}
+                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
+                              />
                             </div>
 
                             {/* Allocation percent input */}
@@ -4719,12 +4728,16 @@ Date: ${new Date().toLocaleString()}
                 const cashVal = parseFloat(cashOnHand) || 0;
                 const balancesTotal = chequingVal + savingsVal + cashVal;
 
+                // Subtract existing accumulated savings across goals to avoid double-counting
+                const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+                const unallocatedLiquidCash = balancesTotal - existingSavingsTotal;
+
                 const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
                 const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
                 const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
                 const projectedExpenses = projectedFixed + projectedDiscretionary;
 
-                const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+                const reconciledSurplus = unallocatedLiquidCash + projectedIncome - projectedExpenses;
 
                 return (
                   <div className="space-y-4">
@@ -4741,21 +4754,21 @@ Date: ${new Date().toLocaleString()}
                       {/* Sub-balances breakdown */}
                       <div className="flex justify-between items-center text-gray-400 border-b border-white/5 pb-1.5">
                         <span className="font-sans text-[10px] font-bold uppercase text-gray-500">Liquidity Subtotal</span>
-                        <span className="font-extrabold text-white">{currencySymbol}{balancesTotal.toLocaleString()}</span>
+                        <span className="font-extrabold text-white">{currencySymbol}{balancesTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       
                       <div className="pl-3 space-y-1 border-l border-white/5 text-[11px] text-gray-400">
                         <div className="flex justify-between items-center">
                           <span>Chequing balances:</span>
-                          <span>{currencySymbol}{chequingVal.toLocaleString()}</span>
+                          <span>{currencySymbol}{chequingVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Savings balances:</span>
-                          <span>{currencySymbol}{savingsVal.toLocaleString()}</span>
+                          <span>{currencySymbol}{savingsVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Cash on hand:</span>
-                          <span>{currencySymbol}{cashVal.toLocaleString()}</span>
+                          <span>{currencySymbol}{cashVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                       </div>
 
@@ -4763,33 +4776,40 @@ Date: ${new Date().toLocaleString()}
                       <div className="space-y-1.5 pt-2 border-t border-white/5">
                         <div className="flex justify-between items-center text-[#eeeeee]">
                           <span className="flex items-center gap-1.5">
-                            <span className="text-emerald-500 font-bold">+</span> Total Account Balances:
+                            <span className="text-emerald-500 font-bold">+</span> Total Bank / Cash Balances:
                           </span>
-                          <span className="font-bold">{currencySymbol}{balancesTotal.toLocaleString()}</span>
+                          <span className="font-bold">{currencySymbol}{balancesTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-amber-400">
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-bold">-</span> Existing Goal Savings:
+                          </span>
+                          <span className="font-bold">{currencySymbol}{existingSavingsTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
 
                         <div className="flex justify-between items-center text-emerald-400">
                           <span className="flex items-center gap-1.5">
                             <span className="font-bold">+</span> Projected Income ({totals.monthName}):
                           </span>
-                          <span className="font-bold">{currencySymbol}{projectedIncome.toLocaleString()}</span>
+                          <span className="font-bold">{currencySymbol}{projectedIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
 
                         <div className="flex justify-between items-center text-rose-400">
                           <span className="flex items-center gap-1.5">
                             <span className="font-bold">-</span> Projected Expenses:
                           </span>
-                          <span className="font-bold">{currencySymbol}{projectedExpenses.toLocaleString()}</span>
+                          <span className="font-bold">{currencySymbol}{projectedExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         
                         <div className="pl-3.5 space-y-0.5 text-[10px] text-gray-500 leading-normal border-l border-white/5">
                           <div className="flex justify-between">
                             <span>Fixed Obligations:</span>
-                            <span>{currencySymbol}{projectedFixed.toLocaleString()}</span>
+                            <span>{currencySymbol}{projectedFixed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Daily Spending Limits:</span>
-                            <span>{currencySymbol}{projectedDiscretionary.toLocaleString()}</span>
+                            <span>{currencySymbol}{projectedDiscretionary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         </div>
                       </div>
@@ -4804,7 +4824,7 @@ Date: ${new Date().toLocaleString()}
                           {reconciledSurplus >= 0 ? 'RECONCILED SURPLUS' : 'RECONCILED DEFICIT'}
                         </span>
                         <span className="text-xl font-black font-mono mt-1">
-                          {currencySymbol}{reconciledSurplus.toLocaleString()}
+                          {currencySymbol}{reconciledSurplus.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         <span className="text-[8px] font-sans text-gray-400 mt-1 uppercase tracking-wider">
                           {reconciledSurplus >= 0 
@@ -4824,12 +4844,16 @@ Date: ${new Date().toLocaleString()}
                 const cashVal = parseFloat(cashOnHand) || 0;
                 const balancesTotal = chequingVal + savingsVal + cashVal;
 
+                // Subtract existing accumulated savings across goals to avoid double-counting
+                const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+                const unallocatedLiquidCash = balancesTotal - existingSavingsTotal;
+
                 const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
                 const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
                 const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
                 const projectedExpenses = projectedFixed + projectedDiscretionary;
 
-                const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+                const reconciledSurplus = unallocatedLiquidCash + projectedIncome - projectedExpenses;
 
                 if (tempSavingsGoals.length === 0) {
                   return (
