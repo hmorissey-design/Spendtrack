@@ -39,7 +39,8 @@ import {
   ChevronUp,
   ArrowRight,
   ArrowLeft,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -1877,7 +1878,7 @@ Date: ${new Date().toLocaleString()}
     }
   }, [totals.percent, selectedMonth]);
 
-  const showAds = showSimulatedAds && expenses.length > 0 && activeTab !== 'help' && activeTab !== 'budget' && activeTab !== 'budget_plan';
+  const showAds = showSimulatedAds && expenses.length > 0 && activeTab !== 'help' && (activeTab as string) !== 'budget' && activeTab !== 'budget_plan';
 
   return (
     <AndroidFrame 
@@ -3392,7 +3393,7 @@ Date: ${new Date().toLocaleString()}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     if (editingItemValue.trim()) {
-                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                      if (isDuplicateName(editingItemValue, 'income', item.id)) {
                                         alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                         setEditingItemId(null);
                                         return;
@@ -3406,7 +3407,7 @@ Date: ${new Date().toLocaleString()}
                                 }}
                                 onBlur={() => {
                                   if (editingItemValue.trim()) {
-                                    if (isDuplicateName(editingItemValue, item.id)) {
+                                    if (isDuplicateName(editingItemValue, 'income', item.id)) {
                                       alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                       setEditingItemId(null);
                                       return;
@@ -3548,7 +3549,7 @@ Date: ${new Date().toLocaleString()}
                                         setEditingItemId(null);
                                         return;
                                       }
-                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                      if (isDuplicateName(editingItemValue, 'fixed', item.id)) {
                                         alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                         setEditingItemId(null);
                                         return;
@@ -3567,7 +3568,7 @@ Date: ${new Date().toLocaleString()}
                                       setEditingItemId(null);
                                       return;
                                     }
-                                    if (isDuplicateName(editingItemValue, item.id)) {
+                                    if (isDuplicateName(editingItemValue, 'fixed', item.id)) {
                                       alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                       setEditingItemId(null);
                                       return;
@@ -3732,7 +3733,7 @@ Date: ${new Date().toLocaleString()}
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') {
                                         if (editingItemValue.trim()) {
-                                          if (isDuplicateName(editingItemValue, cat.id)) {
+                                          if (isDuplicateName(editingItemValue, 'category', cat.id)) {
                                             alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                             setEditingItemId(null);
                                             return;
@@ -3746,7 +3747,7 @@ Date: ${new Date().toLocaleString()}
                                     }}
                                     onBlur={() => {
                                       if (editingItemValue.trim() && editingItemValue.trim() !== cat.name) {
-                                        if (isDuplicateName(editingItemValue, cat.id)) {
+                                        if (isDuplicateName(editingItemValue, 'category', cat.id)) {
                                           alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                           setEditingItemId(null);
                                           return;
@@ -4039,10 +4040,11 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 7: SAVINGS GOALS (DEDICATED VIEW) */}
           {activeTab === 'savings' && (() => {
-            const totalSavedAmt = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
-            const totalTargetAmt = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.targetAmount as any) || 0), 0);
+            const safeSavingsGoals = Array.isArray(savingsGoals) ? savingsGoals : [];
+            const totalSavedAmt = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+            const totalTargetAmt = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.targetAmount as any) || 0), 0);
             const overallSavingsPercent = totalTargetAmt > 0 ? Math.min(100, Math.round((totalSavedAmt / totalTargetAmt) * 100)) : 0;
-            const totalAllocationPercent = savingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
+            const totalAllocationPercent = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
 
             return (
               <div className="space-y-4 animate-in fade-in duration-200" id="tab_savings">
@@ -4110,14 +4112,16 @@ Date: ${new Date().toLocaleString()}
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Active Targets</span>
                       <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 font-bold px-1.5 py-0.2 rounded font-mono">
-                        {savingsGoals.length} GOALS
+                        {safeSavingsGoals.length} GOALS
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {savingsGoals.map((item, index) => {
-                      const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.round(((item.currentAmount || 0) / (item.targetAmount || 0)) * 100)) : 0;
+                    {safeSavingsGoals.map((item, index) => {
+                      const curAmt = parseFloat(item.currentAmount as any) || 0;
+                      const tgtAmt = parseFloat(item.targetAmount as any) || 0;
+                      const percentSaved = tgtAmt > 0 ? Math.min(100, Math.round((curAmt / tgtAmt) * 100)) : 0;
                       const isEven = index % 2 === 0;
                       return (
                         <div 
@@ -4139,7 +4143,7 @@ Date: ${new Date().toLocaleString()}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                       if (editingItemValue.trim()) {
-                                        if (isDuplicateName(editingItemValue, item.id)) {
+                                        if (isDuplicateName(editingItemValue, 'savings', item.id)) {
                                           alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                           setEditingItemId(null);
                                           return;
@@ -4153,7 +4157,7 @@ Date: ${new Date().toLocaleString()}
                                   }}
                                   onBlur={() => {
                                     if (editingItemValue.trim()) {
-                                      if (isDuplicateName(editingItemValue, item.id)) {
+                                      if (isDuplicateName(editingItemValue, 'savings', item.id)) {
                                         alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                         setEditingItemId(null);
                                         return;
@@ -4185,7 +4189,7 @@ Date: ${new Date().toLocaleString()}
                             </div>
                             
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[8px] bg-pink-550/10 text-pink-400 border border-pink-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
+                              <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
                                 {percentSaved}% Saved
                               </span>
                               <button 
@@ -4204,7 +4208,7 @@ Date: ${new Date().toLocaleString()}
                             <div className="flex flex-col gap-1 text-left">
                               <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
                               <DirectAmountInput 
-                                initialValue={item.targetAmount || 0}
+                                initialValue={parseFloat(item.targetAmount as any) || 0}
                                 onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
                                   if (x.id === item.id) {
                                     return { 
@@ -4225,7 +4229,7 @@ Date: ${new Date().toLocaleString()}
                                 Saved <Lock size={8} className="text-pink-400/80 shrink-0" />
                               </span>
                               <div className="w-full px-2.5 py-1.5 bg-black/30 border border-white/5 rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300">
-                                {currencySymbol}{(item.currentAmount || 0).toFixed(2)}
+                                {currencySymbol}{curAmt.toFixed(2)}
                               </div>
                             </div>
 
@@ -4233,12 +4237,12 @@ Date: ${new Date().toLocaleString()}
                             <div className="flex flex-col gap-1 text-left">
                               <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Alloc</span>
                               <DirectAmountInput 
-                                initialValue={item.allocationPercent || 0}
+                                initialValue={parseFloat(item.allocationPercent as any) || 0}
                                 onUpdate={(val) => {
                                   let finalVal = val;
                                   if (finalVal < 0) {
                                     alert("Allocation percentage cannot be negative.");
-                                    finalVal = Math.max(0, item.allocationPercent || 0);
+                                    finalVal = Math.max(0, parseFloat(item.allocationPercent as any) || 0);
                                   }
                                   if (item.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
                                     alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");

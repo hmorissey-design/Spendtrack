@@ -385,7 +385,7 @@ export function CategoryManager({
               </div>
 
               {/* Set as default preference checkbox toggle */}
-              {editingCategory?.id !== 'cat_uncategorized' && (
+              {typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id !== 'cat_uncategorized' && (
                 <div className="bg-black/35 p-3 rounded-xl border border-white/5 space-y-1">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
