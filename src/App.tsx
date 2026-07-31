@@ -1884,7 +1884,7 @@ Date: ${new Date().toLocaleString()}
       currentTime="01:15" 
       onRefreshDatabase={handleResetDatabase}
     >
-      <div className="flex-1 flex flex-col h-full overflow-hidden select-none" id="android_app_root">
+      <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden select-none relative" id="android_app_root">
         {/* App Title & Top Header */}
         <div className="bg-[#0A0A0A] text-white pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
           <div className="flex items-center gap-2.5 select-none pr-4">
@@ -2111,7 +2111,7 @@ Date: ${new Date().toLocaleString()}
         </div>
 
         {/* Primary Screen Scrollable Frame */}
-        <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-3.5 py-1.5 bg-[#0A0A0A] space-y-1.5">
+        <div ref={mainScrollRef} className="flex-1 min-h-0 overflow-y-auto px-3.5 py-1.5 bg-[#0A0A0A] space-y-1.5">
           
           {/* Quick-add floating trigger sheet */}
           {showAddForm && (
@@ -4382,7 +4382,7 @@ Date: ${new Date().toLocaleString()}
 
 
         {/* Modern Bottom Android Navigation Tab bar */}
-        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
+        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-30 relative sticky bottom-0 w-full" id="android_nav_bar">
           
           {/* Nav Item: Dashboard */}
           <button
@@ -4722,16 +4722,9 @@ Date: ${new Date().toLocaleString()}
                 const cashVal = parseFloat(cashOnHand) || 0;
                 const balancesTotal = chequingVal + savingsVal + cashVal;
 
-                // Subtract existing accumulated savings across goals to avoid double-counting
+                // Calculate actual unallocated liquid cash currently in bank vs existing goal reserves
                 const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
-                const unallocatedLiquidCash = balancesTotal - existingSavingsTotal;
-
-                const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
-                const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
-                const projectedExpenses = projectedFixed + projectedDiscretionary;
-
-                const reconciledSurplus = unallocatedLiquidCash + projectedIncome - projectedExpenses;
+                const reconciledSurplus = balancesTotal - existingSavingsTotal;
 
                 return (
                   <div className="space-y-4">
@@ -4767,44 +4760,23 @@ Date: ${new Date().toLocaleString()}
                       </div>
 
                       {/* Calculation Rows */}
-                      <div className="space-y-1.5 pt-2 border-t border-white/5">
+                      <div className="space-y-2 pt-2 border-t border-white/5">
                         <div className="flex justify-between items-center text-[#eeeeee]">
-                          <span className="flex items-center gap-1.5">
-                            <span className="text-emerald-500 font-bold">+</span> Total Bank / Cash Balances:
+                          <span className="flex items-center gap-1.5 font-sans">
+                            <span className="text-emerald-500 font-bold">+</span> Total Verified Bank & Cash Balances:
                           </span>
                           <span className="font-bold">{currencySymbol}{balancesTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
 
                         <div className="flex justify-between items-center text-amber-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="font-bold">-</span> Existing Goal Savings:
+                          <span className="flex items-center gap-1.5 font-sans">
+                            <span className="text-amber-500 font-bold">-</span> Existing Savings Goal Reserves:
                           </span>
                           <span className="font-bold">{currencySymbol}{existingSavingsTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
 
-                        <div className="flex justify-between items-center text-emerald-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="font-bold">+</span> Projected Income ({totals.monthName}):
-                          </span>
-                          <span className="font-bold">{currencySymbol}{projectedIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-
-                        <div className="flex justify-between items-center text-rose-400">
-                          <span className="flex items-center gap-1.5">
-                            <span className="font-bold">-</span> Projected Expenses:
-                          </span>
-                          <span className="font-bold">{currencySymbol}{projectedExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        
-                        <div className="pl-3.5 space-y-0.5 text-[10px] text-gray-500 leading-normal border-l border-white/5">
-                          <div className="flex justify-between">
-                            <span>Fixed Obligations:</span>
-                            <span>{currencySymbol}{projectedFixed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Daily Spending Limits:</span>
-                            <span>{currencySymbol}{projectedDiscretionary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </div>
+                        <div className="p-2.5 bg-white/5 rounded-xl border border-white/5 text-[9.5px] font-sans text-gray-400 leading-relaxed">
+                          ℹ️ <strong>Actual Cash Reconciliation:</strong> Calculates actual liquid surplus sitting in your bank right now that hasn't been earmarked for a savings goal yet. No unearned future income or estimated future expenses are assumed.
                         </div>
                       </div>
 
@@ -4822,8 +4794,8 @@ Date: ${new Date().toLocaleString()}
                         </span>
                         <span className="text-[8px] font-sans text-gray-400 mt-1 uppercase tracking-wider">
                           {reconciledSurplus >= 0 
-                            ? 'Funds ready to transfer to Savings targets!'
-                            : 'Adjust budgets or deposit funds to cover this month\'s obligations.'
+                            ? 'Unallocated cash ready to distribute into Savings targets!'
+                            : 'Adjust goal amounts or deposit funds to reconcile account balance.'
                           }
                         </span>
                       </div>
@@ -4840,14 +4812,7 @@ Date: ${new Date().toLocaleString()}
 
                 // Subtract existing accumulated savings across goals to avoid double-counting
                 const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
-                const unallocatedLiquidCash = balancesTotal - existingSavingsTotal;
-
-                const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
-                const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
-                const projectedExpenses = projectedFixed + projectedDiscretionary;
-
-                const reconciledSurplus = unallocatedLiquidCash + projectedIncome - projectedExpenses;
+                const reconciledSurplus = balancesTotal - existingSavingsTotal;
 
                 if (tempSavingsGoals.length === 0) {
                   return (
@@ -5037,12 +5002,8 @@ Date: ${new Date().toLocaleString()}
                   const cashVal = parseFloat(cashOnHand) || 0;
                   const balancesTotal = chequingVal + savingsVal + cashVal;
 
-                  const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
-                  const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                  const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
-                  const projectedExpenses = projectedFixed + projectedDiscretionary;
-
-                  const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+                  const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+                  const reconciledSurplus = balancesTotal - existingSavingsTotal;
 
                   return (
                     <button
@@ -5063,12 +5024,8 @@ Date: ${new Date().toLocaleString()}
                   const cashVal = parseFloat(cashOnHand) || 0;
                   const balancesTotal = chequingVal + savingsVal + cashVal;
 
-                  const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
-                  const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                  const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
-                  const projectedExpenses = projectedFixed + projectedDiscretionary;
-
-                  const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
+                  const existingSavingsTotal = tempSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+                  const reconciledSurplus = balancesTotal - existingSavingsTotal;
 
                   if (tempSavingsGoals.length === 0) {
                     return (
@@ -5124,7 +5081,7 @@ Date: ${new Date().toLocaleString()}
                             ? baselines[originalGoal.id] 
                             : (originalGoal.currentAmount || 0);
 
-                          const updatedAmount = baseAmount + allocatedPortion;
+                          const updatedAmount = Math.round((baseAmount + allocatedPortion) * 100) / 100;
 
                           return {
                             ...originalGoal,
