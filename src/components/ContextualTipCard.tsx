@@ -50,7 +50,7 @@ const GENERAL_TIPS: FinancialTip[] = [
   {
     id: 'pwa_offline',
     title: "100% Private & Secure",
-    description: "ExpenseTrack runs completely offline as a PWA. Your transactions and budgets are kept locally on your phone.",
+    description: "LooseBudget runs completely offline as a PWA. Your transactions and budgets are kept locally on your phone.",
     iconType: 'heart'
   },
   {

@@ -268,7 +268,7 @@ export function BudgetSettings({
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const fileDateStr = `${year}-${month}-${day}`;
-    const exportFileDefaultName = `ExpenseTrack_backup_${fileDateStr}.json`;
+    const exportFileDefaultName = `LooseBudget_backup_${fileDateStr}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -327,7 +327,7 @@ export function BudgetSettings({
           setDeviceRestoreContent(content);
           setDeviceRestoreConfirm(true);
         } else {
-          setErrorMsg('The selected JSON file does not appear to be a valid ExpenseTrack backup.');
+          setErrorMsg('The selected JSON file does not appear to be a valid LooseBudget backup.');
           setDeviceRestoreContent(null);
           setDeviceRestoreConfirm(false);
           setTimeout(() => setErrorMsg(null), 5000);
@@ -783,9 +783,9 @@ function RenderActiveDashboardLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ET</span>
+            <span className="text-[10px] font-bold text-emerald-400">LB</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">LooseBudget Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Daily Spending
@@ -971,9 +971,9 @@ function RenderAnalyticsTrendsLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ET</span>
+            <span className="text-[10px] font-bold text-emerald-400">LB</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">LooseBudget Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Analytics
@@ -1080,9 +1080,9 @@ function RenderBudgetsCurrencyLive({
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-400">ET</span>
+            <span className="text-[10px] font-bold text-emerald-400">LB</span>
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">ExpenseTrack Live</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eeeeee]">LooseBudget Live</span>
         </div>
         <span className="text-[9px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase">
           Device Frame: Settings
@@ -1179,8 +1179,8 @@ function RenderFinancePDFReportLive({
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-slate-300 pb-4">
         <div>
           <div className="flex items-center gap-1.5 mb-1 bg-[#0F766E]/10 p-1 px-2.5 rounded-lg w-fit">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] flex items-center justify-center font-bold text-[8px] text-white">E</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#0F766E]">ExpenseTrack Statement</span>
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] flex items-center justify-center font-bold text-[8px] text-white">L</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#0F766E]">LooseBudget Statement</span>
           </div>
           <h2 className="text-lg font-extrabold text-slate-900 tracking-tight leading-snug">Business Expense Ledger</h2>
         </div>

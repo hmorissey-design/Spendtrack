@@ -1,6 +1,6 @@
 {
-  "name": "ExpenseTrack",
-  "description": "An offline-first personal finance tracker styled as a high-performance Progressive Web App (PWA) with private localized budgeting, discretionary expense logs, and custom banner ad slots.",
+  "name": "LooseBudget",
+  "description": "LooseBudget is a smart, mobile-first Progressive Web App (PWA) with private localized budgeting, discretionary expense logs, monthly savings reconciliation, and subscription trial engine.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

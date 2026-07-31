@@ -48,7 +48,6 @@ import { ActiveTab, Expense, Category, MonthlyBudget } from './types';
 import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { AndroidFrame } from './components/AndroidFrame';
-import { AdMobBanner } from './components/AdMobBanner';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ContextualTipCard } from './components/ContextualTipCard';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
@@ -1892,13 +1891,13 @@ Date: ${new Date().toLocaleString()}
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
                 src={appLogo} 
-                alt="ExpenseTrack Logo" 
+                alt="LooseBudget Logo" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Expense<span className="text-emerald-400">Track</span></h1>
+              <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Loose<span className="text-emerald-400">Budget</span></h1>
             </div>
           </div>
 
@@ -1909,7 +1908,7 @@ Date: ${new Date().toLocaleString()}
                 <button
                   onClick={triggerNativeInstall}
                   className="px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40"
-                  title="Install ExpenseTrack on your device as a native standalone application"
+                  title="Install LooseBudget on your device as a native standalone application"
                 >
                   <Download size={13} className="stroke-[3]" />
                   <span>Install App 📲</span>
@@ -3872,7 +3871,7 @@ Date: ${new Date().toLocaleString()}
 
                 {/* Introductory section */}
                 <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
-                  Welcome to <strong>ExpenseTrack</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
+                  Welcome to <strong>LooseBudget</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
                 </p>
 
                 {/* Screens */}
@@ -3995,7 +3994,7 @@ Date: ${new Date().toLocaleString()}
                     </a>
                   </p>
                   <p className="text-[9.5px] text-gray-400 leading-normal">
-                    ExpenseTrack is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
+                    LooseBudget is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
                     All transactions reside <strong>strictly on your device</strong>. 
                     You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
                   </p>
@@ -4008,7 +4007,7 @@ Date: ${new Date().toLocaleString()}
                     <span>Feedback & Support</span>
                   </p>
                   <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Help us improve ExpenseTrack! Let us know if you find a bug or have an enhancement suggestion. Form drafts an email directly to the developer.
+                    Help us improve LooseBudget! Let us know if you find a bug or have an enhancement suggestion. Form drafts an email directly to the developer.
                   </p>
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
@@ -4380,12 +4379,7 @@ Date: ${new Date().toLocaleString()}
 
 
 
-        {/* Persistent bottom AdMob Slot for balanced dual-ad standard mobile layout */}
-        {showAds && (
-          <div className="bg-black/20 px-2.5 py-1.5 shrink-0 border-t border-white/5">
-            <AdMobBanner isTopAd={false} hasContent={true} />
-          </div>
-        )}
+
 
         {/* Modern Bottom Android Navigation Tab bar */}
         <div className="bg-[#0A0A0A] border-t border-white/5 px-3 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-10" id="android_nav_bar">
@@ -4487,7 +4481,7 @@ Date: ${new Date().toLocaleString()}
                 <Download size={18} />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install ExpenseTrack PWA</h3>
+                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install LooseBudget PWA</h3>
                 <p className="text-[10px] text-gray-400 mt-0.5">Add standalone App icon to your home screen or desktop launcher.</p>
               </div>
             </div>

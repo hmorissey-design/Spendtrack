@@ -1,7 +1,7 @@
 {
-  "short_name": "ExpenseTrack",
-  "name": "ExpenseTrack - Monthly Budget & Expenses",
-  "description": "Premium visual budget tracker and finance companion app.",
+  "short_name": "LooseBudget",
+  "name": "LooseBudget - Monthly Budget & Expense Reconciliation",
+  "description": "Smart, visual budget tracker and savings reconciliation companion.",
   "icons": [
     {
       "src": "icon-192.jpg",

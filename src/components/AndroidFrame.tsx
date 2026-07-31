@@ -72,7 +72,7 @@ export function AndroidFrame({ children }: AndroidFrameProps) {
               <Download size={18} />
             </div>
             <div className="text-left">
-              <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install ExpenseTrack PWA</h3>
+              <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install LooseBudget PWA</h3>
               <p className="text-[10px] text-gray-400 mt-0.5">Add standalone App icon to your home screen or desktop launcher.</p>
             </div>
           </div>

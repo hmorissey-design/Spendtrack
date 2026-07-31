@@ -1,11 +1,11 @@
 =========================================
-EXPENSETRACK - USER HELP & GUIDE text file
+LOOSEBUDGET - USER HELP & GUIDE text file
 =========================================
 
 Instructions: Feel free to edit any of the text blocks below.
 When you are done, save the file and send the text back in the chat!
 
-Welcome to ExpenseTrack! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
+Welcome to LooseBudget! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
 
 -----------------------------------------
 1. Dashboard
@@ -70,4 +70,4 @@ Note that the Description field is optional EXCEPT for Business Expenses.
 -----------------------------------------
 Privacy & Data Deletion
 -----------------------------------------
-ExpenseTrack is offline-first. We do not transfer, collect, or store your finance logs on external servers. All transactions reside strictly on your device. You can instantly erase your local files at any time from the Settings tab by clicking "Reset All Data". If you created backups in Google Drive, those files are securely held inside your personal cloud storage where you can delete them at your own discretion.
+LooseBudget is offline-first. We do not transfer, collect, or store your finance logs on external servers. All transactions reside strictly on your device. You can instantly erase your local files at any time from the Settings tab by clicking "Reset All Data". If you created backups in Google Drive, those files are securely held inside your personal cloud storage where you can delete them at your own discretion.

@@ -1,3 +1,0 @@
-# Google AdSense ads.txt
-# Real Google AdSense Publisher ID
-google.com, pub-7011980314251971, DIRECT, f08c47fec0942fa0
