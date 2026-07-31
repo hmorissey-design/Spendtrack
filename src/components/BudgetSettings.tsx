@@ -743,7 +743,7 @@ function RenderActiveDashboardLive({
   // Let's calculate category stats for rendering
   const categoryStats = useMemo(() => {
     const stats: Record<string, { total: number; limit: number; name: string; color: string }> = {};
-    categories.filter(c => c.id !== 'cat_business_expense').forEach(c => {
+    categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).forEach(c => {
       stats[c.id] = { total: 0, limit: c.limit || 0, name: c.name, color: c.color };
     });
     currentMonthExpenses.forEach(e => {
@@ -938,7 +938,7 @@ function RenderAnalyticsTrendsLive({
   // Compute pie chart data
   const pieData = useMemo(() => {
     const stats: Record<string, { total: number; name: string; color: string }> = {};
-    categories.filter(c => c.id !== 'cat_business_expense').forEach(c => {
+    categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).forEach(c => {
       stats[c.id] = { total: 0, name: c.name, color: c.color };
     });
     currentMonthExpenses.forEach(e => {
@@ -1116,7 +1116,7 @@ function RenderBudgetsCurrencyLive({
           <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#eeeeee]">Category Budgets</span>
         </div>
 
-        {categories.filter(c => c.id !== 'cat_business_expense').map((cat, idx) => (
+        {categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).map((cat, idx) => (
           <div key={idx} className="flex items-center justify-between text-[10px] bg-black/30 p-2 rounded-xl border border-white/5 leading-none">
             <div className="flex items-center gap-1.5">
               <span className="text-xs">{cat.icon === 'Utensils' ? '🍔' : cat.icon === 'ShoppingBag' ? '🛒' : cat.icon === 'Film' ? '🍿' : cat.icon === 'Car' ? '🚗' : '📁'}</span>

@@ -823,7 +823,7 @@ export default function App() {
     }
     const amount = parseFloat(newSavingsAmount) || 0;
     const targetAmount = parseFloat(newSavingsTarget) || 0;
-    const currentAmount = parseFloat(newSavingsCurrent) || 0;
+    const currentAmount = 0;
     const allocationPercent = parseFloat(newSavingsPercent) || 0;
 
     if (allocationPercent <= 0) {
@@ -3331,7 +3331,7 @@ Date: ${new Date().toLocaleString()}
           {activeTab === 'budget_full' && (() => {
             const totalIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
             const totalFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
             const totalSavings = savingsGoals.reduce((sum, item) => sum + item.amount, 0);
             const overallSurplus = totalIncome - (totalFixed + totalDiscretionary + totalSavings);
 
@@ -3716,7 +3716,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       
                       <div className="divide-y divide-white/5 space-y-1.5 pt-1">
-                        {categories.filter(c => c.id !== 'cat_business_expense').map((cat) => {
+                        {categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).map((cat) => {
                           const isBusiness = cat.id === 'cat_business_expense';
                           return (
                             <div key={cat.id} className="flex items-center justify-between pt-1.5 first:pt-0 group">
@@ -4065,7 +4065,7 @@ Date: ${new Date().toLocaleString()}
                   <div className="grid grid-cols-2 gap-3.5 pt-1">
                     <div className="p-2.5 rounded-xl bg-white/2 border border-white/5 text-left">
                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Saved</span>
-                      <span className="text-sm font-black text-pink-400 font-mono">{currencySymbol}{totalSavedAmt.toLocaleString()}</span>
+                      <span className="text-sm font-black text-pink-400 font-mono">{currencySymbol}{totalSavedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       <span className="block text-[8px] text-gray-400 mt-0.5">Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)</span>
                     </div>
 
@@ -4219,23 +4219,14 @@ Date: ${new Date().toLocaleString()}
                               />
                             </div>
 
-                            {/* Current amount input */}
+                            {/* Current amount display (Read-only: populated via Monthly Reconciliation) */}
                             <div className="flex flex-col gap-1 text-left">
-                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
-                              <DirectAmountInput 
-                                initialValue={item.currentAmount || 0}
-                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
-                                  if (x.id === item.id) {
-                                    return { 
-                                      ...x, 
-                                      currentAmount: val
-                                    };
-                                  }
-                                  return x;
-                                }))}
-                                currencySymbol={currencySymbol}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
-                              />
+                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5 flex items-center gap-1" title="Managed via Monthly Account Reconciliation">
+                                Saved <Lock size={8} className="text-pink-400/80 shrink-0" />
+                              </span>
+                              <div className="w-full px-2.5 py-1.5 bg-black/30 border border-white/5 rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300">
+                                {currencySymbol}{(item.currentAmount || 0).toFixed(2)}
+                              </div>
                             </div>
 
                             {/* Allocation percent input */}
@@ -4323,25 +4314,6 @@ Date: ${new Date().toLocaleString()}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Current Saved Amt</label>
-                        <div className="relative">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-pink-400 font-bold">{currencySymbol}</span>
-                          <input 
-                            type="number"
-                            placeholder="150"
-                            min="0"
-                            step="0.01"
-                            value={newSavingsCurrent}
-                            onChange={(e) => {
-                              setNewSavingsCurrent(e.target.value);
-                              setFormErrors(prev => ({ ...prev, savings: null }));
-                            }}
-                            className="w-full pl-5 pr-1.5 py-1.5 bg-[#121212] border border-pink-500/20 focus:border-pink-500/50 outline-none rounded-lg text-[10px] text-pink-400 font-mono text-left font-bold"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1 col-span-2">
                         <label className="text-[7.5px] text-gray-500 uppercase tracking-wider font-bold">Allocation %</label>
                         <div className="relative">
                           <input 
@@ -4745,7 +4717,7 @@ Date: ${new Date().toLocaleString()}
 
                 const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
                 const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
                 const projectedExpenses = projectedFixed + projectedDiscretionary;
 
                 const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
@@ -4850,7 +4822,7 @@ Date: ${new Date().toLocaleString()}
 
                 const projectedIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
                 const projectedFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
+                const projectedDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
                 const projectedExpenses = projectedFixed + projectedDiscretionary;
 
                 const reconciledSurplus = balancesTotal + projectedIncome - projectedExpenses;
@@ -4943,15 +4915,15 @@ Date: ${new Date().toLocaleString()}
                               <div>
                                 <span>Portion: </span>
                                 {reconciledSurplus >= 0 ? (
-                                  <strong className="text-emerald-400">+{currencySymbol}{allocatedPortion.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                  <strong className="text-emerald-400">+{currencySymbol}{allocatedPortion.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                 ) : (
-                                  <strong className="text-rose-400">-{currencySymbol}{Math.abs(allocatedPortion).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                  <strong className="text-rose-400">-{currencySymbol}{Math.abs(allocatedPortion).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                 )}
                               </div>
                               <div>
                                 <span>Balances: </span>
                                 <span className="text-gray-300">
-                                  {currencySymbol}{(item.currentAmount || 0).toLocaleString()} → <strong className="text-white font-extrabold">{currencySymbol}{updatedAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                                  {currencySymbol}{(item.currentAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → <strong className="text-white font-extrabold">{currencySymbol}{updatedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                 </span>
                               </div>
                             </div>
@@ -5143,9 +5115,9 @@ Date: ${new Date().toLocaleString()}
                         
                         // Soft browser Alert success
                         if (reconciledSurplus >= 0) {
-                          alert(`Reconciliation Successful! Distributed ${currencySymbol}${reconciledSurplus.toLocaleString(undefined, { maximumFractionDigits: 0 })} surplus across your Savings Goals!`);
+                          alert(`Reconciliation Successful! Distributed ${currencySymbol}${reconciledSurplus.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} surplus across your Savings Goals!`);
                         } else {
-                          alert(`Reconciliation Successful! Subtracted ${currencySymbol}${Math.abs(reconciledSurplus).toLocaleString(undefined, { maximumFractionDigits: 0 })} deficit from your Savings Goals!`);
+                          alert(`Reconciliation Successful! Subtracted ${currencySymbol}${Math.abs(reconciledSurplus).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} deficit from your Savings Goals!`);
                         }
                       }}
                       className={`py-2 px-4 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all border-0 ${

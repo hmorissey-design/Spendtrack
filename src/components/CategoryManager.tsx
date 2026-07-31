@@ -110,7 +110,7 @@ export function CategoryManager({
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const allCategories = useMemo(() => {
-    return LocalDb.getAllCategoriesWithLimits(currentBudget.month);
+    return LocalDb.getAllCategoriesWithLimits(currentBudget.month).filter(c => !c.id.startsWith('SAVINGS_'));
   }, [currentBudget.month, categories]);
 
   const categoryToDeleteHasHistory = useMemo(() => {
