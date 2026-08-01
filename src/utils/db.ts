@@ -4,6 +4,16 @@
  */
 
 import { Expense, Category, MonthlyBudget } from '../types';
+import { auth } from '../firebase';
+import { CloudDb } from './cloudDb';
+
+const autoSyncToCloud = () => {
+  if (auth.currentUser) {
+    CloudDb.uploadLocalDataToCloud(auth.currentUser.uid).catch(err => {
+      console.warn('Auto cloud sync background notice:', err);
+    });
+  }
+};
 
 const getLocalMonthString = () => {
   const d = new Date();
@@ -274,6 +284,7 @@ export const LocalDb = {
 
   saveExpenses(expenses: Expense[]): void {
     localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+    autoSyncToCloud();
   },
 
   addExpense(expense: Omit<Expense, 'id' | 'createdAt'>): Expense {
@@ -515,6 +526,7 @@ export const LocalDb = {
 
   saveCategories(categories: Category[]): void {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    autoSyncToCloud();
   },
 
   addCategory(category: Omit<Category, 'id'>, month?: string): Category {
@@ -750,6 +762,7 @@ export const LocalDb = {
       budgets.push(newBudget);
     }
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budgets));
+    autoSyncToCloud();
   },
 
   saveCategoryLimitForMonth(categoryId: string, limit: number, month: string): void {
@@ -790,6 +803,7 @@ export const LocalDb = {
     }
     
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budgets));
+    autoSyncToCloud();
   },
 
   // EXPORT / IMPORT (Backup functions)
@@ -851,6 +865,7 @@ export const LocalDb = {
 
   setDefaultCategoryId(id: string): void {
     localStorage.setItem(STORAGE_KEYS.DEFAULT_CATEGORY, id);
+    autoSyncToCloud();
   },
 
   getCurrencySymbol(): string {
@@ -859,5 +874,6 @@ export const LocalDb = {
 
   setCurrencySymbol(symbol: string): void {
     localStorage.setItem(STORAGE_KEYS.CURRENCY_SYMBOL, symbol);
+    autoSyncToCloud();
   }
 };

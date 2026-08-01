@@ -40,7 +40,8 @@ import {
   ArrowRight,
   ArrowLeft,
   RefreshCw,
-  Lock
+  Lock,
+  Cloud
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -52,6 +53,9 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { ContextualTipCard } from './components/ContextualTipCard';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import { CategoryManager } from './components/CategoryManager';
+import { AuthModal } from './components/AuthModal';
+import { auth, onAuthStateChanged, User } from './firebase';
+import { CloudDb } from './utils/cloudDb';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
 
 // Recharts components imports
@@ -307,6 +311,10 @@ export default function App() {
   const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
+
+  // Firebase Auth & Cloud Sync states
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Delay rendering charts slightly to let elements mount and establish positive dimensions.
   // This suppresses Recharts ResponsiveContainer warnings (width/height of -1 or 0)
@@ -1155,6 +1163,20 @@ Date: ${new Date().toLocaleString()}
     loadDatabaseState(selectedMonth);
   }, [selectedMonth]);
 
+  // Subscribe to Firebase Authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        const downloaded = await CloudDb.downloadCloudDataToLocal(user.uid);
+        if (downloaded) {
+          loadDatabaseState(selectedMonth);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   // Sync total budget target in standard MonthlyBudgets system when category limits sum changes
   const totalCalculatedLimit = useMemo(() => {
     return categories.filter(c => c.id !== 'cat_business_expense').reduce((sum, c) => sum + (c.limit || 0), 0);
@@ -1902,6 +1924,20 @@ Date: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-2 relative z-50">
+            {/* Firebase Cloud Sync Button */}
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className={`px-2.5 py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                currentUser
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
+              title={currentUser ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}` : 'Sign in for Firebase Cloud Sync'}
+            >
+              <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
+              <span className="hidden sm:inline font-sans">{currentUser ? 'Cloud Synced' : 'Cloud Sync'}</span>
+            </button>
+
             {/* Direct PWA Install or Guide Trigger */}
             {!isPwaInstalled && (
               pwaInstallable ? (
@@ -2045,6 +2081,18 @@ Date: ${new Date().toLocaleString()}
                   >
                     <RefreshCw size={14} className="stroke-[2.5] text-emerald-400" />
                     <span>Account Reconciliation 🔄</span>
+                  </button>
+
+                  {/* Firebase Cloud Sync link */}
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setShowGlobalMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <Cloud size={14} className="stroke-[2.5] text-emerald-400" />
+                    <span>Firebase Cloud Sync ☁️</span>
                   </button>
 
                   {/* Help & Guide link */}
@@ -5118,6 +5166,14 @@ Date: ${new Date().toLocaleString()}
         </div>,
         document.body
       )}
+
+      {/* Auth & Firebase Cloud Sync Modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        currentUser={currentUser}
+        onDataSynced={() => loadDatabaseState(selectedMonth)}
+      />
     </AndroidFrame>
   );
 }

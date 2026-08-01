@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDataOwner() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function isExistingDataOwner() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // User profiles
+    match /userProfiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User owned collections
+    match /expenses/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+
+    match /categories/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+
+    match /budgets/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+
+    match /incomeStreams/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+
+    match /fixedExpenses/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+
+    match /savingsGoals/{docId} {
+      allow read, delete: if isExistingDataOwner();
+      allow create: if isDataOwner();
+      allow update: if isDataOwner() && isExistingDataOwner();
+    }
+  }
+}

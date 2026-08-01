@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "expenses": {
+      "title": "Expenses",
+      "description": "User expense transactions",
+      "properties": {
+        "id": { "type": "string", "description": "Unique expense ID" },
+        "userId": { "type": "string", "description": "User ID owner of expense" },
+        "title": { "type": "string", "description": "Title or merchant name" },
+        "amount": { "type": "number", "description": "Transaction amount" },
+        "category": { "type": "string", "description": "Category ID" },
+        "date": { "type": "string", "description": "Transaction date YYYY-MM-DD" },
+        "notes": { "type": "string", "description": "Optional notes" },
+        "isRecurring": { "type": "boolean", "description": "Recurring transaction flag" },
+        "createdAt": { "type": "number", "description": "Timestamp created" }
+      },
+      "required": ["userId", "amount", "category", "date"]
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "User transaction categories",
+      "properties": {
+        "id": { "type": "string", "description": "Category ID" },
+        "userId": { "type": "string", "description": "User ID owner of category" },
+        "name": { "type": "string", "description": "Category display name" },
+        "icon": { "type": "string", "description": "Icon name from Lucide" },
+        "color": { "type": "string", "description": "Tailwind color classes" },
+        "textColor": { "type": "string", "description": "Tailwind text color class" },
+        "isDefault": { "type": "boolean", "description": "System default flag" },
+        "limit": { "type": "number", "description": "Monthly limit" },
+        "isHidden": { "type": "boolean", "description": "Hidden state flag" }
+      },
+      "required": ["userId", "name"]
+    },
+    "budgets": {
+      "title": "Budgets",
+      "description": "Monthly budget records",
+      "properties": {
+        "id": { "type": "string", "description": "Budget record ID" },
+        "userId": { "type": "string", "description": "User ID owner" },
+        "month": { "type": "string", "description": "Month string YYYY-MM" },
+        "limitAmount": { "type": "number", "description": "Total monthly budget limit" },
+        "categoryLimits": { "type": "map", "description": "Category specific budget limits" }
+      },
+      "required": ["userId", "month"]
+    },
+    "incomeStreams": {
+      "title": "Income Streams",
+      "description": "User monthly income sources",
+      "properties": {
+        "id": { "type": "string", "description": "Income stream ID" },
+        "userId": { "type": "string", "description": "User ID owner" },
+        "label": { "type": "string", "description": "Source name" },
+        "amount": { "type": "number", "description": "Income amount" },
+        "frequency": { "type": "string", "description": "Payment frequency" }
+      },
+      "required": ["userId", "label", "amount"]
+    },
+    "fixedExpenses": {
+      "title": "Fixed Expenses",
+      "description": "User fixed monthly obligations",
+      "properties": {
+        "id": { "type": "string", "description": "Fixed expense ID" },
+        "userId": { "type": "string", "description": "User ID owner" },
+        "label": { "type": "string", "description": "Expense label" },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "dueDate": { "type": "string", "description": "Monthly due date or description" }
+      },
+      "required": ["userId", "label", "amount"]
+    },
+    "savingsGoals": {
+      "title": "Savings Goals",
+      "description": "User savings targets",
+      "properties": {
+        "id": { "type": "string", "description": "Savings goal ID" },
+        "userId": { "type": "string", "description": "User ID owner" },
+        "label": { "type": "string", "description": "Goal name" },
+        "targetAmount": { "type": "number", "description": "Target amount" },
+        "currentAmount": { "type": "number", "description": "Current saved amount" },
+        "allocationPercent": { "type": "number", "description": "Reconciliation surplus allocation percentage" }
+      },
+      "required": ["userId", "label"]
+    },
+    "userProfiles": {
+      "title": "User Profiles",
+      "description": "User preferences and settings",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "currencySymbol": { "type": "string", "description": "Currency symbol ($ / € / £ / etc)" },
+        "defaultCategoryId": { "type": "string", "description": "Default category ID" },
+        "lastReconciliationMonth": { "type": "string", "description": "Last month reconciliation was run" }
+      },
+      "required": ["userId"]
+    }
+  }
+}
