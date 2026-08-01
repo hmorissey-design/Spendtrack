@@ -1237,10 +1237,10 @@ Date: ${new Date().toLocaleString()}
   }, [categories]);
 
   useEffect(() => {
-    if (currentBudget.month && totalCalculatedLimit !== currentBudget.limitAmount) {
+    if (currentBudget.month && currentBudget.limitAmount !== undefined && totalCalculatedLimit !== currentBudget.limitAmount) {
       handleUpdateBudget(totalCalculatedLimit, currentBudget.categoryLimits || {});
     }
-  }, [totalCalculatedLimit, currentBudget]);
+  }, [totalCalculatedLimit, currentBudget.month, currentBudget.limitAmount]);
 
 
 

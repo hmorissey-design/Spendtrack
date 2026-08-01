@@ -335,6 +335,25 @@ export const CloudDb = {
     }
   },
 
+  async saveBudgetToCloud(userId: string, budget: MonthlyBudget): Promise<void> {
+    if (!userId) return;
+    try {
+      const docId = `bud_${budget.month}`;
+      await setDoc(doc(db, 'budgets', docId), { ...budget, id: docId, userId }, { merge: true });
+    } catch (e) {
+      console.error('Error saving budget to cloud:', e);
+    }
+  },
+
+  async saveUserProfileToCloud(userId: string, profileData: any): Promise<void> {
+    if (!userId) return;
+    try {
+      await setDoc(doc(db, 'userProfiles', userId), { ...profileData, userId, updatedAt: Date.now() }, { merge: true });
+    } catch (e) {
+      console.error('Error saving profile data to cloud:', e);
+    }
+  },
+
   /**
    * Subscribes to real-time Firestore data changes for the authenticated user
    */
@@ -413,6 +432,67 @@ export const CloudDb = {
       console.error('Realtime budgets subscription notice:', err);
     });
     unsubscribers.push(unsubBud);
+
+    // 4. Realtime Income Streams
+    const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
+    const unsubInc = onSnapshot(incQuery, (incSnap) => {
+      const incomeStreams: any[] = [];
+      incSnap.forEach(d => {
+        const data = d.data();
+        incomeStreams.push({
+          id: data.id || d.id,
+          label: data.label,
+          amount: Number(data.amount) || 0,
+          frequency: data.frequency
+        });
+      });
+      localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
+      onUpdate();
+    }, (err) => {
+      console.error('Realtime incomeStreams subscription notice:', err);
+    });
+    unsubscribers.push(unsubInc);
+
+    // 5. Realtime Fixed Expenses
+    const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
+    const unsubFix = onSnapshot(fixQuery, (fixSnap) => {
+      const fixedExpenses: any[] = [];
+      fixSnap.forEach(d => {
+        const data = d.data();
+        fixedExpenses.push({
+          id: data.id || d.id,
+          label: data.label,
+          amount: Number(data.amount) || 0,
+          dueDate: data.dueDate
+        });
+      });
+      localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
+      onUpdate();
+    }, (err) => {
+      console.error('Realtime fixedExpenses subscription notice:', err);
+    });
+    unsubscribers.push(unsubFix);
+
+    // 6. Realtime Savings Goals
+    const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
+    const unsubSav = onSnapshot(savQuery, (savSnap) => {
+      const savingsGoals: any[] = [];
+      savSnap.forEach(d => {
+        const data = d.data();
+        savingsGoals.push({
+          id: data.id || d.id,
+          label: data.label,
+          targetAmount: Number(data.targetAmount) || 0,
+          currentAmount: Number(data.currentAmount) || 0,
+          allocationPercent: Number(data.allocationPercent) || 0
+        });
+      });
+      localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
+      onUpdate();
+    }, (err) => {
+      console.error('Realtime savingsGoals subscription notice:', err);
+    });
+    unsubscribers.push(unsubSav);
 
     return () => {
       unsubscribers.forEach(unsub => unsub());

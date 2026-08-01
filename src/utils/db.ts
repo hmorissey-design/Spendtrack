@@ -7,14 +7,6 @@ import { Expense, Category, MonthlyBudget } from '../types';
 import { auth } from '../firebase';
 import { CloudDb } from './cloudDb';
 
-const autoSyncToCloud = () => {
-  if (auth.currentUser) {
-    CloudDb.uploadLocalDataToCloud(auth.currentUser.uid).catch(err => {
-      console.warn('Auto cloud sync background notice:', err);
-    });
-  }
-};
-
 const getLocalMonthString = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -284,7 +276,6 @@ export const LocalDb = {
 
   saveExpenses(expenses: Expense[]): void {
     localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
-    autoSyncToCloud();
   },
 
   addExpense(expense: Omit<Expense, 'id' | 'createdAt'>): Expense {
@@ -296,6 +287,9 @@ export const LocalDb = {
     };
     expenses.unshift(newExpense); // Insert new expense first
     this.saveExpenses(expenses);
+    if (auth.currentUser) {
+      CloudDb.saveExpenseToCloud(auth.currentUser.uid, newExpense).catch(e => console.error('Cloud save expense error:', e));
+    }
     return newExpense;
   },
 
@@ -314,6 +308,9 @@ export const LocalDb = {
     if (index !== -1) {
       expenses[index] = updatedExpense;
       this.saveExpenses(expenses);
+      if (auth.currentUser) {
+        CloudDb.saveExpenseToCloud(auth.currentUser.uid, updatedExpense).catch(e => console.error('Cloud save expense error:', e));
+      }
     }
   },
 
@@ -529,7 +526,6 @@ export const LocalDb = {
 
   saveCategories(categories: Category[]): void {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-    autoSyncToCloud();
   },
 
   addCategory(category: Omit<Category, 'id'>, month?: string): Category {
@@ -541,6 +537,9 @@ export const LocalDb = {
     };
     categories.push(newCategory);
     this.saveCategories(categories);
+    if (auth.currentUser) {
+      CloudDb.saveCategoryToCloud(auth.currentUser.uid, newCategory).catch(e => console.error('Cloud add category error:', e));
+    }
     
     if (month) {
       this.saveCategoryLimitForMonth(newCategory.id, newCategory.limit, month);
@@ -557,6 +556,9 @@ export const LocalDb = {
         limit: month ? (categories[index].limit ?? 0) : (updatedCategory.limit !== undefined ? updatedCategory.limit : 0)
       };
       this.saveCategories(categories);
+      if (auth.currentUser) {
+        CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).catch(e => console.error('Cloud update category error:', e));
+      }
     }
     
     if (month) {
@@ -585,6 +587,9 @@ export const LocalDb = {
           isHidden: true
         };
         this.saveCategories(categories);
+        if (auth.currentUser) {
+          CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).catch(e => console.error('Cloud hide category error:', e));
+        }
       }
     } else {
       // No history, we can safely delete it completely
@@ -768,7 +773,9 @@ export const LocalDb = {
       budgets.push(newBudget);
     }
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budgets));
-    autoSyncToCloud();
+    if (auth.currentUser) {
+      CloudDb.saveBudgetToCloud(auth.currentUser.uid, newBudget).catch(e => console.error('Cloud save budget error:', e));
+    }
   },
 
   saveCategoryLimitForMonth(categoryId: string, limit: number, month: string): void {
@@ -809,7 +816,12 @@ export const LocalDb = {
     }
     
     localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budgets));
-    autoSyncToCloud();
+    if (auth.currentUser) {
+      const targetBud = budgets.find(b => b.month === month);
+      if (targetBud) {
+        CloudDb.saveBudgetToCloud(auth.currentUser.uid, targetBud).catch(e => console.error('Cloud save category limit budget error:', e));
+      }
+    }
   },
 
   // EXPORT / IMPORT (Backup functions)
@@ -871,7 +883,9 @@ export const LocalDb = {
 
   setDefaultCategoryId(id: string): void {
     localStorage.setItem(STORAGE_KEYS.DEFAULT_CATEGORY, id);
-    autoSyncToCloud();
+    if (auth.currentUser) {
+      CloudDb.saveUserProfileToCloud(auth.currentUser.uid, { defaultCategoryId: id }).catch(e => console.error(e));
+    }
   },
 
   getCurrencySymbol(): string {
@@ -880,6 +894,8 @@ export const LocalDb = {
 
   setCurrencySymbol(symbol: string): void {
     localStorage.setItem(STORAGE_KEYS.CURRENCY_SYMBOL, symbol);
-    autoSyncToCloud();
+    if (auth.currentUser) {
+      CloudDb.saveUserProfileToCloud(auth.currentUser.uid, { currencySymbol: symbol }).catch(e => console.error(e));
+    }
   }
 };
