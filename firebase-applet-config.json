@@ -1,12 +1,8 @@
 {
-  "projectId": "genuine-zephyr-m53sn",
-  "appId": "1:211872510227:web:012e36bf92a912fe0b2ae6",
-  "apiKey": "AIzaSyCIPWMl5MsU5BHcr3REZrlA1i_hIH-81KU",
-  "authDomain": "genuine-zephyr-m53sn.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-personalfinanceb-37b17315-666b-47cb-9be2-b39c4f2d43f8",
-  "storageBucket": "genuine-zephyr-m53sn.firebasestorage.app",
-  "messagingSenderId": "211872510227",
-  "measurementId": "",
-  "oAuthClientId": "211872510227-sc0tmpjccquvtej40f3lepl4fg2qks9n.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
+  "projectId": "loosebudget-5edf8",
+  "appId": "1:410589318670:web:a4f3dc80c87e6d86e9365f",
+  "apiKey": "AIzaSyAivYrsocXyLbqxa3ZC0UhTPRRAk0ul89I",
+  "authDomain": "loosebudget-5edf8.firebaseapp.com",
+  "storageBucket": "loosebudget-5edf8.firebasestorage.app",
+  "messagingSenderId": "410589318670"
 }

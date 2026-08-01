@@ -48,7 +48,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     } catch (error: any) {
       console.error('Sign-in error:', error);
-      setStatusMessage(`Sign in failed: ${error.message || 'Unknown error'}`);
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+        setStatusMessage('Domain not authorized in Firebase Console yet. Add "spendtrack-ten.vercel.app" under Firebase Auth -> Settings -> Authorized domains.');
+      } else {
+        setStatusMessage(`Sign in failed: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +73,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     } catch (error: any) {
       console.error('Guest auth error:', error);
-      setStatusMessage(`Guest sign-in failed: ${error.message}`);
+      if (error.code === 'auth/admin-restricted-operation' || error.message?.includes('admin-restricted-operation')) {
+        setStatusMessage('Anonymous Auth is disabled in Firebase Console. Enable "Anonymous" under Sign-in providers in Firebase Console.');
+      } else {
+        setStatusMessage(`Guest sign-in failed: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
