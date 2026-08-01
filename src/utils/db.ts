@@ -303,6 +303,9 @@ export const LocalDb = {
     const expenses = this.getExpenses();
     const filtered = expenses.filter(e => e.id !== id);
     this.saveExpenses(filtered);
+    if (auth.currentUser) {
+      CloudDb.deleteExpenseFromCloud(auth.currentUser.uid, id).catch(e => console.error('Cloud delete expense error:', e));
+    }
   },
 
   updateExpense(updatedExpense: Expense): void {
@@ -587,6 +590,9 @@ export const LocalDb = {
       // No history, we can safely delete it completely
       const filtered = categories.filter(c => c.id !== id);
       this.saveCategories(filtered);
+      if (auth.currentUser) {
+        CloudDb.deleteCategoryFromCloud(auth.currentUser.uid, id).catch(e => console.error('Cloud delete category error:', e));
+      }
     }
   },
 

@@ -768,8 +768,22 @@ export default function App() {
     setIncomeStreams(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
   };
 
+  const refreshPlannerStatesFromStorage = () => {
+    try {
+      const incStr = localStorage.getItem('expensetrack_income_streams');
+      if (incStr) setIncomeStreams(JSON.parse(incStr));
+      const fixStr = localStorage.getItem('expensetrack_fixed_expenses');
+      if (fixStr) setFixedExpenses(JSON.parse(fixStr));
+      const savStr = localStorage.getItem('expensetrack_savings_goals');
+      if (savStr) setSavingsGoals(JSON.parse(savStr));
+    } catch (e) {}
+  };
+
   const handleDeleteIncomeStream = (id: string) => {
     setIncomeStreams(prev => prev.filter(item => item.id !== id));
+    if (currentUser) {
+      CloudDb.deleteIncomeStreamFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    }
   };
 
   const handleAddIncomeStream = (e: React.FormEvent) => {
@@ -859,10 +873,16 @@ export default function App() {
 
   const handleDeleteFixedExpense = (id: string) => {
     setFixedExpenses(prev => prev.filter(item => item.id !== id));
+    if (currentUser) {
+      CloudDb.deleteFixedExpenseFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    }
   };
 
   const handleDeleteSavingsGoal = (id: string) => {
     setSavingsGoals(prev => prev.filter(item => item.id !== id));
+    if (currentUser) {
+      CloudDb.deleteSavingsGoalFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    }
   };
 
   const handleAddDiscretionaryCategory = (e: React.FormEvent) => {
@@ -1163,19 +1183,53 @@ Date: ${new Date().toLocaleString()}
     loadDatabaseState(selectedMonth);
   }, [selectedMonth]);
 
-  // Subscribe to Firebase Authentication state changes
+  // Subscribe to Firebase Authentication state changes & Realtime Cloud Sync
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubRealtime: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      if (unsubRealtime) {
+        unsubRealtime();
+        unsubRealtime = null;
+      }
+
       if (user) {
+        // Initial download from cloud to local
         const downloaded = await CloudDb.downloadCloudDataToLocal(user.uid);
         if (downloaded) {
           loadDatabaseState(selectedMonth);
+          refreshPlannerStatesFromStorage();
         }
+
+        // Subscribe to real-time changes across devices
+        unsubRealtime = CloudDb.subscribeToCloudData(user.uid, () => {
+          loadDatabaseState(selectedMonth);
+          refreshPlannerStatesFromStorage();
+        });
       }
     });
-    return () => unsubscribe();
-  }, []);
+
+    const handleFocusOrVisible = async () => {
+      if (auth.currentUser) {
+        const downloaded = await CloudDb.downloadCloudDataToLocal(auth.currentUser.uid);
+        if (downloaded) {
+          loadDatabaseState(selectedMonth);
+          refreshPlannerStatesFromStorage();
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubRealtime) unsubRealtime();
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+    };
+  }, [selectedMonth]);
 
   // Sync total budget target in standard MonthlyBudgets system when category limits sum changes
   const totalCalculatedLimit = useMemo(() => {

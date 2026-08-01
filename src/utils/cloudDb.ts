@@ -129,23 +129,21 @@ export const CloudDb = {
       // 2. Fetch Expenses
       const expQuery = query(collection(db, 'expenses'), where('userId', '==', userId));
       const expSnap = await getDocs(expQuery);
-      if (!expSnap.empty) {
-        const expenses: Expense[] = [];
-        expSnap.forEach(d => {
-          const data = d.data();
-          expenses.push({
-            id: data.id || d.id,
-            amount: Number(data.amount) || 0,
-            category: data.category || 'cat_uncategorized',
-            date: data.date || '',
-            note: data.note || data.title || '',
-            paymentMethod: data.paymentMethod || 'card',
-            createdAt: data.createdAt || Date.now()
-          });
+      const expenses: Expense[] = [];
+      expSnap.forEach(d => {
+        const data = d.data();
+        expenses.push({
+          id: data.id || d.id,
+          amount: Number(data.amount) || 0,
+          category: data.category || 'cat_uncategorized',
+          date: data.date || '',
+          note: data.note || data.title || '',
+          paymentMethod: data.paymentMethod || 'card',
+          createdAt: data.createdAt || Date.now()
         });
-        expenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
-      }
+      });
+      expenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
 
       // 3. Fetch Categories
       const catQuery = query(collection(db, 'categories'), where('userId', '==', userId));
@@ -187,52 +185,52 @@ export const CloudDb = {
       // 5. Fetch Income Streams
       const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
       const incSnap = await getDocs(incQuery);
-      if (!incSnap.empty) {
-        const incomeStreams: any[] = [];
-        incSnap.forEach(d => {
-          const data = d.data();
-          incomeStreams.push({
-            id: data.id || d.id,
-            label: data.label,
-            amount: Number(data.amount) || 0,
-            frequency: data.frequency
-          });
+      const incomeStreams: any[] = [];
+      incSnap.forEach(d => {
+        const data = d.data();
+        incomeStreams.push({
+          id: data.id || d.id,
+          label: data.label,
+          amount: Number(data.amount) || 0,
+          frequency: data.frequency
         });
+      });
+      if (!incSnap.empty) {
         localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
       }
 
       // 6. Fetch Fixed Expenses
       const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
       const fixSnap = await getDocs(fixQuery);
-      if (!fixSnap.empty) {
-        const fixedExpenses: any[] = [];
-        fixSnap.forEach(d => {
-          const data = d.data();
-          fixedExpenses.push({
-            id: data.id || d.id,
-            label: data.label,
-            amount: Number(data.amount) || 0,
-            dueDate: data.dueDate
-          });
+      const fixedExpenses: any[] = [];
+      fixSnap.forEach(d => {
+        const data = d.data();
+        fixedExpenses.push({
+          id: data.id || d.id,
+          label: data.label,
+          amount: Number(data.amount) || 0,
+          dueDate: data.dueDate
         });
+      });
+      if (!fixSnap.empty) {
         localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
       }
 
       // 7. Fetch Savings Goals
       const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
       const savSnap = await getDocs(savQuery);
-      if (!savSnap.empty) {
-        const savingsGoals: any[] = [];
-        savSnap.forEach(d => {
-          const data = d.data();
-          savingsGoals.push({
-            id: data.id || d.id,
-            label: data.label,
-            targetAmount: Number(data.targetAmount) || 0,
-            currentAmount: Number(data.currentAmount) || 0,
-            allocationPercent: Number(data.allocationPercent) || 0
-          });
+      const savingsGoals: any[] = [];
+      savSnap.forEach(d => {
+        const data = d.data();
+        savingsGoals.push({
+          id: data.id || d.id,
+          label: data.label,
+          targetAmount: Number(data.targetAmount) || 0,
+          currentAmount: Number(data.currentAmount) || 0,
+          allocationPercent: Number(data.allocationPercent) || 0
         });
+      });
+      if (!savSnap.empty) {
         localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
       }
 
@@ -274,12 +272,30 @@ export const CloudDb = {
     }
   },
 
+  async deleteCategoryFromCloud(userId: string, categoryId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      await deleteDoc(doc(db, 'categories', categoryId));
+    } catch (e) {
+      console.error('Error deleting category from cloud:', e);
+    }
+  },
+
   async saveSavingsGoalToCloud(userId: string, goal: any): Promise<void> {
     if (!userId) return;
     try {
       await setDoc(doc(db, 'savingsGoals', goal.id), { ...goal, userId }, { merge: true });
     } catch (e) {
       console.error('Error saving goal to cloud:', e);
+    }
+  },
+
+  async deleteSavingsGoalFromCloud(userId: string, goalId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      await deleteDoc(doc(db, 'savingsGoals', goalId));
+    } catch (e) {
+      console.error('Error deleting savings goal from cloud:', e);
     }
   },
 
@@ -292,6 +308,15 @@ export const CloudDb = {
     }
   },
 
+  async deleteIncomeStreamFromCloud(userId: string, streamId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      await deleteDoc(doc(db, 'incomeStreams', streamId));
+    } catch (e) {
+      console.error('Error deleting income stream from cloud:', e);
+    }
+  },
+
   async saveFixedExpenseToCloud(userId: string, fixedExp: any): Promise<void> {
     if (!userId) return;
     try {
@@ -299,5 +324,98 @@ export const CloudDb = {
     } catch (e) {
       console.error('Error saving fixed expense to cloud:', e);
     }
+  },
+
+  async deleteFixedExpenseFromCloud(userId: string, fixedId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      await deleteDoc(doc(db, 'fixedExpenses', fixedId));
+    } catch (e) {
+      console.error('Error deleting fixed expense from cloud:', e);
+    }
+  },
+
+  /**
+   * Subscribes to real-time Firestore data changes for the authenticated user
+   */
+  subscribeToCloudData(userId: string, onUpdate: () => void): () => void {
+    if (!userId) return () => {};
+
+    const unsubscribers: (() => void)[] = [];
+
+    // 1. Realtime Expenses
+    const expQuery = query(collection(db, 'expenses'), where('userId', '==', userId));
+    const unsubExp = onSnapshot(expQuery, (expSnap) => {
+      const expenses: Expense[] = [];
+      expSnap.forEach(d => {
+        const data = d.data();
+        expenses.push({
+          id: data.id || d.id,
+          amount: Number(data.amount) || 0,
+          category: data.category || 'cat_uncategorized',
+          date: data.date || '',
+          note: data.note || data.title || '',
+          paymentMethod: data.paymentMethod || 'card',
+          createdAt: data.createdAt || Date.now()
+        });
+      });
+      expenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
+      onUpdate();
+    }, (err) => {
+      console.error('Realtime expenses subscription notice:', err);
+    });
+    unsubscribers.push(unsubExp);
+
+    // 2. Realtime Categories
+    const catQuery = query(collection(db, 'categories'), where('userId', '==', userId));
+    const unsubCat = onSnapshot(catQuery, (catSnap) => {
+      if (!catSnap.empty) {
+        const categories: Category[] = [];
+        catSnap.forEach(d => {
+          const data = d.data();
+          categories.push({
+            id: data.id || d.id,
+            name: data.name || '',
+            icon: data.icon || 'Tag',
+            color: data.color || '',
+            textColor: data.textColor || '',
+            isDefault: !!data.isDefault,
+            limit: Number(data.limit) || 0,
+            isHidden: !!data.isHidden
+          });
+        });
+        localStorage.setItem('personal_finance_app_categories', JSON.stringify(categories));
+        onUpdate();
+      }
+    }, (err) => {
+      console.error('Realtime categories subscription notice:', err);
+    });
+    unsubscribers.push(unsubCat);
+
+    // 3. Realtime Budgets
+    const budQuery = query(collection(db, 'budgets'), where('userId', '==', userId));
+    const unsubBud = onSnapshot(budQuery, (budSnap) => {
+      if (!budSnap.empty) {
+        const budgets: MonthlyBudget[] = [];
+        budSnap.forEach(d => {
+          const data = d.data();
+          budgets.push({
+            month: data.month,
+            limitAmount: Number(data.limitAmount) || 0,
+            categoryLimits: data.categoryLimits || {}
+          });
+        });
+        localStorage.setItem('personal_finance_app_budget', JSON.stringify(budgets));
+        onUpdate();
+      }
+    }, (err) => {
+      console.error('Realtime budgets subscription notice:', err);
+    });
+    unsubscribers.push(unsubBud);
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
   }
 };
