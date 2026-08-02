@@ -324,6 +324,9 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
+  // Derived Demo Mode flag
+  const isDemoMode = !subscriptionState.isSubscribed && (subscriptionState.tier === 'free_preview' || subscriptionState.status === 'preview');
+
   // Auto-check trial expiration on app boot & handle payment redirect back from Lemon Squeezy
   useEffect(() => {
     // 1. Check for payment return query params
@@ -2029,22 +2032,38 @@ Date: ${new Date().toLocaleString()}
                   ? 'PRO'
                   : subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
                     ? `$1 Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)`
-                    : 'Free Plan'}
+                    : 'Demo Mode'}
               </span>
             </button>
 
             {/* Firebase Cloud Sync Button */}
             <button
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => {
+                if (isDemoMode) {
+                  setShowSubscriptionModal(true);
+                } else {
+                  setShowAuthModal(true);
+                }
+              }}
               className={`px-2.5 py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
-                currentUser
+                isDemoMode
+                  ? 'bg-gray-800/40 border-gray-700/50 text-gray-400 hover:text-gray-200 opacity-70'
+                  : currentUser
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                   : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
               }`}
-              title={currentUser ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}` : 'Sign in for Firebase Cloud Sync'}
+              title={
+                isDemoMode
+                  ? 'Cloud Sync is disabled in Demo Mode. Tap to start $1 trial and enable cloud backup.'
+                  : currentUser
+                  ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}`
+                  : 'Sign in for Firebase Cloud Sync'
+              }
             >
-              <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
-              <span className="hidden sm:inline font-sans">{currentUser ? 'Cloud Synced' : 'Cloud Sync'}</span>
+              <Cloud size={13} className={isDemoMode ? 'text-gray-400' : currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
+              <span className="hidden sm:inline font-sans">
+                {isDemoMode ? 'Cloud Sync (Disabled)' : currentUser ? 'Cloud Synced' : 'Cloud Sync'}
+              </span>
             </button>
 
             {/* Direct PWA Install or Guide Trigger */}
@@ -2195,13 +2214,28 @@ Date: ${new Date().toLocaleString()}
                   {/* Firebase Cloud Sync link */}
                   <button
                     onClick={() => {
-                      setShowAuthModal(true);
+                      if (isDemoMode) {
+                        setShowSubscriptionModal(true);
+                      } else {
+                        setShowAuthModal(true);
+                      }
                       setShowGlobalMenu(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
+                      isDemoMode
+                        ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                        : 'text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10'
+                    }`}
                   >
-                    <Cloud size={14} className="stroke-[2.5] text-emerald-400" />
-                    <span>Firebase Cloud Sync ☁️</span>
+                    <div className="flex items-center gap-2.5">
+                      <Cloud size={14} className={`stroke-[2.5] ${isDemoMode ? 'text-gray-400' : 'text-emerald-400'}`} />
+                      <span>Firebase Cloud Sync ☁️</span>
+                    </div>
+                    {isDemoMode && (
+                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                        Requires $1 Trial
+                      </span>
+                    )}
                   </button>
 
                   {/* Subscription & Billing link */}
@@ -2269,14 +2303,43 @@ Date: ${new Date().toLocaleString()}
           </div>
         </div>
 
-        {/* Contextual Savings & Budget Tip Card */}
+        {/* Contextual Savings & Budget Tip Card OR Demo Mode Announcement Banner */}
         <div className="px-3 pt-1.5 pb-0.5 shrink-0">
-          <ContextualTipCard 
-            expenses={expenses}
-            categories={categories}
-            totalBudget={totals.limit}
-            totalSpent={totals.totalSpent}
-          />
+          {!subscriptionState.isSubscribed && (subscriptionState.tier === 'free_preview' || subscriptionState.status === 'preview') ? (
+            <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-amber-500/10 border border-amber-500/30 rounded-2xl p-3 sm:p-3.5 shadow-lg backdrop-blur-md">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-300 mt-0.5">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                        Demo Mode
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                      👋 <strong>You're in Demo Mode</strong> — explore freely! Feel free to click around and try every feature, but heads up: nothing you enter will be saved. Ready to save your work? Start your fully-featured 30-day trial for just $1 — tap the button above!
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles size={14} className="fill-slate-950" />
+                  <span>Start $1 Trial</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <ContextualTipCard 
+              expenses={expenses}
+              categories={categories}
+              totalBudget={totals.limit}
+              totalSpent={totals.totalSpent}
+            />
+          )}
         </div>
 
         {/* Primary Screen Scrollable Frame */}

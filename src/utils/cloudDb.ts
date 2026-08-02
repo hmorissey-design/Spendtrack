@@ -14,6 +14,28 @@ import {
 } from '../firebase';
 import { Expense, Category, MonthlyBudget } from '../types';
 import { LocalDb } from './db';
+import { SubscriptionManager } from './subscription';
+
+/**
+ * Helper to recursively remove keys with undefined values
+ * Firestore throws an error if an object passed to setDoc contains undefined properties.
+ */
+function cleanUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(cleanUndefined) as unknown as T;
+  }
+  if (typeof obj === 'object') {
+    const cleaned: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanUndefined(value);
+      }
+    }
+    return cleaned as T;
+  }
+  return obj;
+}
 
 export const CloudDb = {
   /**
@@ -34,13 +56,15 @@ export const CloudDb = {
       const lastReconciliationMonth = localStorage.getItem('last_reconciliation_month') || '';
 
       // 1. User profile doc
-      await setDoc(doc(db, 'userProfiles', userId), {
+      const currentSubState = SubscriptionManager.getSubscriptionState();
+      await setDoc(doc(db, 'userProfiles', userId), cleanUndefined({
         userId,
         currencySymbol,
         defaultCategoryId,
         lastReconciliationMonth,
+        subscription: currentSubState,
         updatedAt: Date.now()
-      }, { merge: true });
+      }), { merge: true });
 
       // 2. Upload Expenses
       const expBatch = writeBatch(db);
@@ -124,6 +148,9 @@ export const CloudDb = {
         if (pData.currencySymbol) LocalDb.setCurrencySymbol(pData.currencySymbol);
         if (pData.defaultCategoryId) LocalDb.setDefaultCategoryId(pData.defaultCategoryId);
         if (pData.lastReconciliationMonth) localStorage.setItem('last_reconciliation_month', pData.lastReconciliationMonth);
+        if (pData.subscription) {
+          SubscriptionManager.saveSubscriptionState(pData.subscription);
+        }
       }
 
       // 2. Fetch Expenses
@@ -348,7 +375,8 @@ export const CloudDb = {
   async saveUserProfileToCloud(userId: string, profileData: any): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'userProfiles', userId), { ...profileData, userId, updatedAt: Date.now() }, { merge: true });
+      const payload = cleanUndefined({ ...profileData, userId, updatedAt: Date.now() });
+      await setDoc(doc(db, 'userProfiles', userId), payload, { merge: true });
     } catch (e) {
       console.error('Error saving profile data to cloud:', e);
     }
