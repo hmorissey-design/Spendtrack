@@ -1,75 +1,111 @@
 # 🚀 LooseBudget (`loosebudget.com`) - Production Deployment, Subscription & PWA Roadmap
 
-> **Note for Future Reference:** This document details the step-by-step rollout plan for launching LooseBudget on `loosebudget.com`, including the 35-day free trial, subscription plans, PWA phone installation, and DreamHost domain setup.
+> **Note for Future Reference:** This document details the step-by-step rollout plan for launching LooseBudget on `app.loosebudget.com`, including the $1.00 30-day trial, subscription plans, PWA phone installation, and DreamHost domain setup.
 
 ---
 
 ## 📅 Step-by-Step Rollout Order
 
-### **Step 1: Domain & Hosting Setup (`loosebudget.com`)**
-1. **Host Frontend:** Deploy code to **Vercel** or **Google Cloud Run** connected directly to your GitHub repo.
-2. **DreamHost DNS Configuration:**
-   * **Option A (Main Domain):** Set up `A` / `CNAME` records in DreamHost for `loosebudget.com` pointing to Vercel/Cloud Run.
-   * **Option B (App Subdomain - Recommended for web + app structure):** Set `app.loosebudget.com` via `CNAME` pointing to Vercel (`cname.vercel-dns.com`).
-3. **Verify SSL:** Ensure HTTPS is active (Vercel automatically issues free SSL certificates).
+### **Step 1: Domain & Hosting Setup (`app.loosebudget.com`)**
+1. **Host Frontend:** GitHub source connected to Vercel or Google Cloud Run.
+2. **DreamHost DNS Configuration (COMPLETED):**
+   * `app.loosebudget.com` CNAME record added in DreamHost and fully active.
+3. **Verify SSL:** HTTPS active for secure multi-device usage.
 
 ---
 
-## 🔒 Step 2: Authentication & 35-Day Free Trial Logic
-1. **Firebase / Auth Provider Integration:**
-   * Users register when first opening the app (e.g., Email/Password or Google Sign-In).
+## 🔒 Step 2: Authentication & Subscription Model
+1. **Firebase Auth Integration:**
+   * Firebase Authentication & Cloud Storage enable continuous cross-device sync.
 2. **Persistent Login Sessions:**
-   * Store JWT / auth tokens in persistent storage (IndexedDB / LocalStorage) so users **stay logged in indefinitely** on their phone unless they explicitly log out or change devices.
-3. **35-Day Trial Engine:**
-   * On registration, set `trialStartDate = now()`.
-   * Grant 35 full days of access (allows user to track 1 full calendar month + perform end-of-month savings reconciliation).
-   * Display a subtle banner showing trial status (e.g., "Trial: 22 days left").
+   * Persistent storage keeps users logged in seamlessly on phone and desktop.
+3. **$1.00 30-Day Trial Engine:**
+   * Users purchase/activate the $1.00 30-day trial via Lemon Squeezy.
+   * Grants 30 full days of active cloud syncing and multi-device access.
 
 ---
 
 ## 💳 Step 3: Subscription & Billing Integration (Lemon Squeezy)
-1. **Configure Merchant of Record (Lemon Squeezy):**
-   * Set up products & tax settings (handles GST/HST/VAT automatically).
+1. **Merchant of Record (Lemon Squeezy):**
+   * Handles global taxes (Canadian GST/HST, US state sales tax, EU VAT) and subscriptions.
    * **Tier Options:**
-     * **Monthly Subscription** (e.g., $4.99/mo)
-     * **Yearly Subscription** (e.g., $39.99/yr)
-     * **Lifetime License** (e.g., $99 one-time)
-2. **Post-Trial Paywall Gate:**
-   * When `currentDate > trialStartDate + 35 days` and `user.isSubscribed === false`, show the subscription modal.
-3. **Webhook Sync:**
-   * Connect Lemon Squeezy webhooks to mark `user.isSubscribed = true` in Firestore/Database upon purchase.
+     * **30-Day Trial:** $1.00 one-time
+     * **Monthly Plan:** $1.99 / month
+     * **Yearly Plan:** $14.99 / year (Save 37%)
+2. **Paywall Gate:**
+   * Users on Free Preview can view features locally. Upgrading or starting the $1 trial via Lemon Squeezy activates full multi-device cloud synchronization.
 
 ---
 
 ## 📱 Step 4: Phone App Experience (PWA & Installation)
 1. **Web-Based PWA Distribution:**
-   * Users navigate to `loosebudget.com` (or `app.loosebudget.com`) on iOS Safari or Android Chrome.
-2. **Install Prompt:**
-   * Android Chrome shows the **"Install App"** prompt directly or via the app's in-ui **Install App** button.
-   * iOS Safari users tap **Share → Add to Home Screen**.
+   * Users visit `app.loosebudget.com` on mobile/desktop.
+2. **Install Prompt (COMPLETED & VERIFIED):**
+   * PWA manifest & service worker enable 1-click **Install App** / **Add to Home Screen**.
 3. **Standalone App Feel:**
-   * Opens full-screen without browser URL bars, works offline, and keeps the user signed in continuously.
+   * Launches full-screen without browser address bars, caches assets offline, and retains state across launches.
 
 ---
 
 ## 📋 Execution Checklist
 
-- [ ] Connect GitHub repo to Vercel / Cloud Run
-- [ ] Configure DreamHost DNS for `loosebudget.com` / `app.loosebudget.com`
-- [ ] Enable Firebase Auth / Persistent Session token storage
-- [ ] Implement 35-day trial expiration counter & database field
-- [ ] Set up Lemon Squeezy subscription products (Monthly, Annual, Lifetime)
-- [ ] Add post-trial Paywall overlay triggered on Day 36
-- [ ] Test PWA "Add to Home Screen" & offline caching on iOS and Android
+- [x] Configure DreamHost CNAME DNS for `app.loosebudget.com` (Working & Verified)
+- [x] Test PWA "Add to Home Screen" & standalone phone installation (Working & Verified)
+- [x] Implement Lemon Squeezy tier options ($1.00 Trial, $1.99/mo, $14.99/yr)
+- [x] Integrate Firebase Auth & Cloud Firestore profile sync
+- [x] Configure Post-Trial / Subscription Paywall Modal
+- [ ] Paste production Lemon Squeezy Product Checkout URLs into environment variables (`.env` / Vercel secrets)
 
 ---
 
-## ❓ Frequently Asked Questions
+## 🍋 Detailed Lemon Squeezy Account Setup Walkthrough
 
-### **Is "Add to Home Screen" the same as the "Install App" button in the app?**
-**Yes, conceptually they achieve the exact same result!**
+### **Phase 1: Account Creation & Store Approval (5–10 Minutes)**
+1. Go to [lemonsqueezy.com](https://www.lemonsqueezy.com/) and click **Get Started** or **Sign Up**.
+2. **Create Your Account:** Enter your email (`Hmorissey@gmail.com`) and create a secure password.
+3. **Store Setup:**
+   * **Store Name:** Set to `LooseBudget` or `LooseBudget Apps`.
+   * **Store URL:** This will generate your store link (e.g. `loosebudget.lemonsqueezy.com`).
+4. **Activate Store:**
+   * Lemon Squeezy will ask for basic business/payout details (your legal name/business entity, home/business address, and banking info for payouts).
+   * **Merchant of Record Advantage:** You don't need tax registration numbers in Canada/US/EU — Lemon Squeezy handles GST/HST/VAT tax collection and remittance automatically under their MOR umbrella!
 
-* **On Android / Chrome:** When the browser supports PWA installation, clicking the in-app **Install App** button triggers Chrome's native install dialog. Accepting it creates a standalone app icon on the Android home screen/app drawer.
-* **On iOS / Safari (iPhone/iPad):** Apple restricts websites from automatically triggering an install modal with code. The in-app **Install App** button on iPhone opens a clean guide instructing the user to tap Safari's **Share** icon and select **"Add to Home Screen"**.
-* **Result in both cases:** The app runs as a **standalone, full-screen app** without browser address bars, loads quickly from offline cache, and keeps user credentials saved across app launches.
+---
+
+### **Phase 2: Creating Your 3 LooseBudget Products (COMPLETED)**
+All 3 products are now created in Lemon Squeezy and linked to the app:
+
+1. **Product 1: $1.00 30-Day Trial (CREATED & LINKED)**
+   * **Name:** `LooseBudget - $1 Trial (30 Days)`
+   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/6a55af9b-b545-40bd-a55d-9e55022abc6b`
+   * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=trial`
+
+2. **Product 2: $1.99 / Month Subscription (CREATED & LINKED)**
+   * **Name:** `Regular MonthlySubscription to LooseBudget`
+   * **Pricing:** **$1.99 USD** / month (Recurring subscription).
+   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/82e0d56b-82f8-42d5-88c4-44c547f540d6`
+   * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=monthly`
+
+3. **Product 3: $14.99 / Year Subscription (CREATED & LINKED)**
+   * **Name:** `37% discount - Annual subscription to LooseBudget`
+   * **Pricing:** **$14.99 USD** / year (Recurring subscription).
+   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/0be2aa11-aecf-4a78-8d2c-9e66317ab504`
+   * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=yearly`
+
+---
+
+### **Phase 3: Connecting Your Checkout Links to LooseBudget**
+Once created, click **Share / Copy Checkout Link** on each product in Lemon Squeezy. You'll get 3 checkout URLs looking like:
+`https://loosebudget.lemonsqueezy.com/buy/12345678-abcd-...`
+
+Add these 3 URLs to your deployment environment variables (e.g., in Vercel or `.env`):
+```env
+VITE_LEMON_SQUEEZY_TRIAL_URL="https://loosebudget.lemonsqueezy.com/buy/YOUR_TRIAL_VARIANT_ID"
+VITE_LEMON_SQUEEZY_MONTHLY_URL="https://loosebudget.lemonsqueezy.com/buy/YOUR_MONTHLY_VARIANT_ID"
+VITE_LEMON_SQUEEZY_YEARLY_URL="https://loosebudget.lemonsqueezy.com/buy/YOUR_YEARLY_VARIANT_ID"
+VITE_LEMON_SQUEEZY_STORE_URL="https://loosebudget.lemonsqueezy.com/my-orders"
+```
+When a user taps **"Activate $1.00 Trial"**, **"Get Monthly"**, or **"Get Yearly"** in LooseBudget, it opens their secure checkout instantly!
+
+
 

@@ -45,15 +45,17 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
-import { ActiveTab, Expense, Category, MonthlyBudget } from './types';
+import { ActiveTab, Expense, Category, MonthlyBudget, SubscriptionState } from './types';
 import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
+import { SubscriptionManager } from './utils/subscription';
 import { AndroidFrame } from './components/AndroidFrame';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ContextualTipCard } from './components/ContextualTipCard';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import { CategoryManager } from './components/CategoryManager';
 import { AuthModal } from './components/AuthModal';
+import { SubscriptionModal } from './components/SubscriptionModal';
 import { auth, onAuthStateChanged, User } from './firebase';
 import { CloudDb } from './utils/cloudDb';
 import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
@@ -315,6 +317,19 @@ export default function App() {
   // Firebase Auth & Cloud Sync states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Subscription & Paywall state management
+  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(() => {
+    return SubscriptionManager.getSubscriptionState();
+  });
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  // Auto-check trial expiration on app boot
+  useEffect(() => {
+    if (SubscriptionManager.isPaywalled(subscriptionState)) {
+      setShowSubscriptionModal(true);
+    }
+  }, []);
 
   // Delay rendering charts slightly to let elements mount and establish positive dimensions.
   // This suppresses Recharts ResponsiveContainer warnings (width/height of -1 or 0)
@@ -1978,6 +1993,22 @@ Date: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-2 relative z-50">
+            {/* Membership / Trial Status Badge */}
+            <button
+              onClick={() => setShowSubscriptionModal(true)}
+              className="px-2 py-1 text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0"
+              title="View Membership & Subscription Details"
+            >
+              <Sparkles size={12} className="text-amber-300 shrink-0" />
+              <span className="font-sans">
+                {subscriptionState.isSubscribed
+                  ? 'PRO'
+                  : subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
+                    ? `$1 Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)`
+                    : 'Free Plan'}
+              </span>
+            </button>
+
             {/* Firebase Cloud Sync Button */}
             <button
               onClick={() => setShowAuthModal(true)}
@@ -2147,6 +2178,18 @@ Date: ${new Date().toLocaleString()}
                   >
                     <Cloud size={14} className="stroke-[2.5] text-emerald-400" />
                     <span>Firebase Cloud Sync ☁️</span>
+                  </button>
+
+                  {/* Subscription & Billing link */}
+                  <button
+                    onClick={() => {
+                      setShowSubscriptionModal(true);
+                      setShowGlobalMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <Sparkles size={14} className="stroke-[2.5] text-amber-300" />
+                    <span>Membership & Billing 💳</span>
                   </button>
 
                   {/* Help & Guide link */}
@@ -3425,6 +3468,8 @@ Date: ${new Date().toLocaleString()}
                 onShowSimulatedAdsChange={handleShowSimulatedAdsChange}
                 onLoadDemoData={handleLoadDemoData}
                 onBackupCompleted={() => setLastBackupTime(Date.now())}
+                subscriptionState={subscriptionState}
+                onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
               />
             </div>
           )}
@@ -5227,6 +5272,17 @@ Date: ${new Date().toLocaleString()}
         onClose={() => setShowAuthModal(false)}
         currentUser={currentUser}
         onDataSynced={() => loadDatabaseState(selectedMonth)}
+      />
+
+      {/* Subscription & Paywall Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        subscriptionState={subscriptionState}
+        onSubscriptionUpdate={(newState) => {
+          setSubscriptionState(newState);
+          SubscriptionManager.saveSubscriptionState(newState);
+        }}
       />
     </AndroidFrame>
   );

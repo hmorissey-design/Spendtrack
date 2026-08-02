@@ -32,6 +32,21 @@ export interface MonthlyBudget {
 
 export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub' | 'budget_full' | 'savings';
 
+export type PlanTier = 'free_preview' | 'trial' | 'monthly' | 'yearly';
+
+export type SubscriptionStatus = 'preview' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired';
+
+export interface SubscriptionState {
+  tier: PlanTier;
+  status: SubscriptionStatus;
+  trialStartDate?: number; // timestamp in ms
+  trialDaysTotal: number; // 30
+  subscriptionEndDate?: number; // timestamp in ms
+  isSubscribed: boolean;
+  lemonSqueezyCustomerId?: string;
+  lemonSqueezySubscriptionId?: string;
+}
+
 export interface AccentTheme {
   id: string;
   name: string;

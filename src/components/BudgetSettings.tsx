@@ -34,6 +34,9 @@ import appLogo from '../assets/images/expensetrack_logo_1781299964788.jpg';
 import { LocalDb } from '../utils/db';
 import { ACCENT_THEMES } from '../utils/theme';
 
+import { SubscriptionState } from '../types';
+import { SubscriptionManager } from '../utils/subscription';
+
 interface BudgetSettingsProps {
   categories: Category[];
   currentBudget: MonthlyBudget;
@@ -52,6 +55,8 @@ interface BudgetSettingsProps {
   onShowSimulatedAdsChange?: (val: boolean) => void;
   onLoadDemoData?: () => void;
   onBackupCompleted?: () => void;
+  subscriptionState?: SubscriptionState;
+  onOpenSubscriptionModal?: () => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -134,7 +139,9 @@ export function BudgetSettings({
   showSimulatedAds = true,
   onShowSimulatedAdsChange,
   onLoadDemoData,
-  onBackupCompleted
+  onBackupCompleted,
+  subscriptionState,
+  onOpenSubscriptionModal
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [renderCharts, setRenderCharts] = useState(false);
@@ -383,7 +390,40 @@ export function BudgetSettings({
 
   return (
     <div className="space-y-2 p-0.5" id="budget_settings_ui">
-      {/* System Preferences & Database Management */}
+      {/* Membership & Subscription Status Card */}
+      {subscriptionState && (
+        <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 text-slate-100 rounded-xl p-4 border border-emerald-500/20 shadow-sm animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  Membership & Billing
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-white">
+                Status: {subscriptionState.isSubscribed
+                  ? `Active (${subscriptionState.tier === 'yearly' ? 'Yearly' : 'Monthly'})`
+                  : subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
+                    ? `$1.00 Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
+                    : 'Free Preview (No Active Subscription)'}
+              </p>
+              <p className="text-xs text-slate-400">
+                Processed via Lemon Squeezy (Merchant of Record). Full multi-device sync & backups enabled.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onOpenSubscriptionModal}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shrink-0"
+            >
+              <Sparkles size={14} className="text-amber-300" />
+              <span>{subscriptionState.isSubscribed ? 'Manage Subscription' : 'Upgrade / View Tiers'}</span>
+            </button>
+          </div>
+        </div>
+      )}
       {successMsg && (
         <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg flex items-center gap-1.5 font-sans">
           <CheckCircle size={14} className="text-emerald-400" />
