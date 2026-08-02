@@ -58,7 +58,7 @@ import { AuthModal } from './components/AuthModal';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { auth, onAuthStateChanged, User } from './firebase';
 import { CloudDb } from './utils/cloudDb';
-import appLogo from './assets/images/expensetrack_logo_1781299964788.jpg';
+import appLogo from './assets/images/loosebudget_logo_1785685735427.jpg';
 
 // Recharts components imports
 import {
@@ -1441,7 +1441,7 @@ Date: ${new Date().toLocaleString()}
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(15, 118, 110);
-    doc.text("EXPENSE TRACK STATEMENT", 25, 19);
+    doc.text("LOOSEBUDGET STATEMENT", 25, 19);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
@@ -4265,7 +4265,7 @@ Date: ${new Date().toLocaleString()}
 
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">
-                  <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">EXPENSE TRACK PRIVATE LEDGER SYSTEM</p>
+                  <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">LOOSEBUDGET PRIVATE LEDGER SYSTEM</p>
                 </div>
               </div>
             </div>
@@ -4616,83 +4616,83 @@ Date: ${new Date().toLocaleString()}
 
 
         {/* Modern Bottom Android Navigation Tab bar */}
-        <div className="bg-[#0A0A0A] border-t border-white/5 px-3 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-30 relative sticky bottom-0 w-full" id="android_nav_bar">
+        <div className="bg-[#0A0A0A] border-t border-white/10 px-2 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] shrink-0 flex items-center justify-between z-30 relative sticky bottom-0 w-full" id="android_nav_bar">
           
           {/* Nav Item: Dashboard */}
           <button
             onClick={() => { setActiveTab('dashboard'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'dashboard' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'dashboard' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <LayoutDashboard size={17} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Daily Spending</span>
+            <LayoutDashboard size={18} className={activeTab === 'dashboard' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Daily</span>
           </button>
 
           {/* Nav Item: Logs history */}
           <button
             onClick={() => { setActiveTab('history'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'history' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'history' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <History size={17} className={activeTab === 'history' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">History</span>
+            <History size={18} className={activeTab === 'history' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">History</span>
           </button>
 
           {/* Nav Item: Trends & Charts */}
           <button
             onClick={() => { setActiveTab('analytics'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'analytics' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'analytics' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <PieChart size={17} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Insights</span>
+            <PieChart size={18} className={activeTab === 'analytics' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Insights</span>
           </button>
 
           {/* Nav Item: Full Budget */}
           <button
             onClick={() => { setActiveTab('budget_full'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'budget_full' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'budget_full' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <Wallet size={17} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Budget</span>
+            <Wallet size={18} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Budget</span>
           </button>
 
           {/* Nav Item: Savings Goals */}
           <button
             onClick={() => { setActiveTab('savings'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'savings' ? 'text-pink-400 scale-102 font-bold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'savings' ? 'text-pink-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <PiggyBank size={17} className={activeTab === 'savings' ? 'stroke-[2.5] text-pink-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Savings</span>
+            <PiggyBank size={18} className={activeTab === 'savings' ? 'stroke-[2.5] text-pink-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Savings</span>
           </button>
 
           {/* Nav Item: Local SQLite/Budget settings */}
           <button
             onClick={() => { setActiveTab('budget_plan'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'budget_plan' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'budget_plan' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <Sliders size={17} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Settings</span>
+            <Sliders size={18} className={activeTab === 'budget_plan' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Settings</span>
           </button>
 
           {/* Nav Item: Help & Guide */}
           <button
             onClick={() => { setActiveTab('help'); setShowAddForm(false); }}
             className={`flex flex-col items-center justify-center flex-1 cursor-pointer transition-all ${
-              activeTab === 'help' ? 'text-emerald-400 scale-102 font-semibold font-sans' : 'text-gray-500 hover:text-gray-400 font-sans'
+              activeTab === 'help' ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-300 hover:text-white font-medium'
             }`}
           >
-            <HelpCircle size={17} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-            <span className="text-[8.5px] mt-0.5 font-sans">Help</span>
+            <HelpCircle size={18} className={activeTab === 'help' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[2] text-slate-300'} />
+            <span className="text-[9px] mt-0.5 font-sans tracking-tight">Help</span>
           </button>
 
         </div>

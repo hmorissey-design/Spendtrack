@@ -30,7 +30,7 @@ import dashSplash from '../assets/images/expensetrack_dash_splash_1781301585056.
 import chartsSplash from '../assets/images/expensetrack_charts_splash_1781301595864.jpg';
 import budgetSplash from '../assets/images/expensetrack_budget_splash_1781301607200.jpg';
 import pdfReportSplash from '../assets/images/expensetrack_pdf_splash_1781301617685.jpg';
-import appLogo from '../assets/images/expensetrack_logo_1781299964788.jpg';
+import appLogo from '../assets/images/loosebudget_logo_1785685735427.jpg';
 import { LocalDb } from '../utils/db';
 import { ACCENT_THEMES } from '../utils/theme';
 
@@ -409,7 +409,7 @@ export function BudgetSettings({
                     : 'Free Preview (No Active Subscription)'}
               </p>
               <p className="text-xs text-slate-400">
-                Processed via Lemon Squeezy (Merchant of Record). Full multi-device sync & backups enabled.
+                Processed via Lemon Squeezy secure checkout. Multi-device sync & cloud backups enabled.
               </p>
             </div>
 

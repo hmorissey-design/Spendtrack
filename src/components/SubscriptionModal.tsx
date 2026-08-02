@@ -60,10 +60,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white p-6 sm:p-8 relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            title="Close"
+            className="absolute top-4 right-4 px-3.5 py-2 bg-slate-950/50 hover:bg-slate-950/80 text-white font-extrabold text-xs sm:text-sm rounded-xl border border-white/30 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 cursor-pointer z-20 group"
+            title="Return to LooseBudget App"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4.5 h-4.5 text-amber-300 group-hover:rotate-90 transition-transform" />
+            <span className="tracking-wide uppercase font-sans">Return to App</span>
           </button>
 
           <div className="flex items-center gap-2 mb-2 text-emerald-200 text-xs sm:text-sm font-semibold uppercase tracking-wider">
@@ -241,7 +242,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <span>Lemon Squeezy Automatic Tax Compliance</span>
+                <span>Encrypted Checkout & Instant Activation</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
@@ -292,9 +293,9 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               )}
               <button
                 onClick={onClose}
-                className="px-4 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-1.5 active:scale-95"
               >
-                {isPaywalled ? 'Dismiss' : 'Close'}
+                <span>RETURN TO APP ↩</span>
               </button>
             </div>
           </div>
