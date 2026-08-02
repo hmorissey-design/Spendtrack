@@ -83,6 +83,8 @@ export const SubscriptionManager = {
   isPaywalled(state?: SubscriptionState): boolean {
     const sub = state || this.getSubscriptionState();
     if (sub.isSubscribed || sub.status === 'active') return false;
+    // Free Preview allows full local budgeting features without blocking
+    if (sub.tier === 'free_preview' || sub.status === 'preview') return false;
     const remainingDays = this.getTrialDaysRemaining(sub);
     return remainingDays <= 0;
   },

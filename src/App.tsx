@@ -324,8 +324,32 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Auto-check trial expiration on app boot
+  // Auto-check trial expiration on app boot & handle payment redirect back from Lemon Squeezy
   useEffect(() => {
+    // 1. Check for payment return query params
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const payment = params.get('payment');
+      const plan = params.get('plan');
+
+      if (payment === 'success' && plan) {
+        let updated: SubscriptionState;
+        if (plan === 'trial') {
+          updated = SubscriptionManager.startTrial();
+        } else if (plan === 'yearly' || plan === 'monthly') {
+          updated = SubscriptionManager.activatePlan(plan as 'yearly' | 'monthly');
+        } else {
+          updated = SubscriptionManager.startTrial();
+        }
+        setSubscriptionState(updated);
+        // Clean URL query params without triggering page reload
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {
+      console.warn('Error processing payment redirect:', e);
+    }
+
+    // 2. Check if user is paywalled (trial expired and unsubscribed)
     if (SubscriptionManager.isPaywalled(subscriptionState)) {
       setShowSubscriptionModal(true);
     }
