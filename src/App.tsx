@@ -2006,9 +2006,9 @@ Date: ${new Date().toLocaleString()}
     >
       <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden select-none relative" id="android_app_root">
         {/* App Title & Top Header */}
-        <div className="bg-[#0A0A0A] text-white pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
-          <div className="flex items-center gap-2.5 select-none pr-4">
-            <div className="w-8 h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
+        <div className="bg-[#0A0A0A] text-white pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 px-2.5 sm:px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
+          <div className="flex items-center gap-2 select-none pr-1 sm:pr-4 shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
               <img 
                 src={appLogo} 
                 alt="LooseBudget Logo" 
@@ -2016,12 +2016,12 @@ Date: ${new Date().toLocaleString()}
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div>
-              <h1 className="text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Loose<span className="text-emerald-400">Budget</span></h1>
+            <div className="hidden xs:block">
+              <h1 className="text-xs sm:text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Loose<span className="text-emerald-400">Budget</span></h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 relative z-50">
+          <div className="flex items-center gap-1.5 sm:gap-2 relative z-50 shrink-0">
             {/* Membership / Trial Status Badge */}
             <button
               onClick={() => setShowSubscriptionModal(true)}
@@ -2030,13 +2030,23 @@ Date: ${new Date().toLocaleString()}
             >
               <Sparkles size={12} className="text-amber-300 shrink-0" />
               <span className="font-sans">
-                {subscriptionState.isSubscribed
-                  ? 'PRO'
-                  : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
-                    ? subscriptionState.trialDaysTotal === 30
-                      ? `$1 Extended Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)`
-                      : `Free 3-Day Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)`
-                    : 'Trial Expired'}
+                {subscriptionState.isSubscribed ? (
+                  'PRO'
+                ) : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? (
+                  subscriptionState.trialDaysTotal === 30 ? (
+                    <>
+                      <span className="sm:hidden">$1 Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
+                      <span className="hidden sm:inline">$1 Extended Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">3d Trial</span>
+                      <span className="hidden sm:inline">3-Day Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
+                    </>
+                  )
+                ) : (
+                  'Expired'
+                )}
               </span>
             </button>
 
@@ -2047,7 +2057,7 @@ Date: ${new Date().toLocaleString()}
                 onClick={() => {
                   setShowAuthModal(true);
                 }}
-                className={`px-2.5 py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                className={`px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0 active:scale-95 ${
                   currentUser
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
@@ -2058,7 +2068,7 @@ Date: ${new Date().toLocaleString()}
                     : 'Sign in for Firebase Cloud Sync'
                 }
               >
-                <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
+                <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse shrink-0' : 'text-gray-400 shrink-0'} />
                 <span className="hidden sm:inline font-sans">
                   {currentUser ? 'Cloud Synced' : 'Cloud Sync'}
                 </span>
@@ -2070,20 +2080,20 @@ Date: ${new Date().toLocaleString()}
               pwaInstallable ? (
                 <button
                   onClick={triggerNativeInstall}
-                  className="px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40"
+                  className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0"
                   title="Install LooseBudget on your device as a native standalone application"
                 >
-                  <Download size={13} className="stroke-[3]" />
-                  <span>Install App 📲</span>
+                  <Download size={12} className="stroke-[3] shrink-0" />
+                  <span>Install 📲</span>
                 </button>
               ) : (
                 <button
                   onClick={triggerOpenInstallGuide}
-                  className="px-2.5 py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0"
                   title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
                 >
-                  <Download size={12} />
-                  <span>How to Install 📲</span>
+                  <Download size={12} className="text-emerald-400 shrink-0" />
+                  <span>Install 📲</span>
                 </button>
               )
             )}

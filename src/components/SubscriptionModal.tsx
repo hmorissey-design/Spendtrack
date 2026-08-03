@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Check, Sparkles, ExternalLink, Zap, RefreshCw, X, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Check, Sparkles, ExternalLink, Zap, RefreshCw, X, AlertCircle, Download } from 'lucide-react';
 import { SubscriptionState, PlanTier } from '../types';
 import { SubscriptionManager } from '../utils/subscription';
 
@@ -83,6 +83,16 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <p className="mt-2 text-emerald-100 text-xs sm:text-sm max-w-xl leading-relaxed">
             Track expenses effortlessly with unlimited cloud backup, budget analytics, and PWA phone app synchronization.
           </p>
+
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-pwa-install-guide'));
+            }}
+            className="mt-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-amber-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-sm w-fit"
+          >
+            <Download className="w-3.5 h-3.5 text-amber-300" />
+            <span>How to Download / Install App on Phone or PC 📲</span>
+          </button>
 
           {/* Current Status Pill */}
           <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md text-white border border-white/30">
