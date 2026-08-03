@@ -5,6 +5,10 @@ import {
   signInWithPopup, 
   signOut, 
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
   onAuthStateChanged,
   User 
 } from 'firebase/auth';
@@ -56,6 +60,10 @@ export {
   signInWithPopup,
   signOut,
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
   onAuthStateChanged
 };
 

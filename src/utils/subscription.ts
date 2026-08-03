@@ -10,9 +10,9 @@ import { CloudDb } from './cloudDb';
 const SUBSCRIPTION_STORAGE_KEY = 'expensetrack_subscription_state';
 
 export const DEFAULT_SUBSCRIPTION_STATE: SubscriptionState = {
-  tier: 'free_preview',
-  status: 'preview',
-  trialDaysTotal: 0,
+  tier: 'trial',
+  status: 'trialing',
+  trialDaysTotal: 3,
   isSubscribed: false,
 };
 
@@ -26,6 +26,18 @@ export const SubscriptionManager = {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.tier) {
+          // If legacy state was free_preview or missing trialStartDate or trialDaysTotal, migrate to 3-day trial
+          if (parsed.tier === 'free_preview' || parsed.status === 'preview' || !parsed.trialStartDate) {
+            const updated: SubscriptionState = {
+              tier: 'trial',
+              status: 'trialing',
+              trialStartDate: Date.now(),
+              trialDaysTotal: 3,
+              isSubscribed: false,
+            };
+            this.saveSubscriptionState(updated);
+            return updated;
+          }
           return parsed;
         }
       }
@@ -33,10 +45,11 @@ export const SubscriptionManager = {
       console.error('Error reading subscription state:', e);
     }
 
-    // Default: initialize 30-day trial starting now
-    const initialState = {
+    // Default: initialize 3-day full access trial starting now
+    const initialState: SubscriptionState = {
       ...DEFAULT_SUBSCRIPTION_STATE,
       trialStartDate: Date.now(),
+      trialDaysTotal: 3,
     };
     this.saveSubscriptionState(initialState);
     return initialState;
@@ -59,20 +72,21 @@ export const SubscriptionManager = {
   },
 
   /**
-   * Calculates remaining trial days based on trialStartDate and total trialDays (30)
+   * Calculates remaining trial days based on trialStartDate and total trialDays (3)
    */
   getTrialDaysRemaining(state?: SubscriptionState): number {
     const sub = state || this.getSubscriptionState();
     if (sub.isSubscribed || sub.status === 'active') {
-      return 30; // Active subscriber
+      return 3; // Active subscriber
     }
-    if (sub.tier === 'free_preview' || !sub.trialStartDate || sub.trialDaysTotal === 0) return 0;
+    if (!sub.trialStartDate) return 0;
 
     const startDate = new Date(sub.trialStartDate);
     const now = new Date();
-    const diffTime = now.getTime() - startDate.getTime();
+    const diffTime = Math.max(0, now.getTime() - startDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const remaining = sub.trialDaysTotal - diffDays;
+    const totalDays = sub.trialDaysTotal || 3;
+    const remaining = totalDays - diffDays;
 
     return Math.max(0, remaining);
   },
@@ -83,21 +97,19 @@ export const SubscriptionManager = {
   isPaywalled(state?: SubscriptionState): boolean {
     const sub = state || this.getSubscriptionState();
     if (sub.isSubscribed || sub.status === 'active') return false;
-    // Free Preview allows full local budgeting features without blocking
-    if (sub.tier === 'free_preview' || sub.status === 'preview') return false;
     const remainingDays = this.getTrialDaysRemaining(sub);
     return remainingDays <= 0;
   },
 
   /**
-   * Start or reset the 30-Day $1 Trial
+   * Start or reset the 3-Day Trial
    */
   startTrial(): SubscriptionState {
     const newState: SubscriptionState = {
       tier: 'trial',
       status: 'trialing',
       trialStartDate: Date.now(),
-      trialDaysTotal: 30,
+      trialDaysTotal: 3,
       isSubscribed: false,
     };
     this.saveSubscriptionState(newState);

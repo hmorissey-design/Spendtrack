@@ -23,7 +23,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   if (!isOpen) return null;
 
   const trialDaysLeft = SubscriptionManager.getTrialDaysRemaining(subscriptionState);
-  const isPaywalled = SubscriptionManager.isPaywalled(subscriptionState);
 
   const handleCheckout = (tier: 'trial' | 'monthly' | 'yearly') => {
     setIsProcessing(true);
@@ -41,7 +40,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         let updated: SubscriptionState;
         if (tier === 'trial') {
           updated = SubscriptionManager.startTrial();
-          setSimulationSuccessMsg('🎉 30-Day $1 Trial activated successfully!');
+          setSimulationSuccessMsg('🎉 3-Day Trial activated successfully!');
         } else {
           updated = SubscriptionManager.activatePlan(tier);
           setSimulationSuccessMsg(`🎉 ${tier === 'yearly' ? 'Yearly ($14.99/yr)' : 'Monthly ($1.99/mo)'} Subscription activated successfully!`);
@@ -53,30 +52,35 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-3 sm:my-8 shrink-0">
         
-        {/* Top Banner */}
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white p-6 sm:p-8 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 px-3.5 py-2 bg-slate-950/50 hover:bg-slate-950/80 text-white font-extrabold text-xs sm:text-sm rounded-xl border border-white/30 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 cursor-pointer z-20 group"
-            title="Return to LooseBudget App"
-          >
-            <X className="w-4.5 h-4.5 text-amber-300 group-hover:rotate-90 transition-transform" />
-            <span className="tracking-wide uppercase font-sans">Return to App</span>
-          </button>
+        {/* Top Banner Header */}
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white p-5 sm:p-8 relative">
+          
+          {/* Header Top Bar: Badge + Return to App Button */}
+          <div className="flex items-center justify-between gap-3 mb-4 border-b border-white/15 pb-3">
+            <div className="flex items-center gap-2 text-emerald-200 text-xs sm:text-sm font-semibold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>LooseBudget Membership & Billing</span>
+            </div>
 
-          <div className="flex items-center gap-2 mb-2 text-emerald-200 text-xs sm:text-sm font-semibold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>LooseBudget Membership & Billing</span>
+            {/* Top Return to App Button */}
+            <button
+              onClick={onClose}
+              className="px-3.5 py-2 bg-slate-950/60 hover:bg-slate-950/90 text-amber-300 font-black text-xs sm:text-sm rounded-xl border border-amber-300/40 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Return to LooseBudget App"
+            >
+              <X className="w-4 h-4 text-amber-300" />
+              <span className="tracking-wide uppercase font-sans">Return to App ↩</span>
+            </button>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight">
             Unlock Full Multi-Device Access
           </h2>
 
-          <p className="mt-2 text-emerald-100 text-sm sm:text-base max-w-xl">
+          <p className="mt-2 text-emerald-100 text-xs sm:text-sm max-w-xl leading-relaxed">
             Track expenses effortlessly with unlimited cloud backup, budget analytics, and PWA phone app synchronization.
           </p>
 
@@ -90,12 +94,16 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             ) : trialDaysLeft > 0 ? (
               <>
                 <Zap className="w-4 h-4 text-amber-300" />
-                <span>$1.00 Trial Active — {trialDaysLeft} days remaining</span>
+                <span>
+                  {subscriptionState.trialDaysTotal === 30
+                    ? `Active $1 Extended Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'day' : 'days'} remaining`
+                    : `Active Plan: Free 3-Day Full Access Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'day' : 'days'} remaining`}
+                </span>
               </>
             ) : (
               <>
                 <AlertCircle className="w-4 h-4 text-rose-300" />
-                <span>Select $1.00 Trial or Subscription Plan to Activate Sync</span>
+                <span>Free 3-Day Full Access Trial Ended — Subscribe to Unlock Unlimited Access & Cloud Sync</span>
               </>
             )}
           </div>
@@ -124,7 +132,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               }`}
             >
               <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                30-Day Trial
+                30-Day Extended Trial
               </div>
               <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
                 $1.00
@@ -133,7 +141,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 One-time payment
               </div>
               <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Try all features & multi-device cloud sync full month risk-free.
+                Try all features & multi-device cloud sync for 30 days.
               </p>
               <button
                 onClick={(e) => {
@@ -143,7 +151,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 disabled={isProcessing}
                 className="mt-4 w-full py-2 px-3 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
               >
-                {subscriptionState.tier === 'trial' && trialDaysLeft > 0 ? 'Active Trial' : 'Start $1 Trial'}
+                {subscriptionState.tier === 'trial' && subscriptionState.trialDaysTotal === 30 && trialDaysLeft > 0 ? 'Active $1 Trial' : 'Start $1 Trial'}
               </button>
             </div>
 

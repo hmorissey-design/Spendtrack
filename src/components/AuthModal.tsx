@@ -5,10 +5,13 @@ import {
   signInWithPopup, 
   signOut, 
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   User 
 } from '../firebase';
 import { CloudDb } from '../utils/cloudDb';
-import { X, LogIn, LogOut, Cloud, RefreshCw, CheckCircle2, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { X, LogIn, LogOut, Cloud, RefreshCw, CheckCircle2, User as UserIcon, ShieldCheck, Mail, Lock, UserPlus, KeyRound } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,6 +28,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  
+  // Email/Password state
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   if (!isOpen) return null;
 
@@ -35,7 +44,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
         setStatusMessage('Syncing data with Firebase Cloud...');
-        // First try to download existing cloud data; if none exists or first time, upload local data
         const downloaded = await CloudDb.downloadCloudDataToLocal(result.user.uid);
         if (!downloaded) {
           await CloudDb.uploadLocalDataToCloud(result.user.uid);
@@ -49,9 +57,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } catch (error: any) {
       console.error('Sign-in error:', error);
       if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
-        setStatusMessage('Domain not authorized in Firebase Console yet. Add "spendtrack-ten.vercel.app" under Firebase Auth -> Settings -> Authorized domains.');
+        setStatusMessage('Domain not authorized in Firebase Console yet. Add your domain under Firebase Auth -> Settings -> Authorized domains.');
       } else {
         setStatusMessage(`Sign in failed: ${error.message || 'Unknown error'}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setLoading(true);
+    setStatusMessage(null);
+
+    try {
+      if (authMode === 'forgot') {
+        await sendPasswordResetEmail(auth, email);
+        setStatusMessage(`Password reset link sent to ${email}. Check your inbox!`);
+        setTimeout(() => setAuthMode('signin'), 3000);
+        return;
+      }
+
+      let userCred;
+      if (authMode === 'signup') {
+        setStatusMessage('Creating your account...');
+        userCred = await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        setStatusMessage('Signing in...');
+        userCred = await signInWithEmailAndPassword(auth, email, password);
+      }
+
+      if (userCred.user) {
+        setStatusMessage('Syncing data with Firebase Cloud...');
+        const downloaded = await CloudDb.downloadCloudDataToLocal(userCred.user.uid);
+        if (!downloaded) {
+          await CloudDb.uploadLocalDataToCloud(userCred.user.uid);
+        }
+        onDataSynced();
+        setStatusMessage(authMode === 'signup' ? 'Account created & synced!' : 'Signed in & synced!');
+        setTimeout(() => {
+          onClose();
+        }, 1200);
+      }
+    } catch (error: any) {
+      console.error('Email auth error:', error);
+      if (error.code === 'auth/operation-not-allowed' || error.message?.includes('operation-not-allowed')) {
+        setStatusMessage('Email/Password provider is disabled in Firebase Console. Go to Firebase Console -> Authentication -> Sign-in method and enable "Email/Password".');
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        setStatusMessage('Invalid email or password. Please try again or create an account.');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setStatusMessage('An account with this email already exists. Try signing in instead.');
+        setAuthMode('signin');
+      } else if (error.code === 'auth/weak-password') {
+        setStatusMessage('Password should be at least 6 characters long.');
+      } else {
+        setStatusMessage(`Error: ${error.message || 'Authentication failed'}`);
       }
     } finally {
       setLoading(false);
@@ -130,10 +193,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-[#121212] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-5">
+      <div className="bg-[#121212] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-4">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Cloud size={20} />
@@ -145,7 +208,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -155,7 +218,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {statusMessage && (
           <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-xs text-emerald-300 animate-in fade-in">
             <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
-            <span>{statusMessage}</span>
+            <span className="leading-relaxed">{statusMessage}</span>
           </div>
         )}
 
@@ -172,7 +235,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-white truncate">
-                  {currentUser.displayName || (currentUser.isAnonymous ? 'Guest User' : 'Authenticated User')}
+                  {currentUser.displayName || (currentUser.isAnonymous ? 'Guest User' : currentUser.email || 'Authenticated User')}
                 </p>
                 <p className="text-[10px] text-gray-400 truncate font-mono">
                   {currentUser.email || `ID: ${currentUser.uid.substring(0, 12)}...`}
@@ -188,7 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 onClick={handleForceUpload}
                 disabled={loading}
-                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-200 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-200 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <Cloud size={14} className="text-emerald-400" />
                 Upload Local Data
@@ -196,7 +259,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 onClick={handleForceDownload}
                 disabled={loading}
-                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-200 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-200 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <RefreshCw size={14} className="text-blue-400" />
                 Pull Cloud Data
@@ -206,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleSignOut}
               disabled={loading}
-              className="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-300 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-300 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <LogOut size={14} />
               Sign Out
@@ -215,13 +278,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         ) : (
           <div className="space-y-3 pt-1">
             <p className="text-xs text-gray-300 leading-relaxed font-sans">
-              Sign in with your Google account to automatically store and sync your budget, expenses, income streams, and savings goals securely in Firestore.
+              Sign in to store and synchronize your budget, expenses, income streams, and savings goals securely in Firebase Cloud.
             </p>
 
+            {/* Google Sign In */}
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-xl text-xs font-bold flex items-center justify-center gap-3 transition-colors shadow-lg disabled:opacity-50"
+              className="w-full py-2.5 bg-white hover:bg-gray-100 text-gray-900 rounded-xl text-xs font-bold flex items-center justify-center gap-3 transition-colors shadow-lg disabled:opacity-50 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -244,7 +308,106 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Sign in with Google
             </button>
 
-            <div className="relative flex items-center justify-center my-3">
+            {/* Email / Password Toggle */}
+            {!showEmailForm ? (
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(true)}
+                className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Mail size={14} className="text-emerald-400" />
+                Sign in or Register with Email
+              </button>
+            ) : (
+              <div className="bg-[#181818] border border-white/10 rounded-xl p-3.5 space-y-3 animate-in fade-in">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('signin')}
+                      className={`text-[11px] font-bold px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                        authMode === 'signin' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-gray-400 hover:text-gray-200'
+                      }`}
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('signup')}
+                      className={`text-[11px] font-bold px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                        authMode === 'signup' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-gray-400 hover:text-gray-200'
+                      }`}
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailForm(false)}
+                    className="text-[10px] text-gray-500 hover:text-gray-300"
+                  >
+                    Hide
+                  </button>
+                </div>
+
+                <form onSubmit={handleEmailAuth} className="space-y-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Email Address</label>
+                    <div className="relative">
+                      <Mail size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full bg-[#111111] border border-white/10 rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
+                      />
+                    </div>
+                  </div>
+
+                  {authMode !== 'forgot' && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Password</label>
+                        {authMode === 'signin' && (
+                          <button
+                            type="button"
+                            onClick={() => setAuthMode('forgot')}
+                            className="text-[10px] text-emerald-400 hover:underline"
+                          >
+                            Forgot?
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Lock size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                        <input
+                          type="password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full bg-[#111111] border border-white/10 rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer mt-1"
+                  >
+                    {authMode === 'signin' && <><LogIn size={13} /> Sign In</>}
+                    {authMode === 'signup' && <><UserPlus size={13} /> Create Account</>}
+                    {authMode === 'forgot' && <><KeyRound size={13} /> Send Password Reset Email</>}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div className="relative flex items-center justify-center my-2">
               <div className="border-t border-white/10 w-full" />
               <span className="bg-[#121212] px-3 text-[10px] text-gray-500 uppercase font-mono tracking-wider">or</span>
             </div>
@@ -252,7 +415,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleAnonymousSignIn}
               disabled={loading}
-              className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-300 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-gray-300 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <LogIn size={14} className="text-emerald-400" />
               Continue as Guest (Anonymous Cloud Sync)
@@ -270,3 +433,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </div>
   );
 };
+

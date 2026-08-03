@@ -57,6 +57,7 @@ interface BudgetSettingsProps {
   onBackupCompleted?: () => void;
   subscriptionState?: SubscriptionState;
   onOpenSubscriptionModal?: () => void;
+  isCloudSynced?: boolean;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -141,7 +142,8 @@ export function BudgetSettings({
   onLoadDemoData,
   onBackupCompleted,
   subscriptionState,
-  onOpenSubscriptionModal
+  onOpenSubscriptionModal,
+  isCloudSynced = false
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [renderCharts, setRenderCharts] = useState(false);
@@ -405,8 +407,10 @@ export function BudgetSettings({
                 Status: {subscriptionState.isSubscribed
                   ? `Active (${subscriptionState.tier === 'yearly' ? 'Yearly' : 'Monthly'})`
                   : subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
-                    ? `$1.00 Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
-                    : 'Free Preview (No Active Subscription)'}
+                    ? subscriptionState.trialDaysTotal === 30
+                      ? `$1.00 Extended Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
+                      : `Free 3-Day Full Access Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
+                    : 'Trial Expired (Demo Mode)'}
               </p>
               <p className="text-xs text-slate-400">
                 Processed via Lemon Squeezy secure checkout. Multi-device sync & cloud backups enabled.
@@ -651,29 +655,55 @@ export function BudgetSettings({
 
 
 
-      {/* Localized Architecture Notice */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
+      {/* Backup & Data Protection Section */}
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-3.5 border border-white/5 shadow-2xs animate-in fade-in duration-200 delay-100">
         <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest mb-1.5 flex items-center justify-center gap-1.5 font-sans text-center">
-          <Shield size={14} className="text-emerald-500 shrink-0" /> Backup or Restore from Your Device
+          <Shield size={14} className="text-emerald-500 shrink-0" /> {isCloudSynced ? 'Data Protection & Backup' : 'Backup or Restore from Your Device'}
         </h3>
-        <p className="text-[10.5px] text-slate-300 leading-normal text-center">
-          All records remain privately saved on your device only
-        </p>
-        <div className="mt-2.5 pt-2.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
-          <button
-            onClick={handleExport}
-            className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
-          >
-            <Download size={12} className="text-emerald-500 shrink-0" /> Backup to Device
-          </button>
-          
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
-          >
-            <Upload size={12} className="text-emerald-500 shrink-0" /> Restore from Device
-          </button>
-        </div>
+
+        {isCloudSynced ? (
+          <div className="space-y-3">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-400 mb-1">
+                <Cloud size={14} className="animate-pulse" />
+                <span>Cloud Sync & Automatic Backups Active</span>
+              </div>
+              <p className="text-[10.5px] text-slate-300 leading-relaxed">
+                Your budget and transactions are automatically backed up in real-time to your Cloud Sync account across all devices. Manual device restores are disabled while Cloud Sync is active.
+              </p>
+            </div>
+
+            <div className="pt-1 flex justify-center">
+              <button
+                onClick={handleExport}
+                className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              >
+                <Download size={12} className="text-emerald-500 shrink-0" /> Download Offline JSON Copy
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-[10.5px] text-slate-300 leading-normal text-center">
+              All records remain privately saved on your device only
+            </p>
+            <div className="mt-2.5 pt-2.5 border-t border-white/5 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
+              <button
+                onClick={handleExport}
+                className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              >
+                <Download size={12} className="text-emerald-500 shrink-0" /> Backup to Device
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="py-2 px-3 bg-emerald-950/20 hover:bg-emerald-950/30 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400 hover:text-emerald-300 rounded-xl text-[11px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
+              >
+                <Upload size={12} className="text-emerald-500 shrink-0" /> Restore from Device
+              </button>
+            </div>
+          </>
+        )}
 
         <input 
           type="file" 

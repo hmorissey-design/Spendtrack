@@ -324,8 +324,8 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Derived Demo Mode flag
-  const isDemoMode = !subscriptionState.isSubscribed && (subscriptionState.tier === 'free_preview' || subscriptionState.status === 'preview');
+  // Derived Demo Mode flag (active when trial expired and unsubscribed)
+  const isDemoMode = !subscriptionState.isSubscribed && SubscriptionManager.isPaywalled(subscriptionState);
 
   // Auto-check trial expiration on app boot & handle payment redirect back from Lemon Squeezy
   useEffect(() => {
@@ -1806,13 +1806,15 @@ Date: ${new Date().toLocaleString()}
   }, [expenses, categories, selectedMonth]);
 
   const showBackupReminder = useMemo(() => {
+    // If user is signed in to Cloud Sync, cloud automatically backs up data real-time
+    if (currentUser) return false;
     // Only remind if the user has transactions to back up
     if (expenses.length === 0) return false;
     
     const diffTime = Date.now() - lastBackupTime;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     return diffDays > 7;
-  }, [expenses, lastBackupTime]);
+  }, [currentUser, expenses, lastBackupTime]);
  
   // Derived category statistics for insights
   const categoryStats = useMemo(() => {
@@ -2030,44 +2032,41 @@ Date: ${new Date().toLocaleString()}
               <span className="font-sans">
                 {subscriptionState.isSubscribed
                   ? 'PRO'
-                  : subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
-                    ? `$1 Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)`
-                    : 'Demo Mode'}
+                  : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
+                    ? subscriptionState.trialDaysTotal === 30
+                      ? `$1 Extended Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)`
+                      : `Free 3-Day Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)`
+                    : 'Trial Expired'}
               </span>
             </button>
 
             {/* Firebase Cloud Sync Button */}
-            <button
-              onClick={() => {
-                if (isDemoMode) {
-                  setShowSubscriptionModal(true);
-                } else {
+            {/* Cloud Sync Status/Trigger Button (Hidden in Demo Mode) */}
+            {!isDemoMode && (
+              <button
+                onClick={() => {
                   setShowAuthModal(true);
+                }}
+                className={`px-2.5 py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                  currentUser
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+                title={
+                  currentUser
+                    ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}`
+                    : 'Sign in for Firebase Cloud Sync'
                 }
-              }}
-              className={`px-2.5 py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
-                isDemoMode
-                  ? 'bg-gray-800/40 border-gray-700/50 text-gray-400 hover:text-gray-200 opacity-70'
-                  : currentUser
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
-              }`}
-              title={
-                isDemoMode
-                  ? 'Cloud Sync is disabled in Demo Mode. Tap to start $1 trial and enable cloud backup.'
-                  : currentUser
-                  ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}`
-                  : 'Sign in for Firebase Cloud Sync'
-              }
-            >
-              <Cloud size={13} className={isDemoMode ? 'text-gray-400' : currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
-              <span className="hidden sm:inline font-sans">
-                {isDemoMode ? 'Cloud Sync (Disabled)' : currentUser ? 'Cloud Synced' : 'Cloud Sync'}
-              </span>
-            </button>
+              >
+                <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse' : 'text-gray-400'} />
+                <span className="hidden sm:inline font-sans">
+                  {currentUser ? 'Cloud Synced' : 'Cloud Sync'}
+                </span>
+              </button>
+            )}
 
-            {/* Direct PWA Install or Guide Trigger */}
-            {!isPwaInstalled && (
+            {/* Direct PWA Install or Guide Trigger (Hidden in Demo Mode) */}
+            {!isDemoMode && !isPwaInstalled && (
               pwaInstallable ? (
                 <button
                   onClick={triggerNativeInstall}
@@ -3557,6 +3556,7 @@ Date: ${new Date().toLocaleString()}
                 onBackupCompleted={() => setLastBackupTime(Date.now())}
                 subscriptionState={subscriptionState}
                 onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
+                isCloudSynced={!!currentUser}
               />
             </div>
           )}
