@@ -700,6 +700,24 @@ export default function App() {
     return false;
   });
 
+  const isLastDayOfMonth = useMemo(() => {
+    const today = new Date();
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    return tomorrow.getDate() === 1;
+  }, []);
+
+  const isThreeDayTrial = useMemo(() => {
+    return !subscriptionState.isSubscribed && subscriptionState.tier === 'trial' && (subscriptionState.trialDaysTotal || 3) === 3;
+  }, [subscriptionState]);
+
+  const hasEnteredBudgetData = useMemo(() => {
+    const hasCategoryLimits = categories.some(c => (c.limit || 0) > 0);
+    const hasIncome = incomeStreams.some(i => (i.amount || 0) > 0);
+    const hasFixedExpenses = fixedExpenses.some(f => (f.amount || 0) > 0);
+    const hasExpenses = expenses.length > 0;
+    return hasCategoryLimits || hasIncome || hasFixedExpenses || hasExpenses;
+  }, [categories, incomeStreams, fixedExpenses, expenses]);
+
   const currentReconciliationMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
   const hasRunReconciliationThisMonth = (() => {
     try {
@@ -2669,8 +2687,8 @@ Date: ${new Date().toLocaleString()}
                 </div>
               )}
 
-              {/* Reconciliation Reminder Banner */}
-              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && (
+              {/* Reconciliation Reminder Banner (Only on last day of month, not during 3-day trial, and only if user has entered budget data) */}
+              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && isLastDayOfMonth && !isThreeDayTrial && hasEnteredBudgetData && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
@@ -2681,9 +2699,7 @@ Date: ${new Date().toLocaleString()}
                         📅 Monthly Reconciliation Due
                       </p>
                       <p className="text-[10.5px] text-gray-300 font-bold leading-normal">
-                        {new Date().getDate() === 1 
-                          ? "Today is the first day of the month! It's time to run your account reconciliation process."
-                          : "It is time to run your monthly account reconciliation process."}
+                        Today is the last day of the month! It's time to run your monthly account reconciliation process.
                       </p>
                       <p className="text-[9.5px] text-gray-400 leading-normal">
                         Reconcile your actual cash balances from chequing, savings, and cash to calculate your surplus and distribute it to your savings goals.
@@ -4897,6 +4913,16 @@ Date: ${new Date().toLocaleString()}
             <div className="p-4 overflow-y-auto space-y-4 flex-1 text-left">
               {reconciliationStep === 1 && (
                 <div className="space-y-3.5">
+                  {!hasEnteredBudgetData && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1">
+                      <p className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                        <AlertCircle size={12} /> No Budget Data Entered
+                      </p>
+                      <p className="text-[9.5px] text-gray-300 leading-normal">
+                        You haven't entered any budget limits, income streams, fixed expenses, or transactions yet. Please configure your budget data in the Budget Plan tab first before running account reconciliation.
+                      </p>
+                    </div>
+                  )}
                   <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-1">
                     <p className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest">
                       Enter cash balances
@@ -5228,13 +5254,18 @@ Date: ${new Date().toLocaleString()}
                   <button
                     type="button"
                     onClick={() => {
+                      if (!hasEnteredBudgetData) {
+                        alert("Please set up your budget data (category limits, income, or fixed expenses) first before running account reconciliation.");
+                        return;
+                      }
                       if (!chequingBalance || !savingsBalance || !cashOnHand) {
                         alert("Please fill in all balance values to proceed.");
                         return;
                       }
                       setReconciliationStep(2);
                     }}
-                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border-0 active:scale-95"
+                    disabled={!hasEnteredBudgetData}
+                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border-0 active:scale-95"
                   >
                     Calculate Surplus <ArrowRight size={12} />
                   </button>
