@@ -1772,11 +1772,30 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleResetDatabase = async () => {
-    // Clear LocalStorage and SessionStorage (local cache only - Cloud records remain safe in Firestore)
+    // Capture active subscription state so paid account access / renewal status is preserved
+    const savedSubState = SubscriptionManager.getSubscriptionState();
+
+    // Wipe Cloud Firestore records if signed in (financial data only, keeping user profile/subscription intact)
+    if (auth.currentUser?.uid) {
+      try {
+        await CloudDb.wipeCloudData(auth.currentUser.uid);
+      } catch (e) {
+        console.error('Error wiping cloud data during reset:', e);
+      }
+    }
+
+    // Clear LocalStorage and SessionStorage
     try {
       window.localStorage.clear();
       window.sessionStorage.clear();
     } catch (e) {}
+
+    // Restore subscription state locally and to cloud profile
+    if (savedSubState) {
+      try {
+        SubscriptionManager.saveSubscriptionState(savedSubState);
+      } catch (e) {}
+    }
 
     // Purge IndexedDB databases (local app offline cache)
     try {
@@ -1808,7 +1827,12 @@ Date: ${new Date().toLocaleString()}
       }
     } catch (e) {}
 
-    // Hard reload to initialize pristine fresh local state (Cloud data will re-sync if signed in)
+    // Reset local database structures to fresh empty state
+    try {
+      LocalDb.resetToFreshInstall();
+    } catch (e) {}
+
+    // Hard reload to initialize pristine fresh state
     window.location.reload();
   };
 

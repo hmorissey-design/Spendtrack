@@ -219,7 +219,7 @@ export function CategoryManager({
   return (
     <>
       {/* Main Categories & Budgets Dialogue Box Manager Overlay */}
-      <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-40 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
+      <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-[100] p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
         <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="dialogue_categories_budgets_manager">
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <div>
@@ -338,7 +338,7 @@ export function CategoryManager({
 
       {/* Modal-like overlay for Editing/Adding Category - Elegant Full Screen Backdrop */}
       {editingCategory && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-[110] p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
           <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="full_screen_category_builder">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
@@ -491,7 +491,7 @@ export function CategoryManager({
 
       {/* Warning/Hide modal for Category Deletion */}
       {categoryToDelete && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-in fade-in duration-250">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-[110] p-4 animate-in fade-in duration-250">
           <div className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
             {categoryToDeleteHasHistory ? (
               <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto">

@@ -33,6 +33,8 @@ import pdfReportSplash from '../assets/images/expensetrack_pdf_splash_1781301617
 import appLogo from '../assets/images/loosebudget_logo_1785685735427.jpg';
 import { LocalDb } from '../utils/db';
 import { ACCENT_THEMES } from '../utils/theme';
+import { auth } from '../firebase';
+import { CloudDb } from '../utils/cloudDb';
 
 import { SubscriptionState } from '../types';
 import { SubscriptionManager } from '../utils/subscription';
@@ -224,6 +226,9 @@ export function BudgetSettings({
   const [deviceRestoreConfirm, setDeviceRestoreConfirm] = useState<boolean>(false);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
   const [showBackupSuccess, setShowBackupSuccess] = useState<boolean>(false);
+  const [showWipeModal, setShowWipeModal] = useState<boolean>(false);
+  const [wipeConfirmInput, setWipeConfirmInput] = useState<string>('');
+  const [isWiping, setIsWiping] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentMonthPrefixVal = useMemo(() => {
@@ -741,44 +746,132 @@ export function BudgetSettings({
         )}
       </div>
 
-      {/* Database Purge Options */}
-      <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
-        <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-          <AlertTriangle size={15} /> DANGER ! CAUTION
+      {/* Database Purge / Permanent Cloud Data Wipe Section */}
+      <div className="bg-rose-950/15 border border-rose-500/20 rounded-xl p-3.5 space-y-2">
+        <h4 className="text-xs font-extrabold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
+          <AlertTriangle size={15} className="text-rose-500" /> Danger Zone: Permanent Data Wipe
         </h4>
-        <p className="text-[11px] text-gray-400 mt-1 leading-normal">
-          Delete ALL records. This will remove all records and set app to a new start.
+        <p className="text-[11px] text-gray-400 leading-relaxed">
+          Permanently erase all transaction history, custom categories, monthly budgets, income streams, fixed expenses, and savings goals from both Cloud Sync and local storage.
         </p>
 
-        <div className="mt-2.5">
-          {!confirmReset ? (
-            <button
-              onClick={() => setConfirmReset(true)}
-              className="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
-            >
-              Reset to Empty Initial Database
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <span className="block text-[10px] font-bold text-rose-400">Are you absolutely sure? All local expense data gets deleted forever!</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={triggerReset}
-                  className="py-1 px-2.5 bg-rose-600 text-slate-100 text-xs font-bold rounded-md cursor-pointer transition-all border-0"
-                >
-                  Yes, Purge Now
-                </button>
-                <button
-                  onClick={() => setConfirmReset(false)}
-                  className="py-1 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] text-gray-300 text-xs font-semibold rounded-md cursor-pointer transition-all border-0"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="pt-1">
+          <button
+            onClick={() => {
+              setWipeConfirmInput('');
+              setShowWipeModal(true);
+            }}
+            className="py-2 px-3.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+          >
+            <Trash2 size={13} />
+            <span>Delete all Cloud data and History</span>
+          </button>
         </div>
       </div>
+
+      {/* Irreversible Permanent Data Wipe Confirmation Modal */}
+      {showWipeModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-[#111111] border border-rose-500/30 rounded-2xl p-5 md:p-6 space-y-4 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200 text-left">
+            
+            <div className="flex items-start justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-white tracking-tight uppercase font-sans">
+                    Delete All Cloud Data & History
+                  </h3>
+                  <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block font-mono">
+                    Irreversible Action
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!isWiping) setShowWipeModal(false);
+                }}
+                className="p-1 text-gray-400 hover:text-white rounded-lg transition-colors cursor-pointer border-0 bg-transparent"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-2 text-xs">
+              <p className="font-bold text-rose-300 leading-snug">
+                ⚠️ Warning: This will permanently wipe all your records!
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-[11px] text-gray-300 leading-relaxed">
+                <li>All transaction history & receipts will be erased.</li>
+                <li>All budgets, category structures & limits will be removed.</li>
+                <li>All savings goals, income streams & fixed expenses will be lost.</li>
+                <li>Cloud Sync records in Firestore & local caches will be purged.</li>
+              </ul>
+              <p className="text-[11px] font-semibold text-rose-400 pt-1">
+                You will have to begin setup from the start across all connected devices.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-gray-300 select-none">
+                To confirm, type <span className="font-mono text-rose-400 font-extrabold select-all">PERMANENTLY DELETE MY DATA</span> below:
+              </label>
+              <input
+                type="text"
+                value={wipeConfirmInput}
+                onChange={(e) => setWipeConfirmInput(e.target.value)}
+                disabled={isWiping}
+                placeholder="PERMANENTLY DELETE MY DATA"
+                className="w-full px-3.5 py-2.5 bg-black/60 border border-white/15 focus:border-rose-500 outline-none rounded-xl text-xs font-mono font-bold text-white placeholder:text-gray-600 transition-all"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowWipeModal(false)}
+                disabled={isWiping}
+                className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-xs font-bold transition-all cursor-pointer border-0 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={
+                  isWiping ||
+                  (wipeConfirmInput.trim().toUpperCase() !== 'PERMANENTLY DELETE MY DATA' &&
+                   wipeConfirmInput.trim().toLowerCase() !== 'permanently')
+                }
+                onClick={async () => {
+                  setIsWiping(true);
+                  try {
+                    if (auth.currentUser?.uid) {
+                      await CloudDb.wipeCloudData(auth.currentUser.uid);
+                    }
+                  } catch (e) {
+                    console.error('Error wiping cloud database:', e);
+                  }
+                  onDatabaseReset();
+                }}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-950 disabled:text-rose-500/50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-extrabold transition-all cursor-pointer border-0 shadow-lg shadow-rose-900/30 flex items-center justify-center gap-1.5"
+              >
+                {isWiping ? (
+                  <span>Wiping All Data...</span>
+                ) : (
+                  <>
+                    <Trash2 size={13} />
+                    <span>Permanently Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
 
     </div>
