@@ -155,6 +155,38 @@ export const CloudDb = {
     try {
       // 1. Fetch user profile
       const profileSnap = await getDoc(doc(db, 'userProfiles', userId));
+
+      // 2. Fetch Expenses
+      const expQuery = query(collection(db, 'expenses'), where('userId', '==', userId));
+      const expSnap = await getDocs(expQuery);
+
+      // 3. Fetch Categories
+      const catQuery = query(collection(db, 'categories'), where('userId', '==', userId));
+      const catSnap = await getDocs(catQuery);
+
+      // 4. Fetch Budgets
+      const budQuery = query(collection(db, 'budgets'), where('userId', '==', userId));
+      const budSnap = await getDocs(budQuery);
+
+      // 5. Fetch Income Streams
+      const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
+      const incSnap = await getDocs(incQuery);
+
+      // 6. Fetch Fixed Expenses
+      const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
+      const fixSnap = await getDocs(fixQuery);
+
+      // 7. Fetch Savings Goals
+      const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
+      const savSnap = await getDocs(savQuery);
+
+      const hasAnyCloudData = profileSnap.exists() || !expSnap.empty || !catSnap.empty || !budSnap.empty || !incSnap.empty || !fixSnap.empty || !savSnap.empty;
+
+      if (!hasAnyCloudData) {
+        return false;
+      }
+
+      // Process profile
       if (profileSnap.exists()) {
         const pData = profileSnap.data();
         if (pData.currencySymbol) LocalDb.setCurrencySymbol(pData.currencySymbol);
@@ -165,9 +197,8 @@ export const CloudDb = {
         }
       }
 
-      // 2. Fetch Expenses
-      const expQuery = query(collection(db, 'expenses'), where('userId', '==', userId));
-      const expSnap = await getDocs(expQuery);
+      // Process Expenses & merge any local unsynced additions
+      const localExpenses = LocalDb.getExpenses();
       const expenses: Expense[] = [];
       expSnap.forEach(d => {
         const data = d.data();
@@ -181,14 +212,23 @@ export const CloudDb = {
           createdAt: data.createdAt || Date.now()
         });
       });
+
+      const cloudExpIds = new Set(expenses.map(e => e.id));
+      const unsyncedLocalExp = localExpenses.filter(e => e.id && !cloudExpIds.has(e.id));
+      if (unsyncedLocalExp.length > 0) {
+        expenses.push(...unsyncedLocalExp);
+        unsyncedLocalExp.forEach(e => {
+          CloudDb.saveExpenseToCloud(userId, e).catch(console.error);
+        });
+      }
+
       expenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
 
-      // 3. Fetch Categories
-      const catQuery = query(collection(db, 'categories'), where('userId', '==', userId));
-      const catSnap = await getDocs(catQuery);
+      // Process Categories & merge any local unsynced additions
+      const localCategories = LocalDb.getCategoriesOnly();
+      const categories: Category[] = [];
       if (!catSnap.empty) {
-        const categories: Category[] = [];
         catSnap.forEach(d => {
           const data = d.data();
           categories.push({
@@ -202,12 +242,21 @@ export const CloudDb = {
             isHidden: !!data.isHidden
           });
         });
+      }
+
+      if (categories.length > 0) {
+        const cloudCatIds = new Set(categories.map(c => c.id));
+        const unsyncedLocalCat = localCategories.filter(c => c.id && !cloudCatIds.has(c.id));
+        if (unsyncedLocalCat.length > 0) {
+          categories.push(...unsyncedLocalCat);
+          unsyncedLocalCat.forEach(c => {
+            CloudDb.saveCategoryToCloud(userId, c).catch(console.error);
+          });
+        }
         localStorage.setItem('personal_finance_app_categories', JSON.stringify(categories));
       }
 
-      // 4. Fetch Budgets
-      const budQuery = query(collection(db, 'budgets'), where('userId', '==', userId));
-      const budSnap = await getDocs(budQuery);
+      // Process Budgets
       if (!budSnap.empty) {
         const budgets: MonthlyBudget[] = [];
         budSnap.forEach(d => {
@@ -221,9 +270,8 @@ export const CloudDb = {
         localStorage.setItem('personal_finance_app_budget', JSON.stringify(budgets));
       }
 
-      // 5. Fetch Income Streams
-      const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
-      const incSnap = await getDocs(incQuery);
+      // Process Income Streams & merge any local unsynced additions
+      const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
@@ -234,13 +282,19 @@ export const CloudDb = {
           frequency: data.frequency
         });
       });
-      if (!incSnap.empty) {
-        localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
-      }
 
-      // 6. Fetch Fixed Expenses
-      const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
-      const fixSnap = await getDocs(fixQuery);
+      const cloudIncIds = new Set(incomeStreams.map(i => i.id));
+      const unsyncedLocalInc = localInc.filter((i: any) => i.id && !cloudIncIds.has(i.id));
+      if (unsyncedLocalInc.length > 0) {
+        incomeStreams.push(...unsyncedLocalInc);
+        unsyncedLocalInc.forEach((inc: any) => {
+          CloudDb.saveIncomeStreamToCloud(userId, inc).catch(console.error);
+        });
+      }
+      localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
+
+      // Process Fixed Expenses & merge any local unsynced additions
+      const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
         const data = d.data();
@@ -251,13 +305,19 @@ export const CloudDb = {
           dueDate: data.dueDate
         });
       });
-      if (!fixSnap.empty) {
-        localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
-      }
 
-      // 7. Fetch Savings Goals
-      const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
-      const savSnap = await getDocs(savQuery);
+      const cloudFixIds = new Set(fixedExpenses.map(f => f.id));
+      const unsyncedLocalFix = localFix.filter((f: any) => f.id && !cloudFixIds.has(f.id));
+      if (unsyncedLocalFix.length > 0) {
+        fixedExpenses.push(...unsyncedLocalFix);
+        unsyncedLocalFix.forEach((fix: any) => {
+          CloudDb.saveFixedExpenseToCloud(userId, fix).catch(console.error);
+        });
+      }
+      localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
+
+      // Process Savings Goals & merge any local unsynced additions
+      const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
         const data = d.data();
@@ -270,9 +330,16 @@ export const CloudDb = {
           allocationPercent: Number(data.allocationPercent) || 0
         });
       });
-      if (!savSnap.empty) {
-        localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
+
+      const cloudSavIds = new Set(savingsGoals.map(s => s.id));
+      const unsyncedLocalSav = localSav.filter((s: any) => s.id && !cloudSavIds.has(s.id));
+      if (unsyncedLocalSav.length > 0) {
+        savingsGoals.push(...unsyncedLocalSav);
+        unsyncedLocalSav.forEach((sav: any) => {
+          CloudDb.saveSavingsGoalToCloud(userId, sav).catch(console.error);
+        });
       }
+      localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
 
       localStorage.setItem('personal_finance_app_has_init', 'true');
       return true;
@@ -288,7 +355,7 @@ export const CloudDb = {
   async saveExpenseToCloud(userId: string, expense: Expense): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'expenses', expense.id), { ...expense, userId }, { merge: true });
+      await setDoc(doc(db, 'expenses', expense.id), { ...expense, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving expense to cloud:', e);
     }
@@ -306,7 +373,7 @@ export const CloudDb = {
   async saveCategoryToCloud(userId: string, category: Category): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'categories', category.id), { ...category, userId }, { merge: true });
+      await setDoc(doc(db, 'categories', category.id), { ...category, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving category to cloud:', e);
     }
@@ -324,7 +391,7 @@ export const CloudDb = {
   async saveSavingsGoalToCloud(userId: string, goal: any): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'savingsGoals', goal.id), { ...goal, userId }, { merge: true });
+      await setDoc(doc(db, 'savingsGoals', goal.id), { ...goal, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving goal to cloud:', e);
     }
@@ -342,7 +409,7 @@ export const CloudDb = {
   async saveIncomeStreamToCloud(userId: string, stream: any): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'incomeStreams', stream.id), { ...stream, userId }, { merge: true });
+      await setDoc(doc(db, 'incomeStreams', stream.id), { ...stream, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving income stream to cloud:', e);
     }
@@ -360,7 +427,7 @@ export const CloudDb = {
   async saveFixedExpenseToCloud(userId: string, fixedExp: any): Promise<void> {
     if (!userId) return;
     try {
-      await setDoc(doc(db, 'fixedExpenses', fixedExp.id), { ...fixedExp, userId }, { merge: true });
+      await setDoc(doc(db, 'fixedExpenses', fixedExp.id), { ...fixedExp, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving fixed expense to cloud:', e);
     }
@@ -379,7 +446,7 @@ export const CloudDb = {
     if (!userId) return;
     try {
       const docId = `bud_${budget.month}`;
-      await setDoc(doc(db, 'budgets', docId), { ...budget, id: docId, userId }, { merge: true });
+      await setDoc(doc(db, 'budgets', docId), { ...budget, id: docId, userId, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
       console.error('Error saving budget to cloud:', e);
     }
