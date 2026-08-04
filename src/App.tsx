@@ -649,21 +649,36 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
+      if (currentUser?.uid) {
+        incomeStreams.forEach(stream => {
+          CloudDb.saveIncomeStreamToCloud(currentUser.uid, stream).catch(e => console.error(e));
+        });
+      }
     } catch (e) {}
-  }, [incomeStreams]);
+  }, [incomeStreams, currentUser]);
 
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
+      if (currentUser?.uid) {
+        fixedExpenses.forEach(fix => {
+          CloudDb.saveFixedExpenseToCloud(currentUser.uid, fix).catch(e => console.error(e));
+        });
+      }
     } catch (e) {}
-  }, [fixedExpenses]);
+  }, [fixedExpenses, currentUser]);
 
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
       setCategories(LocalDb.getCategories(selectedMonth));
+      if (currentUser?.uid) {
+        savingsGoals.forEach(goal => {
+          CloudDb.saveSavingsGoalToCloud(currentUser.uid, goal).catch(e => console.error(e));
+        });
+      }
     } catch (e) {}
-  }, [savingsGoals, selectedMonth]);
+  }, [savingsGoals, selectedMonth, currentUser]);
 
   const getPreviousMonthName = () => {
     const date = new Date();
@@ -1255,6 +1270,9 @@ Date: ${new Date().toLocaleString()}
       }
 
       if (user) {
+        // First sync local data up to Firestore so any newly entered budget data is safely saved
+        await CloudDb.uploadLocalDataToCloud(user.uid);
+
         // Initial download from cloud to local
         const downloaded = await CloudDb.downloadCloudDataToLocal(user.uid);
         if (downloaded) {

@@ -67,66 +67,78 @@ export const CloudDb = {
       }), { merge: true });
 
       // 2. Upload Expenses
-      const expBatch = writeBatch(db);
-      for (const exp of expenses) {
-        expBatch.set(doc(db, 'expenses', exp.id), {
-          ...exp,
-          userId
-        }, { merge: true });
+      if (expenses.length > 0) {
+        const expBatch = writeBatch(db);
+        for (const exp of expenses) {
+          expBatch.set(doc(db, 'expenses', exp.id), cleanUndefined({
+            ...exp,
+            userId
+          }), { merge: true });
+        }
+        await expBatch.commit();
       }
-      await expBatch.commit();
 
       // 3. Upload Categories
-      const catBatch = writeBatch(db);
-      for (const cat of categories) {
-        catBatch.set(doc(db, 'categories', cat.id), {
-          ...cat,
-          userId
-        }, { merge: true });
+      if (categories.length > 0) {
+        const catBatch = writeBatch(db);
+        for (const cat of categories) {
+          catBatch.set(doc(db, 'categories', cat.id), cleanUndefined({
+            ...cat,
+            userId
+          }), { merge: true });
+        }
+        await catBatch.commit();
       }
-      await catBatch.commit();
 
       // 4. Upload Budgets
-      const budBatch = writeBatch(db);
-      for (const bud of budgets) {
-        const docId = `bud_${bud.month}`;
-        budBatch.set(doc(db, 'budgets', docId), {
-          ...bud,
-          id: docId,
-          userId
-        }, { merge: true });
+      if (budgets.length > 0) {
+        const budBatch = writeBatch(db);
+        for (const bud of budgets) {
+          const docId = `bud_${bud.month}`;
+          budBatch.set(doc(db, 'budgets', docId), cleanUndefined({
+            ...bud,
+            id: docId,
+            userId
+          }), { merge: true });
+        }
+        await budBatch.commit();
       }
-      await budBatch.commit();
 
       // 5. Upload Income Streams
-      const incBatch = writeBatch(db);
-      for (const inc of incomeStreams) {
-        incBatch.set(doc(db, 'incomeStreams', inc.id), {
-          ...inc,
-          userId
-        }, { merge: true });
+      if (incomeStreams.length > 0) {
+        const incBatch = writeBatch(db);
+        for (const inc of incomeStreams) {
+          incBatch.set(doc(db, 'incomeStreams', inc.id), cleanUndefined({
+            ...inc,
+            userId
+          }), { merge: true });
+        }
+        await incBatch.commit();
       }
-      await incBatch.commit();
 
       // 6. Upload Fixed Expenses
-      const fixBatch = writeBatch(db);
-      for (const fix of fixedExpenses) {
-        fixBatch.set(doc(db, 'fixedExpenses', fix.id), {
-          ...fix,
-          userId
-        }, { merge: true });
+      if (fixedExpenses.length > 0) {
+        const fixBatch = writeBatch(db);
+        for (const fix of fixedExpenses) {
+          fixBatch.set(doc(db, 'fixedExpenses', fix.id), cleanUndefined({
+            ...fix,
+            userId
+          }), { merge: true });
+        }
+        await fixBatch.commit();
       }
-      await fixBatch.commit();
 
       // 7. Upload Savings Goals
-      const savBatch = writeBatch(db);
-      for (const sav of savingsGoals) {
-        savBatch.set(doc(db, 'savingsGoals', sav.id), {
-          ...sav,
-          userId
-        }, { merge: true });
+      if (savingsGoals.length > 0) {
+        const savBatch = writeBatch(db);
+        for (const sav of savingsGoals) {
+          savBatch.set(doc(db, 'savingsGoals', sav.id), cleanUndefined({
+            ...sav,
+            userId
+          }), { merge: true });
+        }
+        await savBatch.commit();
       }
-      await savBatch.commit();
 
       console.log('Local data successfully uploaded & synced to Firestore');
     } catch (error) {
@@ -464,6 +476,19 @@ export const CloudDb = {
     // 4. Realtime Income Streams
     const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
     const unsubInc = onSnapshot(incQuery, (incSnap) => {
+      if (incSnap.empty) {
+        try {
+          const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
+          if (Array.isArray(localInc) && localInc.length > 0) {
+            const batch = writeBatch(db);
+            for (const item of localInc) {
+              batch.set(doc(db, 'incomeStreams', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+            }
+            batch.commit().catch(e => console.error(e));
+            return;
+          }
+        } catch (e) {}
+      }
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
@@ -484,6 +509,19 @@ export const CloudDb = {
     // 5. Realtime Fixed Expenses
     const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
     const unsubFix = onSnapshot(fixQuery, (fixSnap) => {
+      if (fixSnap.empty) {
+        try {
+          const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
+          if (Array.isArray(localFix) && localFix.length > 0) {
+            const batch = writeBatch(db);
+            for (const item of localFix) {
+              batch.set(doc(db, 'fixedExpenses', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+            }
+            batch.commit().catch(e => console.error(e));
+            return;
+          }
+        } catch (e) {}
+      }
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
         const data = d.data();
@@ -504,6 +542,19 @@ export const CloudDb = {
     // 6. Realtime Savings Goals
     const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
     const unsubSav = onSnapshot(savQuery, (savSnap) => {
+      if (savSnap.empty) {
+        try {
+          const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
+          if (Array.isArray(localSav) && localSav.length > 0) {
+            const batch = writeBatch(db);
+            for (const item of localSav) {
+              batch.set(doc(db, 'savingsGoals', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+            }
+            batch.commit().catch(e => console.error(e));
+            return;
+          }
+        } catch (e) {}
+      }
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
         const data = d.data();
