@@ -324,6 +324,38 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
+  // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state
+  const logoTapCountRef = useRef<number>(0);
+  const logoTapTimerRef = useRef<any>(null);
+  const [devNotice, setDevNotice] = useState<string | null>(null);
+
+  const handleLogoTap = () => {
+    logoTapCountRef.current += 1;
+    if (logoTapTimerRef.current) {
+      clearTimeout(logoTapTimerRef.current);
+    }
+
+    if (logoTapCountRef.current >= 5) {
+      logoTapCountRef.current = 0;
+      if (subscriptionState.isSubscribed) {
+        // Toggle OFF Dev Pro -> Reset to standard trial
+        const updated = SubscriptionManager.startTrial();
+        setSubscriptionState(updated);
+        setDevNotice('🔒 Developer PRO Mode Deactivated');
+      } else {
+        // Toggle ON Dev Pro -> Activate Pro membership
+        const updated = SubscriptionManager.activatePlan('yearly');
+        setSubscriptionState(updated);
+        setDevNotice('🔓 Developer PRO Mode Activated');
+      }
+      setTimeout(() => setDevNotice(null), 3500);
+    } else {
+      logoTapTimerRef.current = setTimeout(() => {
+        logoTapCountRef.current = 0;
+      }, 2000);
+    }
+  };
+
   // Derived Demo Mode flag (active when trial expired and unsubscribed)
   const isDemoMode = !subscriptionState.isSubscribed && SubscriptionManager.isPaywalled(subscriptionState);
 
@@ -1735,33 +1767,44 @@ Date: ${new Date().toLocaleString()}
     loadDatabaseState(selectedMonth);
   };
 
-  const handleResetDatabase = () => {
-    // Complete, destructive storage clear to resolve any version mismatches
+  const handleResetDatabase = async () => {
+    // Clear LocalStorage and SessionStorage (local cache only - Cloud records remain safe in Firestore)
     try {
       window.localStorage.clear();
       window.sessionStorage.clear();
     } catch (e) {}
 
-    // Unregister service workers and purge caches to break persistent caching on mobile phones
+    // Purge IndexedDB databases (local app offline cache)
+    try {
+      if (window.indexedDB && window.indexedDB.databases) {
+        const dbs = await window.indexedDB.databases();
+        for (const dbInfo of dbs) {
+          if (dbInfo.name) {
+            window.indexedDB.deleteDatabase(dbInfo.name);
+          }
+        }
+      }
+    } catch (e) {}
+
+    // Unregister service workers to clear PWA application cache
     try {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (let reg of registrations) {
-            reg.unregister();
-          }
-        });
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) {
+          await reg.unregister();
+        }
       }
     } catch (e) {}
 
+    // Purge browser Cache Storage
     try {
       if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach(name => caches.delete(name));
-        });
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
       }
     } catch (e) {}
 
-    // Force immediate hard reload of the page to download pristine bundle and re-initialize the empty database
+    // Hard reload to initialize pristine fresh local state (Cloud data will re-sync if signed in)
     window.location.reload();
   };
 
@@ -2043,8 +2086,12 @@ Date: ${new Date().toLocaleString()}
       <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden select-none relative" id="android_app_root">
         {/* App Title & Top Header */}
         <div className="bg-[#0A0A0A] text-white pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 px-2.5 sm:px-3.5 flex items-center justify-between shrink-0 border-b border-white/5 relative">
-          <div className="flex items-center gap-2 select-none pr-1 sm:pr-4 shrink-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20">
+          <div 
+            onClick={handleLogoTap}
+            className="flex items-center gap-2 select-none pr-1 sm:pr-4 shrink-0 cursor-pointer active:opacity-80 transition-opacity"
+            title="LooseBudget Logo"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden border border-emerald-500/20 flex items-center justify-center bg-black shrink-0 relative shadow-md shadow-emerald-950/20 active:scale-90 transition-transform">
               <img 
                 src={appLogo} 
                 alt="LooseBudget Logo" 
@@ -2348,6 +2395,13 @@ Date: ${new Date().toLocaleString()}
           </div>
         </div>
 
+        {/* Developer Mode Floating Toast Banner */}
+        {devNotice && (
+          <div className="bg-emerald-600/90 backdrop-blur-md text-white text-xs font-black py-2 px-4 text-center shadow-xl border-b border-emerald-400/40 animate-in slide-in-from-top duration-200 z-[100] flex items-center justify-center gap-2">
+            <span>{devNotice}</span>
+          </div>
+        )}
+
         {/* Contextual Savings & Budget Tip Card OR Demo Mode Announcement Banner */}
         <div className="px-3 pt-1.5 pb-0.5 shrink-0">
           {!subscriptionState.isSubscribed && (subscriptionState.tier === 'free_preview' || subscriptionState.status === 'preview') ? (
@@ -2397,6 +2451,7 @@ Date: ${new Date().toLocaleString()}
                 <ExpenseForm 
                   categories={categories} 
                   savingsGoals={savingsGoals}
+                  onOpenCategoryManager={() => setShowCategoryManager(true)}
                   onSubmit={handleAddExpense} 
                   onClose={() => setShowAddForm(false)} 
                   defaultCategoryId={defaultCategoryId}
@@ -2412,6 +2467,7 @@ Date: ${new Date().toLocaleString()}
                 <ExpenseForm 
                   categories={categories} 
                   savingsGoals={savingsGoals}
+                  onOpenCategoryManager={() => setShowCategoryManager(true)}
                   onSubmit={handleSaveEditedExpense} 
                   onClose={() => setEditingExpense(null)} 
                   defaultCategoryId={defaultCategoryId}

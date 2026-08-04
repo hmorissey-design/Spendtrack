@@ -15,6 +15,7 @@ interface ExpenseFormProps {
   onClose?: () => void;
   defaultCategoryId?: string;
   expenseToEdit?: Expense;
+  onOpenCategoryManager?: () => void;
 }
 
 const getLocalYYYYMMDD = () => {
@@ -38,7 +39,7 @@ const getDarkTextColor = (colorStr: string) => {
   return 'text-slate-800';
 };
 
-export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defaultCategoryId, expenseToEdit }: ExpenseFormProps) {
+export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defaultCategoryId, expenseToEdit, onOpenCategoryManager }: ExpenseFormProps) {
   const [amount, setAmount] = useState<string>(expenseToEdit ? expenseToEdit.amount.toString() : '');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     expenseToEdit 
@@ -449,17 +450,28 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
                 Tip: Drag & drop cards to reorder
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsReordering(!isReordering)}
-              className={`text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md transition-all cursor-pointer select-none active:scale-95 ${
-                isReordering 
-                  ? 'bg-emerald-600 text-white font-black' 
-                  : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {isReordering ? '✓ Done Arranging' : '⇅ Arrange Icons'}
-            </button>
+            <div className="flex items-center gap-1.5">
+              {onOpenCategoryManager && (
+                <button
+                  type="button"
+                  onClick={onOpenCategoryManager}
+                  className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer select-none active:scale-95"
+                >
+                  + Edit Categories
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsReordering(!isReordering)}
+                className={`text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md transition-all cursor-pointer select-none active:scale-95 ${
+                  isReordering 
+                    ? 'bg-emerald-600 text-white font-black' 
+                    : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {isReordering ? '✓ Done' : '⇅ Arrange'}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5 max-h-[240px] overflow-y-auto pr-1">
