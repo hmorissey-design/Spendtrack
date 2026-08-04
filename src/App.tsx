@@ -1333,7 +1333,7 @@ Date: ${new Date().toLocaleString()}
       const goalId = newExpenseData.category.substring(8);
       setSavingsGoals(prev => prev.map(goal => {
         if (goal.id === goalId) {
-          const updatedAmount = Math.max(0, (goal.currentAmount || 0) - newExpenseData.amount);
+          const updatedAmount = (goal.currentAmount || 0) - newExpenseData.amount;
           return { ...goal, currentAmount: updatedAmount };
         }
         return goal;
@@ -1377,7 +1377,7 @@ Date: ${new Date().toLocaleString()}
         newGoals = newGoals.map(goal => {
           if (goal.id === newGoalId) {
             goalsUpdated = true;
-            const updatedAmount = Math.max(0, (goal.currentAmount || 0) - updatedData.amount);
+            const updatedAmount = (goal.currentAmount || 0) - updatedData.amount;
             return { ...goal, currentAmount: updatedAmount };
           }
           return goal;
@@ -2396,6 +2396,7 @@ Date: ${new Date().toLocaleString()}
               <div className="w-full max-w-sm my-auto animate-in slide-in-from-bottom duration-250">
                 <ExpenseForm 
                   categories={categories} 
+                  savingsGoals={savingsGoals}
                   onSubmit={handleAddExpense} 
                   onClose={() => setShowAddForm(false)} 
                   defaultCategoryId={defaultCategoryId}
@@ -2410,6 +2411,7 @@ Date: ${new Date().toLocaleString()}
               <div className="w-full max-w-sm my-auto animate-in slide-in-from-bottom duration-250">
                 <ExpenseForm 
                   categories={categories} 
+                  savingsGoals={savingsGoals}
                   onSubmit={handleSaveEditedExpense} 
                   onClose={() => setEditingExpense(null)} 
                   defaultCategoryId={defaultCategoryId}
@@ -3607,10 +3609,10 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 5: FULL MONTHLY BUDGET (PREVIEW MODE) */}
           {activeTab === 'budget_full' && (() => {
-            const totalIncome = incomeStreams.reduce((sum, item) => sum + item.amount, 0);
-            const totalFixed = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
-            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
-            const totalSavings = savingsGoals.reduce((sum, item) => sum + item.amount, 0);
+            const totalIncome = incomeStreams.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
+            const totalFixed = fixedExpenses.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
+            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (Number(c?.limit) || 0), 0);
+            const totalSavings = savingsGoals.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
             const overallSurplus = totalIncome - (totalFixed + totalDiscretionary + totalSavings);
 
             return (

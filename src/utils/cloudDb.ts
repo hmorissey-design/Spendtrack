@@ -264,6 +264,7 @@ export const CloudDb = {
         savingsGoals.push({
           id: data.id || d.id,
           label: data.label,
+          amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
           currentAmount: Number(data.currentAmount) || 0,
           allocationPercent: Number(data.allocationPercent) || 0
@@ -561,6 +562,7 @@ export const CloudDb = {
         savingsGoals.push({
           id: data.id || d.id,
           label: data.label,
+          amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
           currentAmount: Number(data.currentAmount) || 0,
           allocationPercent: Number(data.allocationPercent) || 0

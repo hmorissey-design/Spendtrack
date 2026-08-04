@@ -10,6 +10,7 @@ import { renderCategoryIcon } from './BudgetSettings';
 
 interface ExpenseFormProps {
   categories: Category[];
+  savingsGoals?: { id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number }[];
   onSubmit: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
   onClose?: () => void;
   defaultCategoryId?: string;
@@ -37,7 +38,7 @@ const getDarkTextColor = (colorStr: string) => {
   return 'text-slate-800';
 };
 
-export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, expenseToEdit }: ExpenseFormProps) {
+export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defaultCategoryId, expenseToEdit }: ExpenseFormProps) {
   const [amount, setAmount] = useState<string>(expenseToEdit ? expenseToEdit.amount.toString() : '');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     expenseToEdit 
@@ -46,6 +47,14 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
           ? 'cat_uncategorized'
           : (categories[0]?.id || ''))
   );
+
+  // Compute selected Savings Goal capacity
+  const selectedSavingsGoal = selectedCategory.startsWith('SAVINGS_') && savingsGoals
+    ? savingsGoals.find(g => g.id === selectedCategory.substring(8))
+    : null;
+  const currentGoalBalance = selectedSavingsGoal ? (selectedSavingsGoal.currentAmount ?? selectedSavingsGoal.amount ?? 0) : 0;
+  const editingOriginalAmount = (expenseToEdit && expenseToEdit.category === selectedCategory) ? expenseToEdit.amount : 0;
+  const availableSavingsCapacity = currentGoalBalance + editingOriginalAmount;
   const [note, setNote] = useState<string>(expenseToEdit ? expenseToEdit.note : '');
   const [date, setDate] = useState<string>(expenseToEdit ? expenseToEdit.date : getLocalYYYYMMDD()); // Today's date YYYY-MM-DD
   const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>(expenseToEdit ? expenseToEdit.paymentMethod : 'card');
@@ -271,6 +280,14 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
       return;
     }
 
+    // Validate that expense does not exceed available funds in chosen Savings Goal
+    if (selectedSavingsGoal) {
+      if (parsedAmount > availableSavingsCapacity + 0.001) {
+        setErrorCode(`Expense amount ($${parsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) exceeds available savings in "${selectedSavingsGoal.label}" ($${availableSavingsCapacity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}). Please adjust the amount or add funds to this goal first.`);
+        return;
+      }
+    }
+
     // Prevent standard daily expenses from containing "savings" in the note/description
     if (!selectedCategory.startsWith('SAVINGS_') && note.toLowerCase().includes('savings')) {
       setErrorCode("Daily expenses cannot contain the word 'savings' in their description. Use a Savings category for savings goals.");
@@ -360,6 +377,14 @@ export function ExpenseForm({ categories, onSubmit, onClose, defaultCategoryId, 
                 ref={amountInputRef}
               />
             </div>
+
+            {/* Available Savings Goal Balance Badge */}
+            {selectedSavingsGoal && (
+              <div className="mt-2 w-full px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 rounded-xl flex items-center justify-between text-xs text-pink-300 font-sans">
+                <span>Available in <strong>{selectedSavingsGoal.label}</strong>:</span>
+                <span className="font-extrabold text-pink-200 font-mono">${availableSavingsCapacity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
 
             {/* Live calculation helper badge */}
             {(() => {
