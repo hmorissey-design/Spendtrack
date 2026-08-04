@@ -645,38 +645,5 @@ export const CloudDb = {
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
-  },
-
-  /**
-   * Permanently deletes all Cloud records (expenses, categories, budgets, income streams, fixed expenses, savings goals) for a user from Firestore.
-   * Note: Preserves the user profile and subscription state so paid plan status and renewal dates are not lost.
-   */
-  async wipeCloudData(userId: string): Promise<void> {
-    if (!userId) return;
-
-    const collectionsToWipe = [
-      'expenses',
-      'categories',
-      'budgets',
-      'incomeStreams',
-      'fixedExpenses',
-      'savingsGoals'
-    ];
-
-    try {
-      for (const colName of collectionsToWipe) {
-        const q = query(collection(db, colName), where('userId', '==', userId));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const batch = writeBatch(db);
-          snap.forEach(d => {
-            batch.delete(doc(db, colName, d.id));
-          });
-          await batch.commit();
-        }
-      }
-    } catch (err) {
-      console.error('Error wiping cloud data from Firestore:', err);
-    }
   }
 };

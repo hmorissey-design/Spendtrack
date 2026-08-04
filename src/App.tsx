@@ -1775,16 +1775,7 @@ Date: ${new Date().toLocaleString()}
     // Capture active subscription state so paid account access / renewal status is preserved
     const savedSubState = SubscriptionManager.getSubscriptionState();
 
-    // Wipe Cloud Firestore records if signed in (financial data only, keeping user profile/subscription intact)
-    if (auth.currentUser?.uid) {
-      try {
-        await CloudDb.wipeCloudData(auth.currentUser.uid);
-      } catch (e) {
-        console.error('Error wiping cloud data during reset:', e);
-      }
-    }
-
-    // Clear LocalStorage and SessionStorage
+    // Clear LocalStorage and SessionStorage (local cache only)
     try {
       window.localStorage.clear();
       window.sessionStorage.clear();

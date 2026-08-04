@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error in ExpenseTrack app:', error, errorInfo);
+    console.error('Uncaught error in LooseBudget app:', error, errorInfo);
   }
 
   private handleReset = () => {
