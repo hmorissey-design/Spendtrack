@@ -249,7 +249,7 @@ export function BudgetSettings({
   } = useMemo(() => {
     const expensesInMonth = localExpenses.filter(e => e.date.startsWith(currentMonthPrefixVal) && e.category !== 'cat_business_expense' && !e.category.startsWith('SAVINGS_'));
     const spentObj = expensesInMonth.reduce((sum, e) => sum + e.amount, 0);
-    const limitObj = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
+    const limitObj = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_') && !c.isHidden).reduce((sum, c) => sum + (c.limit || 0), 0);
     const percentObj = limitObj > 0 ? Math.round((spentObj / limitObj) * 100) : 0;
     const remainingObj = limitObj - spentObj;
     return {
@@ -1271,7 +1271,7 @@ function RenderBudgetsCurrencyLive({
           <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#eeeeee]">Category Budgets</span>
         </div>
 
-        {categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).map((cat, idx) => (
+        {categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_') && !c.isHidden).map((cat, idx) => (
           <div key={idx} className="flex items-center justify-between text-[10px] bg-black/30 p-2 rounded-xl border border-white/5 leading-none">
             <div className="flex items-center gap-1.5">
               <span className="text-xs">{cat.icon === 'Utensils' ? '🍔' : cat.icon === 'ShoppingBag' ? '🛒' : cat.icon === 'Film' ? '🍿' : cat.icon === 'Car' ? '🚗' : '📁'}</span>

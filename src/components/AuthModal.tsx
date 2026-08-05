@@ -11,6 +11,7 @@ import {
   User 
 } from '../firebase';
 import { CloudDb } from '../utils/cloudDb';
+import { LocalDb } from '../utils/db';
 import { X, LogIn, LogOut, Cloud, RefreshCw, CheckCircle2, User as UserIcon, ShieldCheck, Mail, Lock, UserPlus, KeyRound } from 'lucide-react';
 
 interface AuthModalProps {
@@ -150,6 +151,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
     try {
       await signOut(auth);
+      LocalDb.clearAllData();
+      onDataSynced();
       setStatusMessage('Signed out successfully.');
       setTimeout(() => {
         onClose();

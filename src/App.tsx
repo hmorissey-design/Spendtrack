@@ -14,6 +14,8 @@ import {
   Search, 
   Filter, 
   Trash2, 
+  Eye,
+  EyeOff,
   TrendingUp, 
   DollarSign, 
   Sparkles, 
@@ -1342,6 +1344,10 @@ Date: ${new Date().toLocaleString()}
           refreshPlannerStatesFromStorage();
         });
         unsubRealtimeRef.current = unsubRealtime;
+      } else {
+        LocalDb.clearAllData();
+        loadDatabaseState(selectedMonth);
+        refreshPlannerStatesFromStorage();
       }
     });
 
@@ -1932,8 +1938,8 @@ Date: ${new Date().toLocaleString()}
     const currentMonthExpenses = expenses.filter(e => e.date.startsWith(currentMonthPrefix) && e.category !== 'cat_business_expense' && !e.category.startsWith('SAVINGS_'));
     const totalSpent = currentMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
     
-    // The Total Budget limit should be the total of individual category budgets (excluding business and savings expenses)
-    const limit = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (c.limit || 0), 0);
+    // The Total Budget limit should be the total of active (non-hidden) individual category budgets (excluding business and savings expenses)
+    const limit = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_') && !c.isHidden).reduce((sum, c) => sum + (c.limit || 0), 0);
     
     const percent = limit > 0 
       ? Math.round((totalSpent / limit) * 100) 
@@ -4169,9 +4175,14 @@ Date: ${new Date().toLocaleString()}
                                   />
                                 ) : (
                                   <div className="flex items-center gap-1.5 min-w-0">
-                                    <span className="text-xs text-gray-300 font-medium truncate">
+                                    <span className={`text-xs font-medium truncate ${cat.isHidden ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
                                       {cat.name}
                                     </span>
+                                    {cat.isHidden && (
+                                      <span className="text-[7.5px] bg-amber-500/15 text-amber-400 border border-amber-500/20 px-1 py-0.2 rounded font-mono font-bold uppercase shrink-0">
+                                        Hidden
+                                      </span>
+                                    )}
                                     {isBusiness && (
                                       <span className="text-[7.5px] bg-slate-500/20 text-slate-400 ml-1.5 px-1 rounded font-mono font-bold uppercase shrink-0">
                                         Tax Deductible
@@ -4199,11 +4210,15 @@ Date: ${new Date().toLocaleString()}
                                 />
                                 {!isBusiness && (
                                   <button 
-                                    onClick={() => setItemToDelete({ type: 'category', id: cat.id, name: cat.name })}
-                                    className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                    title="Remove Category"
+                                    onClick={() => handleUpdateCategory({ ...cat, isHidden: !cat.isHidden })}
+                                    className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                      cat.isHidden 
+                                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20' 
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                                    }`}
+                                    title={cat.isHidden ? 'Unhide category' : 'Hide category'}
                                   >
-                                    <Trash2 size={12} />
+                                    {cat.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
                                   </button>
                                 )}
                               </div>

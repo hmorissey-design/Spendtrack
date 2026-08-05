@@ -102,8 +102,8 @@ export function CategoryManager({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Filter tab state: 'all' | 'spending' | 'fixed' | 'savings'
-  const [activeTab, setActiveTab] = useState<'all' | 'spending' | 'fixed' | 'savings'>('all');
+  // Filter tab state: 'all' | 'spending' | 'fixed'
+  const [activeTab, setActiveTab] = useState<'all' | 'spending' | 'fixed'>('all');
 
   // Creator state
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
@@ -113,21 +113,21 @@ export function CategoryManager({
   const [formColor, setFormColor] = useState<string>('emerald');
   const [formIsHidden, setFormIsHidden] = useState<boolean>(false);
 
-  // Build complete list of categories (Daily Spending, Known/Fixed Expenses, Savings Goals, Business)
+  // Build complete list of categories (Daily Spending, Known/Fixed Expenses, Business)
   const unifiedCategories = useMemo(() => {
-    // 1. Get standard categories from props / LocalDb
-    const list: Array<Category & { categoryType: 'spending' | 'fixed' | 'savings' | 'business' }> = categories.map(c => {
-      let categoryType: 'spending' | 'fixed' | 'savings' | 'business' = 'spending';
-      if (c.id.startsWith('SAVINGS_')) {
-        categoryType = 'savings';
-      } else if (c.id === 'cat_business_expense') {
-        categoryType = 'business';
-      }
-      return {
-        ...c,
-        categoryType
-      };
-    });
+    // 1. Get standard categories from props / LocalDb (excluding Savings Goals which are managed in Savings Goals section)
+    const list: Array<Category & { categoryType: 'spending' | 'fixed' | 'business' }> = categories
+      .filter(c => !c.id.startsWith('SAVINGS_'))
+      .map(c => {
+        let categoryType: 'spending' | 'fixed' | 'business' = 'spending';
+        if (c.id === 'cat_business_expense') {
+          categoryType = 'business';
+        }
+        return {
+          ...c,
+          categoryType
+        };
+      });
 
     // 2. Synthesize Known/Fixed Expense categories if not present
     fixedExpenses.forEach(fix => {
@@ -158,24 +158,19 @@ export function CategoryManager({
     if (activeTab === 'fixed') {
       return unifiedCategories.filter(c => c.categoryType === 'fixed');
     }
-    if (activeTab === 'savings') {
-      return unifiedCategories.filter(c => c.categoryType === 'savings');
-    }
     return unifiedCategories;
   }, [unifiedCategories, activeTab]);
 
   const handleOpenEdit = (cat: Category) => {
     setEditingCategory(cat);
-    const isSavings = cat.id.startsWith('SAVINGS_');
-    const cleanName = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name;
-    setFormName(cleanName);
-    setFormLimit(cat.id === 'cat_uncategorized' || isSavings ? '0' : (cat.limit || 0).toString());
-    setFormIcon(cat.icon || (isSavings ? 'PiggyBank' : 'Tag'));
+    setFormName(cat.name);
+    setFormLimit(cat.id === 'cat_uncategorized' ? '0' : (cat.limit || 0).toString());
+    setFormIcon(cat.icon || 'Tag');
     setFormIsHidden(!!cat.isHidden);
     
     // Reverse-guess form color state from preset
     const match = COLOR_PRESETS.find(p => (cat.color || '').includes(p.value));
-    setFormColor(match ? match.value : (isSavings ? 'pink' : 'emerald'));
+    setFormColor(match ? match.value : 'emerald');
     setErrorMsg(null);
   };
 
@@ -328,17 +323,6 @@ export function CategoryManager({
             >
               Known Expenses ({unifiedCategories.filter(c => c.categoryType === 'fixed').length})
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('savings')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'savings' 
-                  ? 'bg-emerald-600 text-white shadow-xs' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              Savings Goals ({unifiedCategories.filter(c => c.categoryType === 'savings').length})
-            </button>
           </div>
 
           {/* Master action to spawn a new creator form inline placed at the top */}
@@ -355,11 +339,10 @@ export function CategoryManager({
           <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
             {filteredCategories.map((cat) => {
               const displayLimit = cat.limit || 0;
-              const isSavings = cat.id.startsWith('SAVINGS_');
               const isBusiness = cat.id === 'cat_business_expense';
               const isFixed = cat.categoryType === 'fixed';
               const isDefault = cat.id === defaultCategoryId;
-              const displayName = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name;
+              const displayName = cat.name;
 
               return (
                 <div 
@@ -374,7 +357,7 @@ export function CategoryManager({
                     <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 ${
                       cat.color?.includes('/') ? cat.color : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     }`}>
-                      {renderCategoryIcon(cat.icon || (isSavings ? 'PiggyBank' : isFixed ? 'Calendar' : 'Tag'), 16)}
+                      {renderCategoryIcon(cat.icon || (isFixed ? 'Calendar' : 'Tag'), 16)}
                     </div>
 
                     <div className="min-w-0 text-xs">
@@ -382,11 +365,6 @@ export function CategoryManager({
                         <span className="font-bold text-gray-200 truncate">{displayName}</span>
                         
                         {/* Type Badges */}
-                        {isSavings && (
-                          <span className="text-[8px] bg-pink-500/10 text-pink-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-pink-500/20">
-                            Savings Goal
-                          </span>
-                        )}
                         {isFixed && (
                           <span className="text-[8px] bg-sky-500/10 text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-sky-500/20">
                             Known Expense
@@ -412,10 +390,6 @@ export function CategoryManager({
                       {cat.id === 'cat_uncategorized' ? (
                         <span className="text-[11px] text-gray-400 font-medium block mt-0.5 font-sans italic">
                           No Budget Limit
-                        </span>
-                      ) : isSavings ? (
-                        <span className="text-[11px] text-pink-400 font-medium block mt-0.5 font-sans italic">
-                          Managed in Savings Goals
                         </span>
                       ) : (
                         <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
@@ -489,7 +463,7 @@ export function CategoryManager({
                 <input 
                   type="text" 
                   value={formName}
-                  disabled={editingCategory !== 'new' && (editingCategory?.id === 'cat_uncategorized' || editingCategory?.id.startsWith('SAVINGS_'))}
+                  disabled={editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized'}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Subscriptions, Gym, Pet Food"
                   className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -498,16 +472,7 @@ export function CategoryManager({
                 />
               </div>
 
-              {editingCategory !== 'new' && editingCategory?.id.startsWith('SAVINGS_') ? (
-                <div className="bg-black/35 p-3.5 rounded-xl border border-white/5 space-y-1">
-                  <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest block font-sans">
-                    Savings Goal Target
-                  </span>
-                  <p className="text-[11px] text-gray-400 font-medium leading-normal">
-                    Savings Goal target amounts and deposits are managed in the Savings Goals section. Spending budget caps do not apply here.
-                  </p>
-                </div>
-              ) : editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized' ? (
+              {editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized' ? (
                 <div className="bg-black/35 p-3.5 rounded-xl border border-white/5 space-y-1">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block font-sans">
                     Budget Cap Limit

@@ -44,9 +44,9 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
   const [selectedCategory, setSelectedCategory] = useState<string>(
     expenseToEdit 
       ? expenseToEdit.category 
-      : (categories.some(c => c.id === 'cat_uncategorized')
+      : (categories.some(c => c.id === 'cat_uncategorized' && !c.isHidden)
           ? 'cat_uncategorized'
-          : (categories[0]?.id || ''))
+          : (categories.find(c => !c.isHidden)?.id || 'cat_uncategorized'))
   );
 
   // Compute selected Savings Goal capacity
@@ -163,7 +163,8 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
   }, [expenseToEdit]);
 
   const getOrderedCategories = () => {
-    const list = [...categories];
+    // Filter out hidden categories unless currently editing an expense that uses that hidden category
+    const list = categories.filter(c => !c.isHidden || (expenseToEdit && expenseToEdit.category === c.id));
     list.sort((a, b) => {
       let indexA = categoryOrder.indexOf(a.id);
       let indexB = categoryOrder.indexOf(b.id);

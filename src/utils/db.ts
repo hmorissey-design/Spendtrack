@@ -849,10 +849,12 @@ export const LocalDb = {
       const rawCats = this.getCategoriesOnly();
       let totalSum = 0;
       rawCats.forEach(cat => {
-        const catLimit = activeLimits[cat.id] !== undefined 
-          ? activeLimits[cat.id] 
-          : this.getLimitForCategoryForMonth(cat.id, month);
-        totalSum += catLimit;
+        if (!cat.isHidden) {
+          const catLimit = activeLimits[cat.id] !== undefined 
+            ? activeLimits[cat.id] 
+            : this.getLimitForCategoryForMonth(cat.id, month);
+          totalSum += catLimit;
+        }
       });
       budgets[activeBudIndex].limitAmount = totalSum;
     }

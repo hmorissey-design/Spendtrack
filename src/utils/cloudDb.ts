@@ -266,6 +266,15 @@ export const CloudDb = {
         return false;
       }
 
+      // Clean out local cache of previous user session before loading cloud account data
+      localStorage.removeItem('personal_finance_app_expenses');
+      localStorage.removeItem('personal_finance_app_categories');
+      localStorage.removeItem('personal_finance_app_budget');
+      localStorage.removeItem('expensetrack_income_streams');
+      localStorage.removeItem('expensetrack_fixed_expenses');
+      localStorage.removeItem('expensetrack_savings_goals');
+      localStorage.removeItem('expensetrack_recurring_rules');
+
       // Process profile
       if (profileSnap.exists()) {
         const pData = profileSnap.data();
