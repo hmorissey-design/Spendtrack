@@ -722,18 +722,9 @@ export const CloudDb = {
       const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
 
       if (incSnap.empty) {
-        try {
-          if (Array.isArray(localInc) && localInc.length > 0) {
-            const batch = writeBatch(db);
-            for (const item of localInc) {
-              if (!pendingIncDeletes.includes(item.id)) {
-                batch.set(doc(db, 'incomeStreams', item.id), cleanUndefined({ ...item, userId }), { merge: true });
-              }
-            }
-            batch.commit().catch(e => console.error(e));
-            return;
-          }
-        } catch (e) {}
+        localStorage.setItem('expensetrack_income_streams', JSON.stringify([]));
+        onUpdate();
+        return;
       }
 
       const incomeStreams: any[] = [];
@@ -775,18 +766,9 @@ export const CloudDb = {
       const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
 
       if (fixSnap.empty) {
-        try {
-          if (Array.isArray(localFix) && localFix.length > 0) {
-            const batch = writeBatch(db);
-            for (const item of localFix) {
-              if (!pendingFixDeletes.includes(item.id)) {
-                batch.set(doc(db, 'fixedExpenses', item.id), cleanUndefined({ ...item, userId }), { merge: true });
-              }
-            }
-            batch.commit().catch(e => console.error(e));
-            return;
-          }
-        } catch (e) {}
+        localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify([]));
+        onUpdate();
+        return;
       }
 
       const fixedExpenses: any[] = [];
@@ -828,18 +810,9 @@ export const CloudDb = {
       const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
 
       if (savSnap.empty) {
-        try {
-          if (Array.isArray(localSav) && localSav.length > 0) {
-            const batch = writeBatch(db);
-            for (const item of localSav) {
-              if (!pendingSavDeletes.includes(item.id)) {
-                batch.set(doc(db, 'savingsGoals', item.id), cleanUndefined({ ...item, userId }), { merge: true });
-              }
-            }
-            batch.commit().catch(e => console.error(e));
-            return;
-          }
-        } catch (e) {}
+        localStorage.setItem('expensetrack_savings_goals', JSON.stringify([]));
+        onUpdate();
+        return;
       }
 
       const savingsGoals: any[] = [];
@@ -888,37 +861,37 @@ export const CloudDb = {
     if (!userId) return;
 
     try {
+      // 1. Wipe local database and pending sync queues
+      LocalDb.clearAllData();
+
+      // 2. Wipe all collections in Firestore for this user
       const collectionsToWipe = ['expenses', 'categories', 'budgets', 'incomeStreams', 'fixedExpenses', 'savingsGoals'];
       
       for (const colName of collectionsToWipe) {
-        const q = query(collection(db, colName), where('userId', '==', userId));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const batch = writeBatch(db);
-          snap.forEach(d => {
-            batch.delete(d.ref);
-          });
-          await batch.commit();
+        try {
+          const q = query(collection(db, colName), where('userId', '==', userId));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const deletePromises = snap.docs.map(d => 
+              deleteDoc(d.ref).catch(err => console.error(`Error deleting doc ${d.id} from ${colName}:`, err))
+            );
+            await Promise.all(deletePromises);
+          }
+        } catch (colErr) {
+          console.error(`Error querying/wiping collection ${colName}:`, colErr);
         }
       }
 
-      // Also wipe userProfiles doc
+      // 3. Wipe userProfiles document
       try {
         await deleteDoc(doc(db, 'userProfiles', userId));
       } catch (e) {
         console.error('Error deleting user profile doc:', e);
       }
 
-      // Clear all sync queue pending keys
-      ['expenses', 'categories', 'income', 'fixed', 'savings'].forEach(type => {
-        localStorage.removeItem(`expensetrack_pending_deletes_${type}`);
-        localStorage.removeItem(`expensetrack_pending_edits_${type}`);
-      });
-
-      console.log('User cloud data completely wiped successfully.');
+      console.log('User cloud data wiped successfully.');
     } catch (error) {
-      console.error('Error wiping cloud data:', error);
-      throw error;
+      console.error('Error in wipeUserCloudData:', error);
     }
   }
 };

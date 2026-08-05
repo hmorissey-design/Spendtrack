@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  DollarSign, X, CheckCircle, Plus, Edit, Trash2, Eye, Tag,
+  DollarSign, X, CheckCircle, Plus, Edit, Eye, EyeOff, Tag,
   Utensils, ShoppingBag, Film, Car, Sparkles, Coffee, Briefcase, 
   Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, 
-  HelpCircle, Beer, Flame, Train, PiggyBank
+  HelpCircle, Beer, Flame, Train, PiggyBank, Calendar, SlidersHorizontal
 } from 'lucide-react';
 import { LocalDb } from '../utils/db';
 import { Category, MonthlyBudget } from '../types';
@@ -41,12 +41,13 @@ const COLOR_PRESETS = [
 ];
 
 const ICON_PRESETS = [
-  'Utensils', 'ShoppingBag', 'Film', 'Car', 'Sparkles', 'Coffee', 'Briefcase', 'Gift', 'Heart', 'Home', 'Laptop', 'Dumbbell', 'Plane', 'Users', 'Phone', 'HelpCircle', 'Beer', 'Flame', 'Train'
+  'Utensils', 'ShoppingBag', 'Film', 'Car', 'Sparkles', 'Coffee', 'Briefcase', 'Gift', 'Heart', 'Home', 'Laptop', 'Dumbbell', 'Plane', 'Users', 'Phone', 'HelpCircle', 'Beer', 'Flame', 'Train', 'PiggyBank', 'Calendar'
 ];
 
 export function renderCategoryIcon(iconName: string, size = 16) {
   switch (iconName) {
     case 'PiggyBank': return <PiggyBank size={size} />;
+    case 'Calendar': return <Calendar size={size} />;
     case 'Utensils': return <Utensils size={size} />;
     case 'ShoppingBag': return <ShoppingBag size={size} />;
     case 'Film': return <Film size={size} />;
@@ -72,6 +73,8 @@ export function renderCategoryIcon(iconName: string, size = 16) {
 
 interface CategoryManagerProps {
   categories: Category[];
+  fixedExpenses?: Array<{ id: string; label: string; amount: number }>;
+  savingsGoals?: Array<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number }>;
   currentBudget: MonthlyBudget;
   onCategoryAdded: (catData: Omit<Category, 'id'>, isDefault?: boolean) => boolean | void;
   onCategoryUpdated: (cat: Category, isDefault?: boolean) => boolean | void;
@@ -84,6 +87,8 @@ interface CategoryManagerProps {
 
 export function CategoryManager({
   categories,
+  fixedExpenses = [],
+  savingsGoals = [],
   currentBudget,
   onCategoryAdded,
   onCategoryUpdated,
@@ -97,43 +102,80 @@ export function CategoryManager({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Filter tab state: 'all' | 'spending' | 'fixed' | 'savings'
+  const [activeTab, setActiveTab] = useState<'all' | 'spending' | 'fixed' | 'savings'>('all');
+
   // Creator state
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
   const [formName, setFormName] = useState<string>('');
   const [formLimit, setFormLimit] = useState<string>('0');
   const [formIcon, setFormIcon] = useState<string>('Tag');
   const [formColor, setFormColor] = useState<string>('emerald');
-  const [formIsDefault, setFormIsDefault] = useState<boolean>(false);
   const [formIsHidden, setFormIsHidden] = useState<boolean>(false);
 
-  // Deletion modal
-  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
+  // Build complete list of categories (Daily Spending, Known/Fixed Expenses, Savings Goals, Business)
+  const unifiedCategories = useMemo(() => {
+    // 1. Get standard categories from props / LocalDb
+    const list: Array<Category & { categoryType: 'spending' | 'fixed' | 'savings' | 'business' }> = categories.map(c => {
+      let categoryType: 'spending' | 'fixed' | 'savings' | 'business' = 'spending';
+      if (c.id.startsWith('SAVINGS_')) {
+        categoryType = 'savings';
+      } else if (c.id === 'cat_business_expense') {
+        categoryType = 'business';
+      }
+      return {
+        ...c,
+        categoryType
+      };
+    });
 
-  const allCategories = useMemo(() => {
-    return LocalDb.getAllCategoriesWithLimits(currentBudget.month).filter(c => !c.id.startsWith('SAVINGS_'));
-  }, [currentBudget.month, categories]);
+    // 2. Synthesize Known/Fixed Expense categories if not present
+    fixedExpenses.forEach(fix => {
+      const synthId = `FIXED_${fix.id}`;
+      const exists = list.some(c => c.id === synthId || c.name.toLowerCase() === fix.label.toLowerCase());
+      if (!exists) {
+        list.push({
+          id: synthId,
+          name: fix.label,
+          icon: 'Calendar',
+          color: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
+          textColor: 'text-sky-400',
+          limit: fix.amount,
+          isDefault: false,
+          categoryType: 'fixed'
+        });
+      }
+    });
 
-  const categoryToDeleteHasHistory = useMemo(() => {
-    if (!categoryToDelete) return false;
-    const catId = categoryToDelete.id;
-    const expenses = LocalDb.getExpenses();
-    const hasTransactions = expenses.some(e => e.category === catId);
-    const budgets = LocalDb.getBudgets();
-    const hasBudgetLimits = budgets.some(b => b.categoryLimits?.[catId] !== undefined && b.categoryLimits[catId] > 0);
-    return hasTransactions || hasBudgetLimits;
-  }, [categoryToDelete]);
+    return list;
+  }, [categories, fixedExpenses]);
+
+  // Filter categories according to active tab
+  const filteredCategories = useMemo(() => {
+    if (activeTab === 'spending') {
+      return unifiedCategories.filter(c => c.categoryType === 'spending' || c.categoryType === 'business');
+    }
+    if (activeTab === 'fixed') {
+      return unifiedCategories.filter(c => c.categoryType === 'fixed');
+    }
+    if (activeTab === 'savings') {
+      return unifiedCategories.filter(c => c.categoryType === 'savings');
+    }
+    return unifiedCategories;
+  }, [unifiedCategories, activeTab]);
 
   const handleOpenEdit = (cat: Category) => {
     setEditingCategory(cat);
-    setFormName(cat.name);
-    setFormLimit((cat.limit || 0).toString());
-    setFormIcon(cat.icon);
-    setFormIsDefault(cat.id === defaultCategoryId);
+    const isSavings = cat.id.startsWith('SAVINGS_');
+    const cleanName = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name;
+    setFormName(cleanName);
+    setFormLimit(cat.id === 'cat_uncategorized' || isSavings ? '0' : (cat.limit || 0).toString());
+    setFormIcon(cat.icon || (isSavings ? 'PiggyBank' : 'Tag'));
     setFormIsHidden(!!cat.isHidden);
     
     // Reverse-guess form color state from preset
-    const match = COLOR_PRESETS.find(p => cat.color.includes(p.value));
-    setFormColor(match ? match.value : 'emerald');
+    const match = COLOR_PRESETS.find(p => (cat.color || '').includes(p.value));
+    setFormColor(match ? match.value : (isSavings ? 'pink' : 'emerald'));
     setErrorMsg(null);
   };
 
@@ -146,9 +188,15 @@ export function CategoryManager({
     const assignedPreset = COLOR_PRESETS[categories.length % COLOR_PRESETS.length];
     setFormColor(assignedPreset.value);
     
-    setFormIsDefault(false);
     setFormIsHidden(false);
     setErrorMsg(null);
+  };
+
+  const handleToggleHideCategory = (cat: Category) => {
+    const updated = { ...cat, isHidden: !cat.isHidden };
+    onCategoryUpdated(updated);
+    setSuccessMsg(`${cat.name} is now ${updated.isHidden ? 'Hidden' : 'Visible'}.`);
+    setTimeout(() => setSuccessMsg(null), 2500);
   };
 
   const handleSaveCategoryForm = (e: React.FormEvent) => {
@@ -157,12 +205,16 @@ export function CategoryManager({
       setErrorMsg('Please enter a category name.');
       return;
     }
-    if (formName.toLowerCase().includes('savings')) {
+    if (editingCategory === 'new' && formName.toLowerCase().includes('savings')) {
       setErrorMsg("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
       return;
     }
-    let parsedLimit = parseFloat(formLimit);
-    if (isNaN(parsedLimit) || parsedLimit < 0) {
+    
+    const isUncategorized = typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id === 'cat_uncategorized';
+    const isSavings = typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id.startsWith('SAVINGS_');
+    
+    let parsedLimit = (isUncategorized || isSavings) ? 0 : parseFloat(formLimit);
+    if (!isUncategorized && !isSavings && (isNaN(parsedLimit) || parsedLimit < 0)) {
       setErrorMsg('Please enter a valid positive numeric limit.');
       return;
     }
@@ -179,39 +231,26 @@ export function CategoryManager({
         textColor: selectedPreset.textClass,
         isHidden: formIsHidden,
       };
-      const success = onCategoryAdded(newCatData, formIsDefault);
+      const success = onCategoryAdded(newCatData);
       if (success === false) return;
       setSuccessMsg('Created custom budget category.');
     } else if (editingCategory) {
       const updatedCat: Category = {
         ...editingCategory,
-        name: formName.trim(),
-        limit: parsedLimit,
+        name: isSavings ? `SAVINGS - ${formName.trim()}` : formName.trim(),
+        limit: isSavings ? (editingCategory.limit || 0) : parsedLimit,
         icon: formIcon,
         color: selectedPreset.bgClass,
         textColor: selectedPreset.textClass,
         isHidden: formIsHidden,
       };
-      const success = onCategoryUpdated(updatedCat, formIsDefault);
+      const success = onCategoryUpdated(updatedCat);
       if (success === false) return;
-      setSuccessMsg('Updated category budget limit.');
+      setSuccessMsg('Updated category successfully.');
     }
 
     setEditingCategory(null);
     setTimeout(() => setSuccessMsg(null), 3500);
-  };
-
-  const handleDeleteClick = (id: string, name: string) => {
-    setCategoryToDelete({ id, name });
-  };
-
-  const handleConfirmDelete = () => {
-    if (categoryToDelete) {
-      onCategoryDeleted(categoryToDelete.id);
-      setSuccessMsg(`Deleted "${categoryToDelete.name}" category successfully.`);
-      setTimeout(() => setSuccessMsg(null), 3000);
-    }
-    setCategoryToDelete(null);
   };
 
   if (!isOpen) return null;
@@ -220,12 +259,17 @@ export function CategoryManager({
     <>
       {/* Main Categories & Budgets Dialogue Box Manager Overlay */}
       <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-[100] p-4 md:p-6 overflow-y-auto animate-in fade-in duration-250">
-        <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="dialogue_categories_budgets_manager">
+        <div className="w-full max-w-lg bg-[#111111] border border-white/10 rounded-2xl p-5 md:p-6 space-y-4 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="dialogue_categories_budgets_manager">
+          
+          {/* Header */}
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <div>
               <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                <DollarSign size={16} className="text-emerald-400" /> Categories & Budgets
+                <DollarSign size={16} className="text-emerald-400" /> Categories & Category Budgets
               </h4>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                Manage spending categories, set targets, and toggle category visibility (hide/unhide).
+              </p>
             </div>
             <button 
               onClick={onClose} 
@@ -249,75 +293,162 @@ export function CategoryManager({
             </div>
           )}
 
-          <div className="flex items-center justify-between bg-black/25 p-3 rounded-xl border border-white/5 font-sans">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Monthly Budget</span>
-            <span className="text-base font-extrabold font-mono text-emerald-400">{currencySymbol}{currentBudget.limitAmount.toLocaleString()}</span>
+          {/* Filter tabs row */}
+          <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5 font-sans overflow-x-auto text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'all' 
+                  ? 'bg-emerald-600 text-white shadow-xs' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              All ({unifiedCategories.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('spending')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'spending' 
+                  ? 'bg-emerald-600 text-white shadow-xs' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Daily Spending ({unifiedCategories.filter(c => c.categoryType === 'spending' || c.categoryType === 'business').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('fixed')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'fixed' 
+                  ? 'bg-emerald-600 text-white shadow-xs' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Known Expenses ({unifiedCategories.filter(c => c.categoryType === 'fixed').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('savings')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'savings' 
+                  ? 'bg-emerald-600 text-white shadow-xs' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Savings Goals ({unifiedCategories.filter(c => c.categoryType === 'savings').length})
+            </button>
           </div>
 
           {/* Master action to spawn a new creator form inline placed at the top */}
           {!editingCategory && (
             <button
               onClick={handleOpenCreateNew}
-              className="w-full py-2.5 bg-emerald-950/20 hover:bg-emerald-950/40 border border-dashed border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center"
+              className="w-full py-2 bg-emerald-950/20 hover:bg-emerald-950/40 border border-dashed border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-bold tracking-wider uppercase rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center"
             >
-              <Plus size={14} className="stroke-[2.5]" /> Add New Category
+              <Plus size={14} className="stroke-[2.5]" /> Add Custom Category
             </button>
           )}
 
           {/* Categories scrollable deck list */}
-          <div className="space-y-2 max-h-[280px] overflow-y-auto pr-0.5">
-            {allCategories.filter(c => c.id !== 'cat_business_expense').map((cat) => {
+          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            {filteredCategories.map((cat) => {
               const displayLimit = cat.limit || 0;
+              const isSavings = cat.id.startsWith('SAVINGS_');
+              const isBusiness = cat.id === 'cat_business_expense';
+              const isFixed = cat.categoryType === 'fixed';
+              const isDefault = cat.id === defaultCategoryId;
+              const displayName = isSavings ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat.name;
+
               return (
                 <div 
                   key={cat.id} 
-                  className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-white/10 flex items-center justify-between gap-2.5 transition-all"
+                  className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 transition-all ${
+                    cat.isHidden 
+                      ? 'bg-black/20 border-white/5 opacity-60' 
+                      : 'bg-black/40 border-white/5 hover:border-white/10'
+                  }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      cat.color.includes('/') ? cat.color : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 ${
+                      cat.color?.includes('/') ? cat.color : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     }`}>
-                      {renderCategoryIcon(cat.icon, 16)}
+                      {renderCategoryIcon(cat.icon || (isSavings ? 'PiggyBank' : isFixed ? 'Calendar' : 'Tag'), 16)}
                     </div>
+
                     <div className="min-w-0 text-xs">
-                      <span className="font-bold text-gray-200 block truncate flex items-center gap-1.5">
-                        {cat.name}
-                        {cat.isHidden && (
-                          <span className="text-[7.5px] bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-amber-500/20">
-                            Hidden
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-gray-200 truncate">{displayName}</span>
+                        
+                        {/* Type Badges */}
+                        {isSavings && (
+                          <span className="text-[8px] bg-pink-500/10 text-pink-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-pink-500/20">
+                            Savings Goal
                           </span>
                         )}
-                      </span>
-                      <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
-                        Limit: <span className="text-xs font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
-                      </span>
+                        {isFixed && (
+                          <span className="text-[8px] bg-sky-500/10 text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-sky-500/20">
+                            Known Expense
+                          </span>
+                        )}
+                        {isBusiness && (
+                          <span className="text-[8px] bg-purple-500/10 text-purple-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-purple-500/20">
+                            Business
+                          </span>
+                        )}
+                        {isDefault && (
+                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-emerald-500/20">
+                            Default
+                          </span>
+                        )}
+                        {cat.isHidden && (
+                          <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-amber-500/20 flex items-center gap-1">
+                            <EyeOff size={9} /> Hidden
+                          </span>
+                        )}
+                      </div>
+
+                      {cat.id === 'cat_uncategorized' ? (
+                        <span className="text-[11px] text-gray-400 font-medium block mt-0.5 font-sans italic">
+                          No Budget Limit
+                        </span>
+                      ) : isSavings ? (
+                        <span className="text-[11px] text-pink-400 font-medium block mt-0.5 font-sans italic">
+                          Managed in Savings Goals
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
+                          {isFixed ? 'Commitment' : 'Budget Limit'}: <span className="text-xs font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Hide / Unhide Quick Eye Button */}
                     <button
+                      type="button"
+                      onClick={() => handleToggleHideCategory(cat)}
+                      title={cat.isHidden ? 'Unhide category' : 'Hide category'}
+                      className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                        cat.isHidden 
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20' 
+                          : 'bg-white/5 text-gray-400 border-white/5 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {cat.isHidden ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+
+                    {/* Edit button */}
+                    <button
+                      type="button"
                       onClick={() => handleOpenEdit(cat)}
                       className="p-1.5 bg-[#1C1C1C] hover:bg-[#252525] hover:text-emerald-400 text-gray-400 rounded-lg cursor-pointer border border-white/5 transition-colors"
-                      title="Edit category label or budget limit"
+                      title="Edit category label or options"
                     >
-                      <Edit size={12} />
+                      <Edit size={13} />
                     </button>
-                    {cat.id !== 'cat_uncategorized' ? (
-                      <button
-                        onClick={() => handleDeleteClick(cat.id, cat.name)}
-                        className="p-1.5 bg-[#1C1C1C]/60 hover:bg-rose-950/30 hover:text-rose-400 text-gray-500 rounded-lg cursor-pointer border border-white/5 transition-colors"
-                        title="Delete category"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    ) : (
-                      <span 
-                        className="p-1.5 bg-[#1C1C1C]/30 text-gray-600 rounded-lg border border-white/5 cursor-not-allowed opacity-40 select-none"
-                        title="System default category. Cannot be deleted."
-                      >
-                        <Trash2 size={12} />
-                      </span>
-                    )}
                   </div>
                 </div>
               );
@@ -342,7 +473,7 @@ export function CategoryManager({
           <div className="w-full max-w-md bg-[#111111] border border-white/10 rounded-2xl p-6 space-y-5 text-white shadow-2xl relative my-auto animate-in zoom-in-95 duration-200" id="full_screen_category_builder">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                {editingCategory === 'new' ? 'Add New Category' : `Edit Category: ${editingCategory.name}`}
+                {editingCategory === 'new' ? 'Add New Category' : `Edit Category: ${formName}`}
               </h4>
               <button 
                 onClick={() => setEditingCategory(null)} 
@@ -358,7 +489,7 @@ export function CategoryManager({
                 <input 
                   type="text" 
                   value={formName}
-                  disabled={editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized'}
+                  disabled={editingCategory !== 'new' && (editingCategory?.id === 'cat_uncategorized' || editingCategory?.id.startsWith('SAVINGS_'))}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Subscriptions, Gym, Pet Food"
                   className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -367,40 +498,40 @@ export function CategoryManager({
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-1.5 font-sans">Budget Cap Limit ({currencySymbol})</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-500">{currencySymbol}</span>
-                  <input 
-                    type="number" 
-                    value={formLimit}
-                    min="0"
-                    step="0.01"
-                    onChange={(e) => setFormLimit(e.target.value)}
-                    placeholder="0"
-                    className="w-full pl-7.5 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] text-right font-bold"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Set as default preference checkbox toggle */}
-              {typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id !== 'cat_uncategorized' && (
-                <div className="bg-black/35 p-3 rounded-xl border border-white/5 space-y-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox"
-                      checked={formIsDefault}
-                      onChange={(e) => setFormIsDefault(e.target.checked)}
-                      className="rounded bg-black/40 border-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer h-4 w-4"
-                    />
-                    <span className="text-[10px] font-bold text-slate-200 uppercase tracking-widest font-sans">
-                      Set as Default Category
-                    </span>
-                  </label>
-                  <p className="text-[9px] text-gray-500 leading-normal ml-6">
-                    When you enter a quick transaction with no category specified, it will default to this one. Only one category can be default.
+              {editingCategory !== 'new' && editingCategory?.id.startsWith('SAVINGS_') ? (
+                <div className="bg-black/35 p-3.5 rounded-xl border border-white/5 space-y-1">
+                  <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest block font-sans">
+                    Savings Goal Target
+                  </span>
+                  <p className="text-[11px] text-gray-400 font-medium leading-normal">
+                    Savings Goal target amounts and deposits are managed in the Savings Goals section. Spending budget caps do not apply here.
                   </p>
+                </div>
+              ) : editingCategory !== 'new' && editingCategory?.id === 'cat_uncategorized' ? (
+                <div className="bg-black/35 p-3.5 rounded-xl border border-white/5 space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block font-sans">
+                    Budget Cap Limit
+                  </span>
+                  <p className="text-[11px] text-gray-400 font-medium leading-normal">
+                    Uncategorized expenses do not have a budget limit available.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-1.5 font-sans">Budget Cap Limit ({currencySymbol})</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-500">{currencySymbol}</span>
+                    <input 
+                      type="number" 
+                      value={formLimit}
+                      min="0"
+                      step="0.01"
+                      onChange={(e) => setFormLimit(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-7.5 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500 outline-hidden focus:border-emerald-500 focus:bg-[#0A0A0A] text-right font-bold"
+                      required
+                    />
+                  </div>
                 </div>
               )}
 
@@ -419,14 +550,14 @@ export function CategoryManager({
                     </span>
                   </label>
                   <p className="text-[9px] text-gray-500 leading-normal ml-6">
-                    Hiding this category removes it from active dropdowns and lists for this month. Historical data and older months where this category was used remain untouched.
+                    Hiding this category removes it from active dropdowns and lists. Historical data and older months where this category was used remain untouched.
                   </p>
                 </div>
               )}
 
               {/* Icon selector preset grid */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans">Pick Icon Preset</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans font-sans">Pick Icon Preset</label>
                 <div className="grid grid-cols-6 gap-2 bg-black/20 p-2.5 rounded-xl border border-white/5 max-h-[110px] overflow-y-auto">
                   {ICON_PRESETS.map(icon => (
                     <button
@@ -447,7 +578,7 @@ export function CategoryManager({
 
               {/* Color style selector presets */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans">Choose Visual Theme</label>
+                <label className="block text-[10px] font-bold text-slate-200 uppercase tracking-widest mb-2 font-sans font-sans">Choose Visual Theme</label>
                 <div className="grid grid-cols-5 gap-2 bg-black/20 p-2.5 rounded-xl border border-white/5 max-h-[110px] overflow-y-auto">
                   {COLOR_PRESETS.map(preset => (
                     <button
@@ -488,61 +619,7 @@ export function CategoryManager({
           </div>
         </div>
       )}
-
-      {/* Warning/Hide modal for Category Deletion */}
-      {categoryToDelete && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center z-[110] p-4 animate-in fade-in duration-250">
-          <div className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
-            {categoryToDeleteHasHistory ? (
-              <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto">
-                <Eye size={24} className="opacity-80" />
-              </div>
-            ) : (
-              <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto">
-                <Trash2 size={24} />
-              </div>
-            )}
-            
-            <div className="space-y-1">
-              <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                {categoryToDeleteHasHistory ? 'Hide Category?' : 'Delete Category?'}
-              </h4>
-              <p className="text-[11px] text-gray-400 leading-normal">
-                {categoryToDeleteHasHistory ? (
-                  <>
-                    Since <strong className="text-white">"{categoryToDelete.name}"</strong> was used in past transactions or budgets, it cannot be permanently deleted. Instead, we'll <strong className="text-amber-400 font-bold">Hide</strong> it from active selection lists. Historical reports will be preserved!
-                  </>
-                ) : (
-                  <>
-                    Are you sure you want to delete <strong className="text-white">"{categoryToDelete.name}"</strong>? It has no transaction history and will be completely removed.
-                  </>
-                )}
-              </p>
-            </div>
-
-            <div className="flex gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setCategoryToDelete(null)}
-                className="flex-1 py-2.5 bg-black/40 hover:bg-[#1A1A1A] hover:text-white text-gray-400 font-bold text-xs uppercase tracking-widest rounded-xl transition-all border border-white/5 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className={`flex-1 py-2.5 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer shadow-lg ${
-                  categoryToDeleteHasHistory 
-                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-950/20' 
-                    : 'bg-rose-600 hover:bg-rose-500 shadow-rose-950/20'
-                }`}
-              >
-                {categoryToDeleteHasHistory ? 'Hide' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
+

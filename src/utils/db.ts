@@ -257,6 +257,26 @@ export const LocalDb = {
     localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
   },
 
+  clearAllData(): void {
+    localStorage.removeItem(STORAGE_KEYS.EXPENSES);
+    localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+    localStorage.removeItem(STORAGE_KEYS.BUDGET);
+    localStorage.removeItem(STORAGE_KEYS.HAS_INITIALIZED);
+    localStorage.removeItem('expensetrack_income_streams');
+    localStorage.removeItem('expensetrack_fixed_expenses');
+    localStorage.removeItem('expensetrack_savings_goals');
+    localStorage.removeItem('expensetrack_recurring_rules');
+    localStorage.removeItem('last_reconciliation_month');
+    
+    // Clear pending sync queues
+    ['expenses', 'categories', 'income', 'fixed', 'savings'].forEach(type => {
+      localStorage.removeItem(`expensetrack_pending_deletes_${type}`);
+      localStorage.removeItem(`expensetrack_pending_edits_${type}`);
+    });
+
+    this.resetToFreshInstall();
+  },
+
   /**
    * Clears existing data and populates 10 diverse, beautiful demo transactions within the current month
    */

@@ -11,6 +11,7 @@ export interface Expense {
   note: string;
   paymentMethod: 'cash' | 'card' | 'digital_wallet' | 'other';
   createdAt: number;
+  updatedAt?: number;
 }
 
 export interface Category {

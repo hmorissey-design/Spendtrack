@@ -10,7 +10,7 @@ import {
   Plus, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
   Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
-  Beer, Flame, Train, PiggyBank, Database, RefreshCw
+  Beer, Flame, Train, PiggyBank, Database, RefreshCw, EyeOff, FolderCog
 } from 'lucide-react';
 
 import {
@@ -59,6 +59,7 @@ interface BudgetSettingsProps {
   onOpenSubscriptionModal?: () => void;
   isCloudSynced?: boolean;
   onWipeCloudDatabase?: () => Promise<void>;
+  onOpenCategoryManager?: () => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -145,7 +146,8 @@ export function BudgetSettings({
   subscriptionState,
   onOpenSubscriptionModal,
   isCloudSynced = false,
-  onWipeCloudDatabase
+  onWipeCloudDatabase,
+  onOpenCategoryManager
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [renderCharts, setRenderCharts] = useState(false);
@@ -571,6 +573,30 @@ export function BudgetSettings({
           </div>
         </div>
       )}
+
+      {/* Categories & Category Budgets Management Section */}
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-4 border border-white/5 shadow-2xs animate-in fade-in duration-200">
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5 font-sans">
+              <FolderCog size={15} className="text-emerald-400 shrink-0" /> Categories & Category Budgets
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Configure spending categories, monthly limits, and toggle visibility for Daily Spending, Known Expenses, and Savings Goals.
+            </p>
+          </div>
+          {onOpenCategoryManager && (
+            <button
+              type="button"
+              onClick={onOpenCategoryManager}
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+            >
+              <FolderCog size={15} />
+              <span>Manage Categories</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Dynamic Visual Accent Theme Swapper Card */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200">

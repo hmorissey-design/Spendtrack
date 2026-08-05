@@ -1849,28 +1849,32 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleWipeCloudDatabase = async () => {
-    if (!currentUser?.uid) {
-      await handleResetDatabase();
-      return;
-    }
-
     try {
-      setDevNotice('🔄 Wiping Cloud Database...');
+      setDevNotice('🔄 Wiping Cloud & Local Database...');
 
       // 1. Unsubscribe active real-time Firestore listeners to prevent auto re-upload loop
       if (unsubRealtimeRef.current) {
-        unsubRealtimeRef.current();
+        try {
+          unsubRealtimeRef.current();
+        } catch (e) {}
         unsubRealtimeRef.current = null;
       }
 
-      // 2. Wipe all collections in Firestore for this user
-      await CloudDb.wipeUserCloudData(currentUser.uid);
+      // 2. Wipe all collections in Firestore for this user + local database
+      if (currentUser?.uid) {
+        await CloudDb.wipeUserCloudData(currentUser.uid);
+      } else {
+        LocalDb.clearAllData();
+      }
 
-      // 3. Perform local reset & reload
-      await handleResetDatabase();
+      setDevNotice('✨ Database Wiped Successfully!');
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err) {
       console.error('Error wiping cloud DB:', err);
-      setDevNotice('❌ Failed to wipe cloud database');
+      setDevNotice('❌ Failed to wipe database');
       setTimeout(() => setDevNotice(null), 3500);
     }
   };
@@ -3727,6 +3731,7 @@ Date: ${new Date().toLocaleString()}
                 onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
                 isCloudSynced={!!currentUser}
                 onWipeCloudDatabase={handleWipeCloudDatabase}
+                onOpenCategoryManager={() => setShowCategoryManager(true)}
               />
             </div>
           )}
@@ -4994,6 +4999,8 @@ Date: ${new Date().toLocaleString()}
       {showCategoryManager && createPortal(
         <CategoryManager
           categories={categories}
+          fixedExpenses={fixedExpenses}
+          savingsGoals={savingsGoals}
           currentBudget={currentBudget}
           onCategoryAdded={handleAddCategory}
           onCategoryUpdated={handleUpdateCategory}
