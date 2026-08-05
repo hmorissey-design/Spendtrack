@@ -55,14 +55,15 @@ const STORAGE_KEYS = {
 };
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cat_uncategorized', name: 'Uncategorized', icon: 'Tag', color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400', isDefault: true, limit: 0 },
-  { id: 'cat_bars', name: 'Bar', icon: 'Beer', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400', isDefault: true, limit: 0 },
-  { id: 'cat_restaurants', name: 'Restaurants', icon: 'Utensils', color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textColor: 'text-rose-400', isDefault: true, limit: 0 },
-  { id: 'cat_coffee_shops', name: 'Coffee shops', icon: 'Coffee', color: 'bg-orange-500/10 text-orange-400 border border-orange-500/20', textColor: 'text-orange-400', isDefault: true, limit: 0 },
-  { id: 'cat_smoking', name: 'Smoking', icon: 'Flame', color: 'bg-red-500/10 text-red-400 border border-red-500/20', textColor: 'text-red-400', isDefault: true, limit: 0 },
-  { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400', isDefault: true, limit: 0 },
   { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingBag', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', textColor: 'text-emerald-400', isDefault: true, limit: 0 },
-  { id: 'cat_gas_auto', name: 'Gas auto', icon: 'Car', color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', textColor: 'text-blue-400', isDefault: true, limit: 0 },
+  { id: 'cat_gas_auto', name: 'Gas Auto', icon: 'Car', color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', textColor: 'text-blue-400', isDefault: true, limit: 0 },
+  { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20', textColor: 'text-purple-400', isDefault: true, limit: 0 },
+  { id: 'cat_bars', name: 'Bar', icon: 'Beer', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', textColor: 'text-amber-400', isDefault: true, limit: 0 },
+  { id: 'cat_restaurants', name: 'Restaurant', icon: 'Utensils', color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', textColor: 'text-rose-400', isDefault: true, limit: 0 },
+  { id: 'cat_coffee_shops', name: 'Coffee Shops', icon: 'Coffee', color: 'bg-orange-500/10 text-orange-400 border border-orange-500/20', textColor: 'text-orange-400', isDefault: true, limit: 0 },
+  { id: 'cat_fast_food', name: 'Fast Food/ Delivery', icon: 'UtensilsCrossed', color: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20', textColor: 'text-yellow-400', isDefault: true, limit: 0 },
+  { id: 'cat_smoking', name: 'Smoking', icon: 'Flame', color: 'bg-red-500/10 text-red-400 border border-red-500/20', textColor: 'text-red-400', isDefault: true, limit: 0 },
+  { id: 'cat_uncategorized', name: 'Uncategorized', icon: 'Tag', color: 'bg-slate-500/10 text-slate-300 border border-slate-500/20', textColor: 'text-slate-400', isDefault: true, limit: 0 },
   { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 

@@ -486,56 +486,57 @@ export default function App() {
 
   const [fixedExpenses, setFixedExpenses] = useState<{ id: string; label: string; amount: number }[]>(() => {
     const defaultList = [
-      { id: 'mortgage_rent', label: 'Mortgage / Rent', amount: 0 },
-      { id: 'property_tax', label: 'Property Tax', amount: 0 },
-      { id: 'condo_fees', label: 'Condo fees', amount: 0 },
-      { id: 'electricity', label: 'Electricity', amount: 0 },
+      { id: 'mortgage_rent', label: 'Rent/Mortgage', amount: 0 },
+      { id: 'property_tax', label: 'Property Taxes', amount: 0 },
+      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+      { id: 'power', label: 'Power', amount: 0 },
       { id: 'water', label: 'Water', amount: 0 },
       { id: 'phone', label: 'Home Phone', amount: 0 },
       { id: 'mobile_phone', label: 'Mobile Phone', amount: 0 },
-      { id: 'cable', label: 'Cable', amount: 0 },
-      { id: 'internet', label: 'Internet', amount: 0 },
-      { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+      { id: 'cable_internet', label: 'Cable/Internet', amount: 0 },
+      { id: 'loan_auto', label: 'Auto Loan', amount: 0 },
       { id: 'auto_insurance', label: 'Auto Insurance', amount: 0 },
       { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
-      { id: 'loan_auto', label: 'Loan Auto', amount: 0 },
-      { id: 'bank_fee', label: 'Banking fees', amount: 0 }
+      { id: 'bank_fee', label: 'Banking Fees', amount: 0 }
     ];
 
     try {
       const stored = localStorage.getItem('expensetrack_fixed_expenses');
       if (stored) {
         const parsed = JSON.parse(stored);
-        const legacyDefaults: Record<string, number[]> = {
-          mortgage_rent: [1500],
-          property_tax: [200],
-          condo_fees: [150],
-          electricity: [120],
-          water: [40],
-          property_insurance: [80],
-          loan_auto: [350],
-          health_insurance: [250],
-          internet: [60, 80],
-          phone: [50, 60],
-          bank_fee: [15]
-        };
         let modified = false;
-        const hasMigrated = localStorage.getItem('expensetrack_fixed_defaults_cleaned') === 'true';
         
+        // Map old IDs to new default IDs if present
         const cleaned = parsed.map((item: any) => {
-          if (hasMigrated) return item;
-          const possibleDefaults = legacyDefaults[item.id];
-          if (possibleDefaults !== undefined && possibleDefaults.includes(item.amount)) {
+          let updated = { ...item };
+          if (updated.id === 'electricity') {
+            updated.id = 'power';
+            updated.label = 'Power';
             modified = true;
-            return { ...item, amount: 0 };
           }
-          return item;
+          if (updated.id === 'cable' || updated.id === 'internet') {
+            updated.id = 'cable_internet';
+            updated.label = 'Cable/Internet';
+            modified = true;
+          }
+          if (updated.id === 'loan_auto' && updated.label === 'Loan Auto') {
+            updated.label = 'Auto Loan';
+            modified = true;
+          }
+          if (updated.id === 'bank_fee' && updated.label === 'Banking fees') {
+            updated.label = 'Banking Fees';
+            modified = true;
+          }
+          if (updated.id === 'mortgage_rent' && updated.label === 'Mortgage / Rent') {
+            updated.label = 'Rent/Mortgage';
+            modified = true;
+          }
+          if (updated.id === 'property_tax' && updated.label === 'Property Tax') {
+            updated.label = 'Property Taxes';
+            modified = true;
+          }
+          return updated;
         });
-        
-        if (!hasMigrated) {
-          localStorage.setItem('expensetrack_fixed_defaults_cleaned', 'true');
-          modified = true;
-        }
 
         const existingMap = new Map<string, { id: string; label: string; amount: number }>();
         cleaned.forEach((item: any) => {
@@ -543,6 +544,12 @@ export default function App() {
             existingMap.set(item.id, item);
           }
         });
+
+        // Remove obsolete legacy defaults
+        if (existingMap.has('condo_fees')) {
+          existingMap.delete('condo_fees');
+          modified = true;
+        }
 
         const mergedList: { id: string; label: string; amount: number }[] = [];
         defaultList.forEach(defItem => {
@@ -577,74 +584,72 @@ export default function App() {
   });
 
   const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number }[]>(() => {
+    const defaultList = [
+      { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+      { id: 'clothes_fund', label: 'Clothes', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+      { id: 'auto_maint_fund', label: 'Auto Maintenance', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+      { id: 'income_tax_fund', label: 'Income Tax', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 }
+    ];
+
     try {
       const stored = localStorage.getItem('expensetrack_savings_goals');
       if (stored) {
         const parsed = JSON.parse(stored);
         let modified = false;
-        const migrated = parsed.map((item: any) => {
-          let updated = { ...item };
-          if (updated.id === 'emergency_fund' && (updated.label === 'Emergency Reserve' || !updated.label)) {
-            updated.label = 'Reserve';
-            modified = true;
-          }
-          if (updated.amount === undefined) {
-            updated.amount = 0;
-            modified = true;
-          } else if (typeof updated.amount !== 'number') {
-            updated.amount = parseFloat(updated.amount) || 0;
-            modified = true;
-          }
-          if (updated.targetAmount === undefined) {
-            const amtVal = parseFloat(item.amount) || 0;
-            if (amtVal > 1000) {
-              updated.targetAmount = amtVal;
-              updated.amount = 0;
-            } else {
-              updated.targetAmount = item.id === 'emergency_fund' ? 500 
-                : item.id === 'vacation_fund' ? 500 
-                : 500;
-            }
-            modified = true;
-          } else if (typeof updated.targetAmount !== 'number') {
-            updated.targetAmount = parseFloat(updated.targetAmount) || 0;
-            modified = true;
-          }
-          if (updated.currentAmount === undefined) {
-            updated.currentAmount = 0;
-            modified = true;
-          } else if (typeof updated.currentAmount !== 'number') {
-            updated.currentAmount = parseFloat(updated.currentAmount) || 0;
-            modified = true;
-          }
-          if (updated.allocationPercent === undefined) {
-            updated.allocationPercent = item.id === 'emergency_fund' ? 50 
-              : item.id === 'vacation_fund' ? 50 
-              : 50;
-            modified = true;
-          } else if (typeof updated.allocationPercent !== 'number') {
-            updated.allocationPercent = parseFloat(updated.allocationPercent) || 0;
-            modified = true;
-          }
 
-          // Enforce business rules
-          if (updated.id === 'emergency_fund' && (updated.allocationPercent || 0) > 0 && (updated.allocationPercent || 0) < 10) {
-            updated.allocationPercent = 10;
-            modified = true;
+        const existingMap = new Map<string, any>();
+        parsed.forEach((item: any) => {
+          if (item && item.id) {
+            existingMap.set(item.id, item);
           }
-
-          return updated;
         });
-        if (modified) {
-          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(migrated));
+
+        // Remove obsolete legacy defaults like vacation_fund
+        if (existingMap.has('vacation_fund')) {
+          existingMap.delete('vacation_fund');
+          modified = true;
         }
-        return migrated;
+        if (existingMap.has('vacation')) {
+          existingMap.delete('vacation');
+          modified = true;
+        }
+
+        const mergedList: any[] = [];
+        defaultList.forEach(defGoal => {
+          if (existingMap.has(defGoal.id)) {
+            const existing = existingMap.get(defGoal.id)!;
+            let updated = { ...existing };
+            if (updated.label !== defGoal.label) {
+              updated.label = defGoal.label;
+              modified = true;
+            }
+            if (updated.targetAmount === undefined || updated.targetAmount === 0 || updated.targetAmount === 500) {
+              updated.targetAmount = defGoal.targetAmount;
+              modified = true;
+            }
+            if (updated.allocationPercent === undefined || updated.allocationPercent === 50) {
+              updated.allocationPercent = defGoal.allocationPercent;
+              modified = true;
+            }
+            mergedList.push(updated);
+            existingMap.delete(defGoal.id);
+          } else {
+            modified = true;
+            mergedList.push({ ...defGoal });
+          }
+        });
+
+        existingMap.forEach(customItem => {
+          mergedList.push(customItem);
+        });
+
+        if (modified) {
+          localStorage.setItem('expensetrack_savings_goals', JSON.stringify(mergedList));
+        }
+        return mergedList;
       }
     } catch (e) {}
-    return [
-      { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 },
-      { id: 'vacation_fund', label: 'Vacation Goal', amount: 0, targetAmount: 500, currentAmount: 0, allocationPercent: 50 }
-    ];
+    return defaultList;
   });
 
   // Accordion active toggles (initially collapsed by default)
