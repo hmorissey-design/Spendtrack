@@ -879,5 +879,46 @@ export const CloudDb = {
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
+  },
+
+  /**
+   * Completely wipes all Firestore records for a user across all collections
+   */
+  async wipeUserCloudData(userId: string): Promise<void> {
+    if (!userId) return;
+
+    try {
+      const collectionsToWipe = ['expenses', 'categories', 'budgets', 'incomeStreams', 'fixedExpenses', 'savingsGoals'];
+      
+      for (const colName of collectionsToWipe) {
+        const q = query(collection(db, colName), where('userId', '==', userId));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const batch = writeBatch(db);
+          snap.forEach(d => {
+            batch.delete(d.ref);
+          });
+          await batch.commit();
+        }
+      }
+
+      // Also wipe userProfiles doc
+      try {
+        await deleteDoc(doc(db, 'userProfiles', userId));
+      } catch (e) {
+        console.error('Error deleting user profile doc:', e);
+      }
+
+      // Clear all sync queue pending keys
+      ['expenses', 'categories', 'income', 'fixed', 'savings'].forEach(type => {
+        localStorage.removeItem(`expensetrack_pending_deletes_${type}`);
+        localStorage.removeItem(`expensetrack_pending_edits_${type}`);
+      });
+
+      console.log('User cloud data completely wiped successfully.');
+    } catch (error) {
+      console.error('Error wiping cloud data:', error);
+      throw error;
+    }
   }
 };

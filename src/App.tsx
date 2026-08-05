@@ -324,10 +324,12 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state
+  // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state & Dev Mode
   const logoTapCountRef = useRef<number>(0);
   const logoTapTimerRef = useRef<any>(null);
   const [devNotice, setDevNotice] = useState<string | null>(null);
+  const [isDevMode, setIsDevMode] = useState<boolean>(false);
+  const unsubRealtimeRef = useRef<(() => void) | null>(null);
 
   const handleLogoTap = () => {
     logoTapCountRef.current += 1;
@@ -337,16 +339,18 @@ export default function App() {
 
     if (logoTapCountRef.current >= 5) {
       logoTapCountRef.current = 0;
-      if (subscriptionState.isSubscribed) {
+      const nextDevState = !isDevMode;
+      setIsDevMode(nextDevState);
+      if (subscriptionState.isSubscribed && !nextDevState) {
         // Toggle OFF Dev Pro -> Reset to standard trial
         const updated = SubscriptionManager.startTrial();
         setSubscriptionState(updated);
-        setDevNotice('🔒 Developer PRO Mode Deactivated');
+        setDevNotice('🔒 Developer Mode Deactivated');
       } else {
         // Toggle ON Dev Pro -> Activate Pro membership
         const updated = SubscriptionManager.activatePlan('yearly');
         setSubscriptionState(updated);
-        setDevNotice('🔓 Developer PRO Mode Activated');
+        setDevNotice('🔓 Developer PRO & Cloud Options Unlocked');
       }
       setTimeout(() => setDevNotice(null), 3500);
     } else {
@@ -1162,8 +1166,7 @@ Date: ${new Date().toLocaleString()}
     setShowFeedbackModal(false);
   };
 
-  // Developer mode disabled for production
-  const isDevMode = false;
+  // Developer mode managed via state from logo tap shortcut
 
 
 
@@ -1338,6 +1341,7 @@ Date: ${new Date().toLocaleString()}
           loadDatabaseState(selectedMonth);
           refreshPlannerStatesFromStorage();
         });
+        unsubRealtimeRef.current = unsubRealtime;
       }
     });
 
@@ -1842,6 +1846,33 @@ Date: ${new Date().toLocaleString()}
 
     // Hard reload to initialize pristine fresh state
     window.location.reload();
+  };
+
+  const handleWipeCloudDatabase = async () => {
+    if (!currentUser?.uid) {
+      await handleResetDatabase();
+      return;
+    }
+
+    try {
+      setDevNotice('🔄 Wiping Cloud Database...');
+
+      // 1. Unsubscribe active real-time Firestore listeners to prevent auto re-upload loop
+      if (unsubRealtimeRef.current) {
+        unsubRealtimeRef.current();
+        unsubRealtimeRef.current = null;
+      }
+
+      // 2. Wipe all collections in Firestore for this user
+      await CloudDb.wipeUserCloudData(currentUser.uid);
+
+      // 3. Perform local reset & reload
+      await handleResetDatabase();
+    } catch (err) {
+      console.error('Error wiping cloud DB:', err);
+      setDevNotice('❌ Failed to wipe cloud database');
+      setTimeout(() => setDevNotice(null), 3500);
+    }
   };
 
   const handleLoadDemoData = () => {
@@ -3695,6 +3726,7 @@ Date: ${new Date().toLocaleString()}
                 subscriptionState={subscriptionState}
                 onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
                 isCloudSynced={!!currentUser}
+                onWipeCloudDatabase={handleWipeCloudDatabase}
               />
             </div>
           )}

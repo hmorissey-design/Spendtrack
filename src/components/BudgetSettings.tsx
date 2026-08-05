@@ -10,7 +10,7 @@ import {
   Plus, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
   Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
-  Beer, Flame, Train, PiggyBank
+  Beer, Flame, Train, PiggyBank, Database, RefreshCw
 } from 'lucide-react';
 
 import {
@@ -58,6 +58,7 @@ interface BudgetSettingsProps {
   subscriptionState?: SubscriptionState;
   onOpenSubscriptionModal?: () => void;
   isCloudSynced?: boolean;
+  onWipeCloudDatabase?: () => Promise<void>;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -143,7 +144,8 @@ export function BudgetSettings({
   onBackupCompleted,
   subscriptionState,
   onOpenSubscriptionModal,
-  isCloudSynced = false
+  isCloudSynced = false,
+  onWipeCloudDatabase
  }: BudgetSettingsProps) {
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
   const [renderCharts, setRenderCharts] = useState(false);
@@ -223,6 +225,8 @@ export function BudgetSettings({
   const [deviceRestoreFilename, setDeviceRestoreFilename] = useState<string>('');
   const [deviceRestoreConfirm, setDeviceRestoreConfirm] = useState<boolean>(false);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
+  const [confirmCloudWipe, setConfirmCloudWipe] = useState<boolean>(false);
+  const [isWipingCloud, setIsWipingCloud] = useState<boolean>(false);
   const [showBackupSuccess, setShowBackupSuccess] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -766,6 +770,64 @@ export function BudgetSettings({
                   </button>
                   <button
                     onClick={() => setConfirmReset(false)}
+                    className="py-1 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] text-gray-300 text-xs font-semibold rounded-md cursor-pointer transition-all border-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Developer Secret Cloud Database Wipe Option (Visible only in Developer Mode) */}
+      {isDevMode && (
+        <div className="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3.5">
+          <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider font-sans">
+            <Database size={15} /> Developer Mode: Wipe Cloud & Local Database
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+            Completely purges all user documents in Cloud Firestore (expenses, categories, budgets, income, fixed, savings) as well as local browser storage.
+          </p>
+
+          <div className="mt-3">
+            {!confirmCloudWipe ? (
+              <button
+                onClick={() => setConfirmCloudWipe(true)}
+                className="py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 size={13} /> Wipe Cloud & Local DB (Developer Only)
+              </button>
+            ) : (
+              <div className="space-y-2 bg-amber-950/30 p-2.5 rounded-lg border border-amber-500/20">
+                <span className="block text-[11px] font-bold text-amber-300">
+                  ⚠️ Danger: Wipes ALL cloud database records for this user permanently. Proceed?
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setIsWipingCloud(true);
+                      if (onWipeCloudDatabase) {
+                        await onWipeCloudDatabase();
+                      }
+                      setIsWipingCloud(false);
+                      setConfirmCloudWipe(false);
+                    }}
+                    disabled={isWipingCloud}
+                    className="py-1 px-3 bg-amber-600 hover:bg-amber-500 text-slate-100 text-xs font-bold rounded-md cursor-pointer transition-all border-0 flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isWipingCloud ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" /> Wiping Cloud...
+                      </>
+                    ) : (
+                      'Yes, Wipe Everything Now'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setConfirmCloudWipe(false)}
+                    disabled={isWipingCloud}
                     className="py-1 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] text-gray-300 text-xs font-semibold rounded-md cursor-pointer transition-all border-0"
                   >
                     Cancel
