@@ -202,6 +202,13 @@ export const CloudDb = {
     if (!userId) return false;
 
     try {
+      // Capture current local state BEFORE downloading cloud data
+      const localExpenses = LocalDb.getExpenses();
+      const localCategories = LocalDb.getCategoriesOnly();
+      const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
+      const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
+      const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
+
       // Execute any pending deletes on the server
       const pendingExpDeletes = SyncQueue.getPendingDeletes('expenses');
       for (const delId of pendingExpDeletes) {
@@ -266,15 +273,6 @@ export const CloudDb = {
         return false;
       }
 
-      // Clean out local cache of previous user session before loading cloud account data
-      localStorage.removeItem('personal_finance_app_expenses');
-      localStorage.removeItem('personal_finance_app_categories');
-      localStorage.removeItem('personal_finance_app_budget');
-      localStorage.removeItem('expensetrack_income_streams');
-      localStorage.removeItem('expensetrack_fixed_expenses');
-      localStorage.removeItem('expensetrack_savings_goals');
-      localStorage.removeItem('expensetrack_recurring_rules');
-
       // Process profile
       if (profileSnap.exists()) {
         const pData = profileSnap.data();
@@ -287,7 +285,6 @@ export const CloudDb = {
       }
 
       // Process Expenses & merge any local unsynced edits/additions
-      const localExpenses = LocalDb.getExpenses();
       const pendingExpEdits = SyncQueue.getPendingEdits('expenses');
       const localExpMap = new Map(localExpenses.map(e => [e.id, e]));
 
@@ -339,7 +336,6 @@ export const CloudDb = {
       localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
 
       // Process Categories & merge any local unsynced additions
-      const localCategories = LocalDb.getCategoriesOnly();
       const categories: Category[] = [];
       if (!catSnap.empty) {
         catSnap.forEach(d => {
@@ -387,7 +383,6 @@ export const CloudDb = {
       }
 
       // Process Income Streams
-      const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
@@ -413,7 +408,6 @@ export const CloudDb = {
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
 
       // Process Fixed Expenses
-      const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
         const data = d.data();
@@ -439,7 +433,6 @@ export const CloudDb = {
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
 
       // Process Savings Goals
-      const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
         const data = d.data();
@@ -730,12 +723,6 @@ export const CloudDb = {
       const pendingIncDeletes = SyncQueue.getPendingDeletes('income');
       const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
 
-      if (incSnap.empty) {
-        localStorage.setItem('expensetrack_income_streams', JSON.stringify([]));
-        onUpdate();
-        return;
-      }
-
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
@@ -759,6 +746,9 @@ export const CloudDb = {
       const unsyncedLocalInc = localInc.filter((i: any) => i.id && !cloudIncIds.has(i.id) && !pendingIncDeletes.includes(i.id));
       if (unsyncedLocalInc.length > 0) {
         incomeStreams.push(...unsyncedLocalInc);
+        unsyncedLocalInc.forEach((inc: any) => {
+          this.saveIncomeStreamToCloud(userId, inc).catch(console.error);
+        });
       }
 
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
@@ -773,12 +763,6 @@ export const CloudDb = {
     const unsubFix = onSnapshot(fixQuery, (fixSnap) => {
       const pendingFixDeletes = SyncQueue.getPendingDeletes('fixed');
       const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
-
-      if (fixSnap.empty) {
-        localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify([]));
-        onUpdate();
-        return;
-      }
 
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
@@ -803,6 +787,9 @@ export const CloudDb = {
       const unsyncedLocalFix = localFix.filter((f: any) => f.id && !cloudFixIds.has(f.id) && !pendingFixDeletes.includes(f.id));
       if (unsyncedLocalFix.length > 0) {
         fixedExpenses.push(...unsyncedLocalFix);
+        unsyncedLocalFix.forEach((fix: any) => {
+          this.saveFixedExpenseToCloud(userId, fix).catch(console.error);
+        });
       }
 
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
@@ -817,12 +804,6 @@ export const CloudDb = {
     const unsubSav = onSnapshot(savQuery, (savSnap) => {
       const pendingSavDeletes = SyncQueue.getPendingDeletes('savings');
       const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
-
-      if (savSnap.empty) {
-        localStorage.setItem('expensetrack_savings_goals', JSON.stringify([]));
-        onUpdate();
-        return;
-      }
 
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
@@ -849,6 +830,9 @@ export const CloudDb = {
       const unsyncedLocalSav = localSav.filter((s: any) => s.id && !cloudSavIds.has(s.id) && !pendingSavDeletes.includes(s.id));
       if (unsyncedLocalSav.length > 0) {
         savingsGoals.push(...unsyncedLocalSav);
+        unsyncedLocalSav.forEach((sav: any) => {
+          this.saveSavingsGoalToCloud(userId, sav).catch(console.error);
+        });
       }
 
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
