@@ -5,7 +5,7 @@
 
 import { Expense, Category, MonthlyBudget } from '../types';
 import { auth } from '../firebase';
-import { CloudDb } from './cloudDb';
+import { CloudDb, SyncQueue } from './cloudDb';
 
 const getLocalMonthString = () => {
   const d = new Date();
@@ -280,10 +280,12 @@ export const LocalDb = {
 
   addExpense(expense: Omit<Expense, 'id' | 'createdAt'>): Expense {
     const expenses = this.getExpenses();
+    const now = Date.now();
     const newExpense: Expense = {
       ...expense,
-      id: `exp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: Date.now(),
+      id: `exp_${now}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: now,
+      updatedAt: now
     };
     expenses.unshift(newExpense); // Insert new expense first
     this.saveExpenses(expenses);
@@ -297,8 +299,11 @@ export const LocalDb = {
     const expenses = this.getExpenses();
     const filtered = expenses.filter(e => e.id !== id);
     this.saveExpenses(filtered);
+    SyncQueue.addPendingDelete('expenses', id);
     if (auth.currentUser) {
-      CloudDb.deleteExpenseFromCloud(auth.currentUser.uid, id).catch(e => console.error('Cloud delete expense error:', e));
+      CloudDb.deleteExpenseFromCloud(auth.currentUser.uid, id).then(() => {
+        SyncQueue.removePendingDelete('expenses', id);
+      }).catch(e => console.error('Cloud delete expense error:', e));
     }
   },
 
@@ -306,10 +311,17 @@ export const LocalDb = {
     const expenses = this.getExpenses();
     const index = expenses.findIndex(e => e.id === updatedExpense.id);
     if (index !== -1) {
-      expenses[index] = updatedExpense;
+      const expWithTime: Expense = {
+        ...updatedExpense,
+        updatedAt: Date.now()
+      };
+      expenses[index] = expWithTime;
       this.saveExpenses(expenses);
+      SyncQueue.addPendingEdit('expenses', updatedExpense.id, expWithTime.updatedAt);
       if (auth.currentUser) {
-        CloudDb.saveExpenseToCloud(auth.currentUser.uid, updatedExpense).catch(e => console.error('Cloud save expense error:', e));
+        CloudDb.saveExpenseToCloud(auth.currentUser.uid, expWithTime).then(() => {
+          SyncQueue.removePendingEdit('expenses', updatedExpense.id);
+        }).catch(e => console.error('Cloud save expense error:', e));
       }
     }
   },
@@ -556,8 +568,11 @@ export const LocalDb = {
         limit: month ? (categories[index].limit ?? 0) : (updatedCategory.limit !== undefined ? updatedCategory.limit : 0)
       };
       this.saveCategories(categories);
+      SyncQueue.addPendingEdit('categories', updatedCategory.id);
       if (auth.currentUser) {
-        CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).catch(e => console.error('Cloud update category error:', e));
+        CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).then(() => {
+          SyncQueue.removePendingEdit('categories', updatedCategory.id);
+        }).catch(e => console.error('Cloud update category error:', e));
       }
     }
     
@@ -587,16 +602,22 @@ export const LocalDb = {
           isHidden: true
         };
         this.saveCategories(categories);
+        SyncQueue.addPendingEdit('categories', id);
         if (auth.currentUser) {
-          CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).catch(e => console.error('Cloud hide category error:', e));
+          CloudDb.saveCategoryToCloud(auth.currentUser.uid, categories[index]).then(() => {
+            SyncQueue.removePendingEdit('categories', id);
+          }).catch(e => console.error('Cloud hide category error:', e));
         }
       }
     } else {
       // No history, we can safely delete it completely
       const filtered = categories.filter(c => c.id !== id);
       this.saveCategories(filtered);
+      SyncQueue.addPendingDelete('categories', id);
       if (auth.currentUser) {
-        CloudDb.deleteCategoryFromCloud(auth.currentUser.uid, id).catch(e => console.error('Cloud delete category error:', e));
+        CloudDb.deleteCategoryFromCloud(auth.currentUser.uid, id).then(() => {
+          SyncQueue.removePendingDelete('categories', id);
+        }).catch(e => console.error('Cloud delete category error:', e));
       }
     }
   },

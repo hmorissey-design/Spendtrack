@@ -37,6 +37,40 @@ function cleanUndefined<T>(obj: T): T {
   return obj;
 }
 
+export const SyncQueue = {
+  getPendingDeletes(type: string): string[] {
+    try {
+      return JSON.parse(localStorage.getItem(`expensetrack_pending_deletes_${type}`) || '[]');
+    } catch { return []; }
+  },
+  addPendingDelete(type: string, id: string) {
+    const list = this.getPendingDeletes(type);
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(`expensetrack_pending_deletes_${type}`, JSON.stringify(list));
+    }
+  },
+  removePendingDelete(type: string, id: string) {
+    const list = this.getPendingDeletes(type).filter(i => i !== id);
+    localStorage.setItem(`expensetrack_pending_deletes_${type}`, JSON.stringify(list));
+  },
+  getPendingEdits(type: string): Record<string, number> {
+    try {
+      return JSON.parse(localStorage.getItem(`expensetrack_pending_edits_${type}`) || '{}');
+    } catch { return {}; }
+  },
+  addPendingEdit(type: string, id: string, timestamp: number = Date.now()) {
+    const edits = this.getPendingEdits(type);
+    edits[id] = timestamp;
+    localStorage.setItem(`expensetrack_pending_edits_${type}`, JSON.stringify(edits));
+  },
+  removePendingEdit(type: string, id: string) {
+    const edits = this.getPendingEdits(type);
+    delete edits[id];
+    localStorage.setItem(`expensetrack_pending_edits_${type}`, JSON.stringify(edits));
+  }
+};
+
 export const CloudDb = {
   /**
    * Syncs current local storage data into Firestore for the current user
@@ -45,6 +79,20 @@ export const CloudDb = {
     if (!userId) return;
 
     try {
+      // Process pending deletes first
+      const collectionsToSync = ['expenses', 'categories', 'income', 'fixed', 'savings'];
+      for (const colType of collectionsToSync) {
+        const pendingDels = SyncQueue.getPendingDeletes(colType);
+        for (const delId of pendingDels) {
+          if (colType === 'expenses') await this.deleteExpenseFromCloud(userId, delId);
+          else if (colType === 'categories') await this.deleteCategoryFromCloud(userId, delId);
+          else if (colType === 'income') await this.deleteIncomeStreamFromCloud(userId, delId);
+          else if (colType === 'fixed') await this.deleteFixedExpenseFromCloud(userId, delId);
+          else if (colType === 'savings') await this.deleteSavingsGoalFromCloud(userId, delId);
+          SyncQueue.removePendingDelete(colType, delId);
+        }
+      }
+
       const expenses = LocalDb.getExpenses();
       const categories = LocalDb.getCategoriesOnly();
       const budgets = LocalDb.getBudgets();
@@ -72,7 +120,8 @@ export const CloudDb = {
         for (const exp of expenses) {
           expBatch.set(doc(db, 'expenses', exp.id), cleanUndefined({
             ...exp,
-            userId
+            userId,
+            updatedAt: exp.updatedAt || Date.now()
           }), { merge: true });
         }
         await expBatch.commit();
@@ -153,6 +202,37 @@ export const CloudDb = {
     if (!userId) return false;
 
     try {
+      // Execute any pending deletes on the server
+      const pendingExpDeletes = SyncQueue.getPendingDeletes('expenses');
+      for (const delId of pendingExpDeletes) {
+        await this.deleteExpenseFromCloud(userId, delId);
+        SyncQueue.removePendingDelete('expenses', delId);
+      }
+
+      const pendingCatDeletes = SyncQueue.getPendingDeletes('categories');
+      for (const delId of pendingCatDeletes) {
+        await this.deleteCategoryFromCloud(userId, delId);
+        SyncQueue.removePendingDelete('categories', delId);
+      }
+
+      const pendingIncDeletes = SyncQueue.getPendingDeletes('income');
+      for (const delId of pendingIncDeletes) {
+        await this.deleteIncomeStreamFromCloud(userId, delId);
+        SyncQueue.removePendingDelete('income', delId);
+      }
+
+      const pendingFixDeletes = SyncQueue.getPendingDeletes('fixed');
+      for (const delId of pendingFixDeletes) {
+        await this.deleteFixedExpenseFromCloud(userId, delId);
+        SyncQueue.removePendingDelete('fixed', delId);
+      }
+
+      const pendingSavDeletes = SyncQueue.getPendingDeletes('savings');
+      for (const delId of pendingSavDeletes) {
+        await this.deleteSavingsGoalFromCloud(userId, delId);
+        SyncQueue.removePendingDelete('savings', delId);
+      }
+
       // 1. Fetch user profile
       const profileSnap = await getDoc(doc(db, 'userProfiles', userId));
 
@@ -197,28 +277,52 @@ export const CloudDb = {
         }
       }
 
-      // Process Expenses & merge any local unsynced additions
+      // Process Expenses & merge any local unsynced edits/additions
       const localExpenses = LocalDb.getExpenses();
+      const pendingExpEdits = SyncQueue.getPendingEdits('expenses');
+      const localExpMap = new Map(localExpenses.map(e => [e.id, e]));
+
       const expenses: Expense[] = [];
       expSnap.forEach(d => {
         const data = d.data();
-        expenses.push({
-          id: data.id || d.id,
+        const cloudId = data.id || d.id;
+
+        // Ignore if deleted locally while offline
+        if (pendingExpDeletes.includes(cloudId)) return;
+
+        const cloudExp: Expense = {
+          id: cloudId,
           amount: Number(data.amount) || 0,
           category: data.category || 'cat_uncategorized',
           date: data.date || '',
           note: data.note || data.title || '',
           paymentMethod: data.paymentMethod || 'card',
-          createdAt: data.createdAt || Date.now()
-        });
+          createdAt: data.createdAt || Date.now(),
+          updatedAt: data.updatedAt || 0
+        };
+
+        const localExp = localExpMap.get(cloudId);
+        if (localExp) {
+          const hasPendingEdit = !!pendingExpEdits[cloudId];
+          const isLocalNewer = (localExp.updatedAt || 0) > (cloudExp.updatedAt || 0);
+          if (hasPendingEdit || isLocalNewer) {
+            expenses.push(localExp);
+            this.saveExpenseToCloud(userId, localExp).then(() => {
+              SyncQueue.removePendingEdit('expenses', cloudId);
+            }).catch(console.error);
+            return;
+          }
+        }
+
+        expenses.push(cloudExp);
       });
 
       const cloudExpIds = new Set(expenses.map(e => e.id));
-      const unsyncedLocalExp = localExpenses.filter(e => e.id && !cloudExpIds.has(e.id));
+      const unsyncedLocalExp = localExpenses.filter(e => e.id && !cloudExpIds.has(e.id) && !pendingExpDeletes.includes(e.id));
       if (unsyncedLocalExp.length > 0) {
         expenses.push(...unsyncedLocalExp);
         unsyncedLocalExp.forEach(e => {
-          CloudDb.saveExpenseToCloud(userId, e).catch(console.error);
+          this.saveExpenseToCloud(userId, e).catch(console.error);
         });
       }
 
@@ -231,8 +335,11 @@ export const CloudDb = {
       if (!catSnap.empty) {
         catSnap.forEach(d => {
           const data = d.data();
+          const cloudId = data.id || d.id;
+          if (pendingCatDeletes.includes(cloudId)) return;
+
           categories.push({
-            id: data.id || d.id,
+            id: cloudId,
             name: data.name || '',
             icon: data.icon || 'Tag',
             color: data.color || '',
@@ -244,13 +351,13 @@ export const CloudDb = {
         });
       }
 
-      if (categories.length > 0) {
+      if (categories.length > 0 || localCategories.length > 0) {
         const cloudCatIds = new Set(categories.map(c => c.id));
-        const unsyncedLocalCat = localCategories.filter(c => c.id && !cloudCatIds.has(c.id));
+        const unsyncedLocalCat = localCategories.filter(c => c.id && !cloudCatIds.has(c.id) && !pendingCatDeletes.includes(c.id));
         if (unsyncedLocalCat.length > 0) {
           categories.push(...unsyncedLocalCat);
           unsyncedLocalCat.forEach(c => {
-            CloudDb.saveCategoryToCloud(userId, c).catch(console.error);
+            this.saveCategoryToCloud(userId, c).catch(console.error);
           });
         }
         localStorage.setItem('personal_finance_app_categories', JSON.stringify(categories));
@@ -270,13 +377,16 @@ export const CloudDb = {
         localStorage.setItem('personal_finance_app_budget', JSON.stringify(budgets));
       }
 
-      // Process Income Streams & merge any local unsynced additions
+      // Process Income Streams
       const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingIncDeletes.includes(cloudId)) return;
+
         incomeStreams.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           frequency: data.frequency
@@ -284,22 +394,25 @@ export const CloudDb = {
       });
 
       const cloudIncIds = new Set(incomeStreams.map(i => i.id));
-      const unsyncedLocalInc = localInc.filter((i: any) => i.id && !cloudIncIds.has(i.id));
+      const unsyncedLocalInc = localInc.filter((i: any) => i.id && !cloudIncIds.has(i.id) && !pendingIncDeletes.includes(i.id));
       if (unsyncedLocalInc.length > 0) {
         incomeStreams.push(...unsyncedLocalInc);
         unsyncedLocalInc.forEach((inc: any) => {
-          CloudDb.saveIncomeStreamToCloud(userId, inc).catch(console.error);
+          this.saveIncomeStreamToCloud(userId, inc).catch(console.error);
         });
       }
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
 
-      // Process Fixed Expenses & merge any local unsynced additions
+      // Process Fixed Expenses
       const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingFixDeletes.includes(cloudId)) return;
+
         fixedExpenses.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           dueDate: data.dueDate
@@ -307,22 +420,25 @@ export const CloudDb = {
       });
 
       const cloudFixIds = new Set(fixedExpenses.map(f => f.id));
-      const unsyncedLocalFix = localFix.filter((f: any) => f.id && !cloudFixIds.has(f.id));
+      const unsyncedLocalFix = localFix.filter((f: any) => f.id && !cloudFixIds.has(f.id) && !pendingFixDeletes.includes(f.id));
       if (unsyncedLocalFix.length > 0) {
         fixedExpenses.push(...unsyncedLocalFix);
         unsyncedLocalFix.forEach((fix: any) => {
-          CloudDb.saveFixedExpenseToCloud(userId, fix).catch(console.error);
+          this.saveFixedExpenseToCloud(userId, fix).catch(console.error);
         });
       }
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
 
-      // Process Savings Goals & merge any local unsynced additions
+      // Process Savings Goals
       const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingSavDeletes.includes(cloudId)) return;
+
         savingsGoals.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
@@ -332,11 +448,11 @@ export const CloudDb = {
       });
 
       const cloudSavIds = new Set(savingsGoals.map(s => s.id));
-      const unsyncedLocalSav = localSav.filter((s: any) => s.id && !cloudSavIds.has(s.id));
+      const unsyncedLocalSav = localSav.filter((s: any) => s.id && !cloudSavIds.has(s.id) && !pendingSavDeletes.includes(s.id));
       if (unsyncedLocalSav.length > 0) {
         savingsGoals.push(...unsyncedLocalSav);
         unsyncedLocalSav.forEach((sav: any) => {
-          CloudDb.saveSavingsGoalToCloud(userId, sav).catch(console.error);
+          this.saveSavingsGoalToCloud(userId, sav).catch(console.error);
         });
       }
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
@@ -473,19 +589,59 @@ export const CloudDb = {
     // 1. Realtime Expenses
     const expQuery = query(collection(db, 'expenses'), where('userId', '==', userId));
     const unsubExp = onSnapshot(expQuery, (expSnap) => {
+      const localExpenses = LocalDb.getExpenses();
+      const pendingDeletes = SyncQueue.getPendingDeletes('expenses');
+      const pendingEdits = SyncQueue.getPendingEdits('expenses');
+      const localExpMap = new Map(localExpenses.map(e => [e.id, e]));
+
       const expenses: Expense[] = [];
       expSnap.forEach(d => {
         const data = d.data();
-        expenses.push({
-          id: data.id || d.id,
+        const cloudId = data.id || d.id;
+
+        if (pendingDeletes.includes(cloudId)) {
+          this.deleteExpenseFromCloud(userId, cloudId).then(() => {
+            SyncQueue.removePendingDelete('expenses', cloudId);
+          }).catch(console.error);
+          return;
+        }
+
+        const cloudExp: Expense = {
+          id: cloudId,
           amount: Number(data.amount) || 0,
           category: data.category || 'cat_uncategorized',
           date: data.date || '',
           note: data.note || data.title || '',
           paymentMethod: data.paymentMethod || 'card',
-          createdAt: data.createdAt || Date.now()
-        });
+          createdAt: data.createdAt || Date.now(),
+          updatedAt: data.updatedAt || 0
+        };
+
+        const localExp = localExpMap.get(cloudId);
+        if (localExp) {
+          const hasPendingEdit = !!pendingEdits[cloudId];
+          const isLocalNewer = (localExp.updatedAt || 0) > (cloudExp.updatedAt || 0);
+          if (hasPendingEdit || isLocalNewer) {
+            expenses.push(localExp);
+            this.saveExpenseToCloud(userId, localExp).then(() => {
+              SyncQueue.removePendingEdit('expenses', cloudId);
+            }).catch(console.error);
+            return;
+          }
+        }
+
+        expenses.push(cloudExp);
       });
+
+      const cloudExpIds = new Set(expenses.map(e => e.id));
+      const unsyncedLocalExp = localExpenses.filter(e => e.id && !cloudExpIds.has(e.id) && !pendingDeletes.includes(e.id));
+      if (unsyncedLocalExp.length > 0) {
+        expenses.push(...unsyncedLocalExp);
+        unsyncedLocalExp.forEach(e => {
+          this.saveExpenseToCloud(userId, e).catch(console.error);
+        });
+      }
+
       expenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       localStorage.setItem('personal_finance_app_expenses', JSON.stringify(expenses));
       onUpdate();
@@ -497,12 +653,23 @@ export const CloudDb = {
     // 2. Realtime Categories
     const catQuery = query(collection(db, 'categories'), where('userId', '==', userId));
     const unsubCat = onSnapshot(catQuery, (catSnap) => {
+      const pendingCatDeletes = SyncQueue.getPendingDeletes('categories');
+      const localCategories = LocalDb.getCategoriesOnly();
+
       if (!catSnap.empty) {
         const categories: Category[] = [];
         catSnap.forEach(d => {
           const data = d.data();
+          const cloudId = data.id || d.id;
+          if (pendingCatDeletes.includes(cloudId)) {
+            this.deleteCategoryFromCloud(userId, cloudId).then(() => {
+              SyncQueue.removePendingDelete('categories', cloudId);
+            }).catch(console.error);
+            return;
+          }
+
           categories.push({
-            id: data.id || d.id,
+            id: cloudId,
             name: data.name || '',
             icon: data.icon || 'Tag',
             color: data.color || '',
@@ -512,6 +679,13 @@ export const CloudDb = {
             isHidden: !!data.isHidden
           });
         });
+
+        const cloudCatIds = new Set(categories.map(c => c.id));
+        const unsyncedLocalCat = localCategories.filter(c => c.id && !cloudCatIds.has(c.id) && !pendingCatDeletes.includes(c.id));
+        if (unsyncedLocalCat.length > 0) {
+          categories.push(...unsyncedLocalCat);
+        }
+
         localStorage.setItem('personal_finance_app_categories', JSON.stringify(categories));
         onUpdate();
       }
@@ -544,29 +718,49 @@ export const CloudDb = {
     // 4. Realtime Income Streams
     const incQuery = query(collection(db, 'incomeStreams'), where('userId', '==', userId));
     const unsubInc = onSnapshot(incQuery, (incSnap) => {
+      const pendingIncDeletes = SyncQueue.getPendingDeletes('income');
+      const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
+
       if (incSnap.empty) {
         try {
-          const localInc = JSON.parse(localStorage.getItem('expensetrack_income_streams') || '[]');
           if (Array.isArray(localInc) && localInc.length > 0) {
             const batch = writeBatch(db);
             for (const item of localInc) {
-              batch.set(doc(db, 'incomeStreams', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              if (!pendingIncDeletes.includes(item.id)) {
+                batch.set(doc(db, 'incomeStreams', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              }
             }
             batch.commit().catch(e => console.error(e));
             return;
           }
         } catch (e) {}
       }
+
       const incomeStreams: any[] = [];
       incSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingIncDeletes.includes(cloudId)) {
+          this.deleteIncomeStreamFromCloud(userId, cloudId).then(() => {
+            SyncQueue.removePendingDelete('income', cloudId);
+          }).catch(console.error);
+          return;
+        }
+
         incomeStreams.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           frequency: data.frequency
         });
       });
+
+      const cloudIncIds = new Set(incomeStreams.map(i => i.id));
+      const unsyncedLocalInc = localInc.filter((i: any) => i.id && !cloudIncIds.has(i.id) && !pendingIncDeletes.includes(i.id));
+      if (unsyncedLocalInc.length > 0) {
+        incomeStreams.push(...unsyncedLocalInc);
+      }
+
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
       onUpdate();
     }, (err) => {
@@ -577,29 +771,49 @@ export const CloudDb = {
     // 5. Realtime Fixed Expenses
     const fixQuery = query(collection(db, 'fixedExpenses'), where('userId', '==', userId));
     const unsubFix = onSnapshot(fixQuery, (fixSnap) => {
+      const pendingFixDeletes = SyncQueue.getPendingDeletes('fixed');
+      const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
+
       if (fixSnap.empty) {
         try {
-          const localFix = JSON.parse(localStorage.getItem('expensetrack_fixed_expenses') || '[]');
           if (Array.isArray(localFix) && localFix.length > 0) {
             const batch = writeBatch(db);
             for (const item of localFix) {
-              batch.set(doc(db, 'fixedExpenses', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              if (!pendingFixDeletes.includes(item.id)) {
+                batch.set(doc(db, 'fixedExpenses', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              }
             }
             batch.commit().catch(e => console.error(e));
             return;
           }
         } catch (e) {}
       }
+
       const fixedExpenses: any[] = [];
       fixSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingFixDeletes.includes(cloudId)) {
+          this.deleteFixedExpenseFromCloud(userId, cloudId).then(() => {
+            SyncQueue.removePendingDelete('fixed', cloudId);
+          }).catch(console.error);
+          return;
+        }
+
         fixedExpenses.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           dueDate: data.dueDate
         });
       });
+
+      const cloudFixIds = new Set(fixedExpenses.map(f => f.id));
+      const unsyncedLocalFix = localFix.filter((f: any) => f.id && !cloudFixIds.has(f.id) && !pendingFixDeletes.includes(f.id));
+      if (unsyncedLocalFix.length > 0) {
+        fixedExpenses.push(...unsyncedLocalFix);
+      }
+
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
       onUpdate();
     }, (err) => {
@@ -610,24 +824,37 @@ export const CloudDb = {
     // 6. Realtime Savings Goals
     const savQuery = query(collection(db, 'savingsGoals'), where('userId', '==', userId));
     const unsubSav = onSnapshot(savQuery, (savSnap) => {
+      const pendingSavDeletes = SyncQueue.getPendingDeletes('savings');
+      const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
+
       if (savSnap.empty) {
         try {
-          const localSav = JSON.parse(localStorage.getItem('expensetrack_savings_goals') || '[]');
           if (Array.isArray(localSav) && localSav.length > 0) {
             const batch = writeBatch(db);
             for (const item of localSav) {
-              batch.set(doc(db, 'savingsGoals', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              if (!pendingSavDeletes.includes(item.id)) {
+                batch.set(doc(db, 'savingsGoals', item.id), cleanUndefined({ ...item, userId }), { merge: true });
+              }
             }
             batch.commit().catch(e => console.error(e));
             return;
           }
         } catch (e) {}
       }
+
       const savingsGoals: any[] = [];
       savSnap.forEach(d => {
         const data = d.data();
+        const cloudId = data.id || d.id;
+        if (pendingSavDeletes.includes(cloudId)) {
+          this.deleteSavingsGoalFromCloud(userId, cloudId).then(() => {
+            SyncQueue.removePendingDelete('savings', cloudId);
+          }).catch(console.error);
+          return;
+        }
+
         savingsGoals.push({
-          id: data.id || d.id,
+          id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
@@ -635,6 +862,13 @@ export const CloudDb = {
           allocationPercent: Number(data.allocationPercent) || 0
         });
       });
+
+      const cloudSavIds = new Set(savingsGoals.map(s => s.id));
+      const unsyncedLocalSav = localSav.filter((s: any) => s.id && !cloudSavIds.has(s.id) && !pendingSavDeletes.includes(s.id));
+      if (unsyncedLocalSav.length > 0) {
+        savingsGoals.push(...unsyncedLocalSav);
+      }
+
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
       onUpdate();
     }, (err) => {

@@ -57,7 +57,7 @@ import { CategoryManager } from './components/CategoryManager';
 import { AuthModal } from './components/AuthModal';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { auth, onAuthStateChanged, User } from './firebase';
-import { CloudDb } from './utils/cloudDb';
+import { CloudDb, SyncQueue } from './utils/cloudDb';
 import appLogo from './assets/images/loosebudget_logo_1785685735427.jpg';
 
 // Recharts components imports
@@ -891,8 +891,12 @@ export default function App() {
 
   const handleDeleteIncomeStream = (id: string) => {
     setIncomeStreams(prev => prev.filter(item => item.id !== id));
-    if (currentUser) {
-      CloudDb.deleteIncomeStreamFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    SyncQueue.addPendingDelete('income', id);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.deleteIncomeStreamFromCloud(uid, id).then(() => {
+        SyncQueue.removePendingDelete('income', id);
+      }).catch(e => console.error(e));
     }
   };
 
@@ -983,15 +987,23 @@ export default function App() {
 
   const handleDeleteFixedExpense = (id: string) => {
     setFixedExpenses(prev => prev.filter(item => item.id !== id));
-    if (currentUser) {
-      CloudDb.deleteFixedExpenseFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    SyncQueue.addPendingDelete('fixed', id);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.deleteFixedExpenseFromCloud(uid, id).then(() => {
+        SyncQueue.removePendingDelete('fixed', id);
+      }).catch(e => console.error(e));
     }
   };
 
   const handleDeleteSavingsGoal = (id: string) => {
     setSavingsGoals(prev => prev.filter(item => item.id !== id));
-    if (currentUser) {
-      CloudDb.deleteSavingsGoalFromCloud(currentUser.uid, id).catch(e => console.error(e));
+    SyncQueue.addPendingDelete('savings', id);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.deleteSavingsGoalFromCloud(uid, id).then(() => {
+        SyncQueue.removePendingDelete('savings', id);
+      }).catch(e => console.error(e));
     }
   };
 

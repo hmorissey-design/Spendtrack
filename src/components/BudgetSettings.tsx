@@ -736,44 +736,46 @@ export function BudgetSettings({
 
 
 
-      {/* Database Purge Options */}
-      <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
-        <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-          <AlertTriangle size={15} /> Reset Local Database
-        </h4>
-        <p className="text-[11px] text-gray-400 mt-1 leading-normal">
-          Delete all local records on this browser and reset the application to a fresh clean state.
-        </p>
+      {/* Database Purge Options (Hidden for Cloud-synced users) */}
+      {!isCloudSynced && (
+        <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
+          <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 font-sans">
+            <AlertTriangle size={15} /> Reset Local Database
+          </h4>
+          <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+            Delete all local records on this browser and reset the application to a fresh clean state.
+          </p>
 
-        <div className="mt-2.5">
-          {!confirmReset ? (
-            <button
-              onClick={() => setConfirmReset(true)}
-              className="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
-            >
-              Reset to Empty Initial Database
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <span className="block text-[10px] font-bold text-rose-400">Are you sure? All local expense data gets deleted!</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={triggerReset}
-                  className="py-1 px-2.5 bg-rose-600 text-slate-100 text-xs font-bold rounded-md cursor-pointer transition-all border-0"
-                >
-                  Yes, Purge Now
-                </button>
-                <button
-                  onClick={() => setConfirmReset(false)}
-                  className="py-1 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] text-gray-300 text-xs font-semibold rounded-md cursor-pointer transition-all border-0"
-                >
-                  Cancel
-                </button>
+          <div className="mt-2.5">
+            {!confirmReset ? (
+              <button
+                onClick={() => setConfirmReset(true)}
+                className="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
+              >
+                Reset to Empty Initial Database
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <span className="block text-[10px] font-bold text-rose-400">Are you sure? All local expense data gets deleted!</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={triggerReset}
+                    className="py-1 px-2.5 bg-rose-600 text-slate-100 text-xs font-bold rounded-md cursor-pointer transition-all border-0"
+                  >
+                    Yes, Purge Now
+                  </button>
+                  <button
+                    onClick={() => setConfirmReset(false)}
+                    className="py-1 px-2.5 bg-[#1C1C1C] hover:bg-[#252525] text-gray-300 text-xs font-semibold rounded-md cursor-pointer transition-all border-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
 
     </div>
