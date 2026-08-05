@@ -36,9 +36,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // Initialize Auth
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
 
 const config = firebaseConfig as Record<string, string | undefined>;
 
