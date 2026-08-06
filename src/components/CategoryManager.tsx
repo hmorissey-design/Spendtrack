@@ -73,12 +73,12 @@ export function renderCategoryIcon(iconName: string, size = 16) {
 
 interface CategoryManagerProps {
   categories: Category[];
-  fixedExpenses?: Array<{ id: string; label: string; amount: number }>;
-  savingsGoals?: Array<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number }>;
+  fixedExpenses?: Array<{ id: string; label: string; amount: number; isHidden?: boolean }>;
   currentBudget: MonthlyBudget;
   onCategoryAdded: (catData: Omit<Category, 'id'>, isDefault?: boolean) => boolean | void;
   onCategoryUpdated: (cat: Category, isDefault?: boolean) => boolean | void;
   onCategoryDeleted: (id: string) => void;
+  onFixedExpenseUpdated?: (id: string, updates: Partial<{ label: string; amount: number; isHidden: boolean }>) => void;
   defaultCategoryId: string;
   currencySymbol: string;
   isOpen: boolean;
@@ -88,11 +88,11 @@ interface CategoryManagerProps {
 export function CategoryManager({
   categories,
   fixedExpenses = [],
-  savingsGoals = [],
   currentBudget,
   onCategoryAdded,
   onCategoryUpdated,
   onCategoryDeleted,
+  onFixedExpenseUpdated,
   defaultCategoryId,
   currencySymbol,
   isOpen,
@@ -115,7 +115,7 @@ export function CategoryManager({
 
   // Build complete list of categories (Daily Spending, Known/Fixed Expenses, Business)
   const unifiedCategories = useMemo(() => {
-    // 1. Get standard categories from props / LocalDb (excluding Savings Goals which are managed in Savings Goals section)
+    // 1. Get standard categories from props / LocalDb
     const list: Array<Category & { categoryType: 'spending' | 'fixed' | 'business' }> = categories
       .filter(c => !c.id.startsWith('SAVINGS_'))
       .map(c => {
@@ -142,7 +142,8 @@ export function CategoryManager({
           textColor: 'text-sky-400',
           limit: fix.amount,
           isDefault: false,
-          categoryType: 'fixed'
+          categoryType: 'fixed',
+          isHidden: fix.isHidden
         });
       }
     });
@@ -187,10 +188,17 @@ export function CategoryManager({
     setErrorMsg(null);
   };
 
-  const handleToggleHideCategory = (cat: Category) => {
-    const updated = { ...cat, isHidden: !cat.isHidden };
-    onCategoryUpdated(updated);
-    setSuccessMsg(`${cat.name} is now ${updated.isHidden ? 'Hidden' : 'Visible'}.`);
+  const handleToggleHideCategory = (cat: any) => {
+    if (cat.id.startsWith('FIXED_')) {
+      const realId = cat.id.replace('FIXED_', '');
+      if (onFixedExpenseUpdated) {
+        onFixedExpenseUpdated(realId, { isHidden: !cat.isHidden });
+      }
+    } else {
+      const updated = { ...cat, isHidden: !cat.isHidden };
+      onCategoryUpdated(updated);
+    }
+    setSuccessMsg(`"${cat.name}" is now ${!cat.isHidden ? 'hidden' : 'visible'}.`);
     setTimeout(() => setSuccessMsg(null), 2500);
   };
 
@@ -200,16 +208,12 @@ export function CategoryManager({
       setErrorMsg('Please enter a category name.');
       return;
     }
-    if (editingCategory === 'new' && formName.toLowerCase().includes('savings')) {
-      setErrorMsg("Spending category names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
-      return;
-    }
     
     const isUncategorized = typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id === 'cat_uncategorized';
-    const isSavings = typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id.startsWith('SAVINGS_');
+    const isFixed = typeof editingCategory === 'object' && editingCategory !== null && (editingCategory.id.startsWith('FIXED_') || (editingCategory as any).categoryType === 'fixed');
     
-    let parsedLimit = (isUncategorized || isSavings) ? 0 : parseFloat(formLimit);
-    if (!isUncategorized && !isSavings && (isNaN(parsedLimit) || parsedLimit < 0)) {
+    let parsedLimit = isUncategorized ? 0 : parseFloat(formLimit);
+    if (!isUncategorized && (isNaN(parsedLimit) || parsedLimit < 0)) {
       setErrorMsg('Please enter a valid positive numeric limit.');
       return;
     }
@@ -230,18 +234,26 @@ export function CategoryManager({
       if (success === false) return;
       setSuccessMsg('Created custom budget category.');
     } else if (editingCategory) {
-      const updatedCat: Category = {
-        ...editingCategory,
-        name: isSavings ? `SAVINGS - ${formName.trim()}` : formName.trim(),
-        limit: isSavings ? (editingCategory.limit || 0) : parsedLimit,
-        icon: formIcon,
-        color: selectedPreset.bgClass,
-        textColor: selectedPreset.textClass,
-        isHidden: formIsHidden,
-      };
-      const success = onCategoryUpdated(updatedCat);
-      if (success === false) return;
-      setSuccessMsg('Updated category successfully.');
+      if (isFixed) {
+        const realId = editingCategory.id.replace('FIXED_', '');
+        if (onFixedExpenseUpdated) {
+          onFixedExpenseUpdated(realId, { label: formName.trim(), amount: parsedLimit, isHidden: formIsHidden });
+        }
+        setSuccessMsg('Updated Known Expense successfully.');
+      } else {
+        const updatedCat: Category = {
+          ...editingCategory,
+          name: formName.trim(),
+          limit: parsedLimit,
+          icon: formIcon,
+          color: selectedPreset.bgClass,
+          textColor: selectedPreset.textClass,
+          isHidden: formIsHidden,
+        };
+        const success = onCategoryUpdated(updatedCat);
+        if (success === false) return;
+        setSuccessMsg('Updated category successfully.');
+      }
     }
 
     setEditingCategory(null);

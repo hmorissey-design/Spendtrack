@@ -67,6 +67,34 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat_business_expense', name: 'Business Expense', icon: 'Briefcase', color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', textColor: 'text-indigo-400', isDefault: true, limit: 0 },
 ];
 
+export const DEFAULT_INCOME_STREAMS = [
+  { id: 'net_salary', label: 'Salary', amount: 0 },
+  { id: 'side_income', label: 'Govt Pensions', amount: 0 },
+  { id: 'private_pension', label: 'Private Pension', amount: 0 }
+];
+
+export const DEFAULT_FIXED_EXPENSES = [
+  { id: 'mortgage_rent', label: 'Rent/Mortgage', amount: 0 },
+  { id: 'property_tax', label: 'Property Taxes', amount: 0 },
+  { id: 'property_insurance', label: 'Property Insurance', amount: 0 },
+  { id: 'power', label: 'Power', amount: 0 },
+  { id: 'water', label: 'Water', amount: 0 },
+  { id: 'phone', label: 'Home Phone', amount: 0 },
+  { id: 'mobile_phone', label: 'Mobile Phone', amount: 0 },
+  { id: 'cable_internet', label: 'Cable/Internet', amount: 0 },
+  { id: 'loan_auto', label: 'Auto Loan', amount: 0 },
+  { id: 'auto_insurance', label: 'Auto Insurance', amount: 0 },
+  { id: 'health_insurance', label: 'Health Insurance', amount: 0 },
+  { id: 'bank_fee', label: 'Banking Fees', amount: 0 }
+];
+
+export const DEFAULT_SAVINGS_GOALS = [
+  { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+  { id: 'clothes_fund', label: 'Clothes', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+  { id: 'auto_maint_fund', label: 'Auto Maintenance', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+  { id: 'income_tax_fund', label: 'Income Tax', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 }
+];
+
 const getCurrentMonthDayString = (day: number) => {
   const d = new Date();
   const year = d.getFullYear();
@@ -202,6 +230,9 @@ export const LocalDb = {
     if (!isInit) {
       localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(getDefaultExpenses()));
       localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
+      localStorage.setItem('expensetrack_income_streams', JSON.stringify(DEFAULT_INCOME_STREAMS));
+      localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(DEFAULT_FIXED_EXPENSES));
+      localStorage.setItem('expensetrack_savings_goals', JSON.stringify(DEFAULT_SAVINGS_GOALS));
       
       const currentMonth = getLocalMonthString(); // "YYYY-MM"
       const budget: MonthlyBudget = {
@@ -222,6 +253,16 @@ export const LocalDb = {
       localStorage.setItem(STORAGE_KEYS.HAS_INITIALIZED, 'true');
     }
 
+    if (!localStorage.getItem('expensetrack_income_streams')) {
+      localStorage.setItem('expensetrack_income_streams', JSON.stringify(DEFAULT_INCOME_STREAMS));
+    }
+    if (!localStorage.getItem('expensetrack_fixed_expenses')) {
+      localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(DEFAULT_FIXED_EXPENSES));
+    }
+    if (!localStorage.getItem('expensetrack_savings_goals')) {
+      localStorage.setItem('expensetrack_savings_goals', JSON.stringify(DEFAULT_SAVINGS_GOALS));
+    }
+
     // Run auto-healing schema check to upgrade existing installations transparently
     autoHealAndMigrateSchema();
   },
@@ -237,6 +278,9 @@ export const LocalDb = {
     // When clearing for fresh install, we initialize with completely empty expenses, unlike default demo seed
     localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
+    localStorage.setItem('expensetrack_income_streams', JSON.stringify(DEFAULT_INCOME_STREAMS));
+    localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(DEFAULT_FIXED_EXPENSES));
+    localStorage.setItem('expensetrack_savings_goals', JSON.stringify(DEFAULT_SAVINGS_GOALS));
     
     const currentMonth = getLocalMonthString(); // "YYYY-MM"
     const budget: MonthlyBudget = {
@@ -495,6 +539,7 @@ export const LocalDb = {
             color: 'bg-pink-500/20 text-pink-450 border border-pink-500/35',
             textColor: 'text-pink-450',
             isDefault: false,
+            isHidden: !!goal.isHidden,
             limit: 0
           }));
         }

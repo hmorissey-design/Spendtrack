@@ -48,7 +48,7 @@ import {
 import { jsPDF } from 'jspdf';
 
 import { ActiveTab, Expense, Category, MonthlyBudget, SubscriptionState } from './types';
-import { LocalDb, DEFAULT_CATEGORIES } from './utils/db';
+import { LocalDb, DEFAULT_CATEGORIES, DEFAULT_INCOME_STREAMS, DEFAULT_FIXED_EXPENSES, DEFAULT_SAVINGS_GOALS } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { SubscriptionManager } from './utils/subscription';
 import { AndroidFrame } from './components/AndroidFrame';
@@ -490,7 +490,7 @@ export default function App() {
     return defaultList;
   });
 
-  const [fixedExpenses, setFixedExpenses] = useState<{ id: string; label: string; amount: number }[]>(() => {
+  const [fixedExpenses, setFixedExpenses] = useState<{ id: string; label: string; amount: number; isHidden?: boolean }[]>(() => {
     const defaultList = [
       { id: 'mortgage_rent', label: 'Rent/Mortgage', amount: 0 },
       { id: 'property_tax', label: 'Property Taxes', amount: 0 },
@@ -557,7 +557,7 @@ export default function App() {
           modified = true;
         }
 
-        const mergedList: { id: string; label: string; amount: number }[] = [];
+        const mergedList: { id: string; label: string; amount: number; isHidden?: boolean }[] = [];
         defaultList.forEach(defItem => {
           if (existingMap.has(defItem.id)) {
             const existing = existingMap.get(defItem.id)!;
@@ -567,7 +567,8 @@ export default function App() {
             mergedList.push({
               id: defItem.id,
               label: defItem.label,
-              amount: existing.amount
+              amount: existing.amount,
+              isHidden: (existing as any).isHidden
             });
             existingMap.delete(defItem.id);
           } else {
@@ -589,7 +590,7 @@ export default function App() {
     return defaultList;
   });
 
-  const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number }[]>(() => {
+  const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }[]>(() => {
     const defaultList = [
       { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
       { id: 'clothes_fund', label: 'Clothes', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
@@ -882,11 +883,28 @@ export default function App() {
   const refreshPlannerStatesFromStorage = () => {
     try {
       const incStr = localStorage.getItem('expensetrack_income_streams');
-      if (incStr) setIncomeStreams(JSON.parse(incStr));
+      if (incStr && JSON.parse(incStr).length > 0) {
+        setIncomeStreams(JSON.parse(incStr));
+      } else {
+        localStorage.setItem('expensetrack_income_streams', JSON.stringify(DEFAULT_INCOME_STREAMS));
+        setIncomeStreams(DEFAULT_INCOME_STREAMS);
+      }
+
       const fixStr = localStorage.getItem('expensetrack_fixed_expenses');
-      if (fixStr) setFixedExpenses(JSON.parse(fixStr));
+      if (fixStr && JSON.parse(fixStr).length > 0) {
+        setFixedExpenses(JSON.parse(fixStr));
+      } else {
+        localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(DEFAULT_FIXED_EXPENSES));
+        setFixedExpenses(DEFAULT_FIXED_EXPENSES);
+      }
+
       const savStr = localStorage.getItem('expensetrack_savings_goals');
-      if (savStr) setSavingsGoals(JSON.parse(savStr));
+      if (savStr && JSON.parse(savStr).length > 0) {
+        setSavingsGoals(JSON.parse(savStr));
+      } else {
+        localStorage.setItem('expensetrack_savings_goals', JSON.stringify(DEFAULT_SAVINGS_GOALS));
+        setSavingsGoals(DEFAULT_SAVINGS_GOALS);
+      }
     } catch (e) {}
   };
 
@@ -924,9 +942,15 @@ export default function App() {
     setFormErrors(prev => ({ ...prev, income: null }));
   };
 
-  const handleUpdateFixedExpense = (id: string, amount: number) => {
+  const handleUpdateFixedExpense = (id: string, updates: number | Partial<{ label: string; amount: number; isHidden: boolean }>) => {
     setFixedExpenses(prev => {
-      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const updated = prev.map(item => {
+        if (item.id === id) {
+          if (typeof updates === 'number') return { ...item, amount: updates };
+          return { ...item, ...updates };
+        }
+        return item;
+      });
       const uid = currentUser?.uid || auth.currentUser?.uid;
       if (uid) {
         const item = updated.find(i => i.id === id);
@@ -936,9 +960,15 @@ export default function App() {
     });
   };
 
-  const handleUpdateSavingsGoal = (id: string, amount: number) => {
+  const handleUpdateSavingsGoal = (id: string, updates: number | Partial<{ label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }>) => {
     setSavingsGoals(prev => {
-      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const updated = prev.map(item => {
+        if (item.id === id) {
+          if (typeof updates === 'number') return { ...item, amount: updates };
+          return { ...item, ...updates };
+        }
+        return item;
+      });
       const uid = currentUser?.uid || auth.currentUser?.uid;
       if (uid) {
         const item = updated.find(i => i.id === id);
@@ -4014,7 +4044,12 @@ Date: ${new Date().toLocaleString()}
                               />
                             ) : (
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
+                                <span className={`text-xs font-medium truncate ${item.isHidden ? 'text-gray-500 line-through' : 'text-gray-300'}`}>{item.label}</span>
+                                {item.isHidden && (
+                                  <span className="text-[7.5px] bg-sky-500/15 text-sky-400 border border-sky-500/20 px-1 py-0.2 rounded font-mono font-bold uppercase shrink-0">
+                                    Hidden
+                                  </span>
+                                )}
                                 <button 
                                   onClick={() => {
                                     setEditingItemId(item.id);
@@ -4035,11 +4070,15 @@ Date: ${new Date().toLocaleString()}
                                 className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-sky-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
                               />
                               <button 
-                                onClick={() => setItemToDelete({ type: 'fixed', id: item.id, name: item.label })}
-                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                title="Remove Known Expense"
+                                onClick={() => handleUpdateFixedExpense(item.id, { isHidden: !item.isHidden })}
+                                className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                  item.isHidden 
+                                    ? 'bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20' 
+                                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                                }`}
+                                title={item.isHidden ? 'Unhide Known Expense' : 'Hide Known Expense'}
                               >
-                                <Trash2 size={12} />
+                                {item.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
                               </button>
                             </div>
                           </div>
@@ -4612,9 +4651,14 @@ Date: ${new Date().toLocaleString()}
                                 />
                               ) : (
                                 <div className="flex items-center gap-1 min-w-0">
-                                  <span className="text-xs text-white font-extrabold truncate max-w-[150px] sm:max-w-[200px]" title={item.label}>
+                                  <span className={`text-xs font-extrabold truncate max-w-[150px] sm:max-w-[200px] ${item.isHidden ? 'text-gray-500 line-through' : 'text-white'}`} title={item.label}>
                                     {item.label}
                                   </span>
+                                  {item.isHidden && (
+                                    <span className="text-[7.5px] bg-pink-500/15 text-pink-400 border border-pink-500/20 px-1 py-0.2 rounded font-mono font-bold uppercase shrink-0">
+                                      Hidden
+                                    </span>
+                                  )}
                                   <button 
                                     onClick={() => {
                                       setEditingItemId(item.id);
@@ -4633,6 +4677,17 @@ Date: ${new Date().toLocaleString()}
                               <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
                                 {percentSaved}% Saved
                               </span>
+                              <button 
+                                onClick={() => handleUpdateSavingsGoal(item.id, { isHidden: !item.isHidden })}
+                                className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                  item.isHidden 
+                                    ? 'bg-pink-500/10 border-pink-500/30 text-pink-400 hover:bg-pink-500/20' 
+                                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                                }`}
+                                title={item.isHidden ? 'Unhide Savings Goal' : 'Hide Savings Goal'}
+                              >
+                                {item.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+                              </button>
                               <button 
                                 onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
                                 className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
@@ -5033,11 +5088,11 @@ Date: ${new Date().toLocaleString()}
         <CategoryManager
           categories={categories}
           fixedExpenses={fixedExpenses}
-          savingsGoals={savingsGoals}
           currentBudget={currentBudget}
           onCategoryAdded={handleAddCategory}
           onCategoryUpdated={handleUpdateCategory}
           onCategoryDeleted={handleDeleteCategory}
+          onFixedExpenseUpdated={handleUpdateFixedExpense}
           defaultCategoryId={defaultCategoryId}
           currencySymbol={currencySymbol}
           isOpen={showCategoryManager}
