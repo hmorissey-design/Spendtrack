@@ -68,10 +68,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             {/* Top Return to App Button */}
             <button
               onClick={onClose}
-              className="px-3.5 py-2 bg-slate-950/60 hover:bg-slate-950/90 text-amber-300 font-black text-xs sm:text-sm rounded-xl border border-amber-300/40 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl border border-emerald-400/40 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
               title="Return to LooseBudget App"
             >
-              <X className="w-4 h-4 text-amber-300" />
+              <X className="w-4 h-4 text-white" />
               <span className="tracking-wide uppercase font-sans">Return to App ↩</span>
             </button>
           </div>
@@ -105,13 +105,13 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               <>
                 <Zap className="w-4 h-4 text-amber-300" />
                 <span>
-                  Active Plan: Free 5-Day Full Access Trial — {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} remaining
+                  Active Plan: Free 2-Day Full Access Preview — {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} remaining
                 </span>
               </>
             ) : (
               <>
                 <AlertCircle className="w-4 h-4 text-rose-300" />
-                <span>Free 5-Day Trial Ended — Subscribe below with a 5-Day Free Trial to unlock unlimited access & cloud sync</span>
+                <span>Free 2-Day Preview Ended — Subscribe below with a 5-Day Bonus Free Trial to unlock unlimited access & cloud sync</span>
               </>
             )}
           </div>
@@ -131,7 +131,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
-              <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
+              <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Bonus Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
             </div>
           </div>
 

@@ -413,8 +413,8 @@ export function BudgetSettings({
                 Status: {subscriptionState.isSubscribed
                   ? `Active (${subscriptionState.tier === 'yearly' ? 'Yearly' : 'Monthly'})`
                   : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0
-                    ? `Free 5-Day Full Access Trial (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
-                    : 'Trial Expired (Demo / Preview Mode)'}
+                    ? `Free 2-Day Full Access Preview (${SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days remaining)`
+                    : 'Preview Expired (Demo / Action-Gated Mode)'}
               </p>
               <p className="text-xs text-slate-400">
                 Processed via Lemon Squeezy secure checkout. Multi-device sync & cloud backups enabled.

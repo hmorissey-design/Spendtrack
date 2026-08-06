@@ -12,7 +12,7 @@ const SUBSCRIPTION_STORAGE_KEY = 'expensetrack_subscription_state';
 export const DEFAULT_SUBSCRIPTION_STATE: SubscriptionState = {
   tier: 'trial',
   status: 'trialing',
-  trialDaysTotal: 5,
+  trialDaysTotal: 2,
   isSubscribed: false,
 };
 
@@ -26,17 +26,20 @@ export const SubscriptionManager = {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.tier) {
-          // If legacy state was 3-day or missing trialStartDate/trialDaysTotal, upgrade to 5-day trial
-          if (parsed.tier === 'free_preview' || parsed.status === 'preview' || !parsed.trialStartDate || (parsed.trialDaysTotal && parsed.trialDaysTotal < 5 && !parsed.isSubscribed)) {
-            const updated: SubscriptionState = {
-              tier: 'trial',
-              status: 'trialing',
-              trialStartDate: parsed.trialStartDate || Date.now(),
-              trialDaysTotal: 5,
-              isSubscribed: false,
-            };
-            this.saveSubscriptionState(updated);
-            return updated;
+          let needsSave = false;
+          if (parsed.tier === 'free_preview' || parsed.status === 'preview' || !parsed.trialStartDate) {
+            parsed.tier = 'trial';
+            parsed.status = 'trialing';
+            parsed.trialStartDate = parsed.trialStartDate || Date.now();
+            parsed.trialDaysTotal = 2;
+            parsed.isSubscribed = false;
+            needsSave = true;
+          } else if (!parsed.isSubscribed && parsed.trialDaysTotal !== 2) {
+            parsed.trialDaysTotal = 2;
+            needsSave = true;
+          }
+          if (needsSave) {
+            this.saveSubscriptionState(parsed);
           }
           return parsed;
         }
@@ -45,11 +48,11 @@ export const SubscriptionManager = {
       console.error('Error reading subscription state:', e);
     }
 
-    // Default: initialize 5-day full access trial starting now
+    // Default: initialize 2-day full access preview trial starting now
     const initialState: SubscriptionState = {
       ...DEFAULT_SUBSCRIPTION_STATE,
       trialStartDate: Date.now(),
-      trialDaysTotal: 5,
+      trialDaysTotal: 2,
     };
     this.saveSubscriptionState(initialState);
     return initialState;
@@ -85,7 +88,7 @@ export const SubscriptionManager = {
     const now = new Date();
     const diffTime = Math.max(0, now.getTime() - startDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const totalDays = sub.trialDaysTotal || 5;
+    const totalDays = !sub.isSubscribed ? Math.min(2, sub.trialDaysTotal || 2) : 2;
     const remaining = totalDays - diffDays;
 
     return Math.max(0, remaining);
@@ -102,9 +105,9 @@ export const SubscriptionManager = {
   },
 
   /**
-   * Start or reset the 5-Day Trial
+   * Start or reset the 2-Day Preview Trial
    */
-  startTrial(days = 5): SubscriptionState {
+  startTrial(days = 2): SubscriptionState {
     const newState: SubscriptionState = {
       tier: 'trial',
       status: 'trialing',

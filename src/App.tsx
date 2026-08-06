@@ -427,7 +427,7 @@ export default function App() {
   });
 
   // Simulated Full Budget Monthly Planner states (under construction preview)
-  const [incomeStreams, setIncomeStreams] = useState<{ id: string; label: string; amount: number }[]>(() => {
+  const [incomeStreams, setIncomeStreams] = useState<{ id: string; label: string; amount: number; isHidden?: boolean }[]>(() => {
     const defaultList = [
       { id: 'net_salary', label: 'Salary', amount: 0 },
       { id: 'side_income', label: 'Govt Pensions', amount: 0 },
@@ -868,9 +868,15 @@ export default function App() {
     setQuickAddAmount('');
   };
 
-  const handleUpdateIncomeStream = (id: string, amount: number) => {
+  const handleUpdateIncomeStream = (id: string, updates: number | Partial<{ label: string; amount: number; isHidden?: boolean }>) => {
     setIncomeStreams(prev => {
-      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const updated = prev.map(item => {
+        if (item.id === id) {
+          if (typeof updates === 'number') return { ...item, amount: updates };
+          return { ...item, ...updates };
+        }
+        return item;
+      });
       const uid = currentUser?.uid || auth.currentUser?.uid;
       if (uid) {
         const item = updated.find(i => i.id === id);
@@ -2242,8 +2248,8 @@ Date: ${new Date().toLocaleString()}
                   'PRO'
                 ) : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? (
                   <>
-                    <span className="sm:hidden">5d Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
-                    <span className="hidden sm:inline">5-Day Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
+                    <span className="sm:hidden">2d Preview ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
+                    <span className="hidden sm:inline">2-Day Preview ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
                   </>
                 ) : (
                   'Demo Mode'
@@ -2522,7 +2528,7 @@ Date: ${new Date().toLocaleString()}
 
         {/* Contextual Savings & Budget Tip Card OR Demo Mode Announcement Banner */}
         <div className="px-3 pt-1.5 pb-0.5 shrink-0">
-          {!subscriptionState.isSubscribed && SubscriptionManager.isPaywalled(subscriptionState) ? (
+          {!subscriptionState.isSubscribed ? (
             <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-amber-500/10 border border-amber-500/30 rounded-2xl p-3 sm:p-3.5 shadow-lg backdrop-blur-md">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-2.5">
@@ -2532,11 +2538,11 @@ Date: ${new Date().toLocaleString()}
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        Demo / Preview Mode
+                        Demo / Preview Mode ({SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? `${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d Preview` : 'Preview Expired'})
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day free trial with any plan!
+                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Feel free to click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day bonus free trial with any plan below!
                     </p>
                   </div>
                 </div>
@@ -3785,10 +3791,10 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 5: FULL MONTHLY BUDGET (PREVIEW MODE) */}
           {activeTab === 'budget_full' && (() => {
-            const totalIncome = incomeStreams.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
-            const totalFixed = fixedExpenses.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
-            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_')).reduce((sum, c) => sum + (Number(c?.limit) || 0), 0);
-            const totalSavings = savingsGoals.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
+            const totalIncome = incomeStreams.filter(item => !item.isHidden).reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
+            const totalFixed = fixedExpenses.filter(item => !item.isHidden).reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
+            const totalDiscretionary = categories.filter(c => c.id !== 'cat_business_expense' && !c.id.startsWith('SAVINGS_') && !c.isHidden).reduce((sum, c) => sum + (Number(c?.limit) || 0), 0);
+            const totalSavings = savingsGoals.filter(item => !item.isHidden).reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
             const overallSurplus = totalIncome - (totalFixed + totalDiscretionary + totalSavings);
 
             return (
@@ -3876,7 +3882,12 @@ Date: ${new Date().toLocaleString()}
                               />
                             ) : (
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-xs text-gray-300 font-medium truncate">{item.label}</span>
+                                <span className={`text-xs font-medium truncate ${item.isHidden ? 'text-gray-500 line-through' : 'text-gray-300'}`}>{item.label}</span>
+                                {item.isHidden && (
+                                  <span className="text-[7.5px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1 py-0.2 rounded font-mono font-bold uppercase shrink-0">
+                                    Hidden
+                                  </span>
+                                )}
                                 <button 
                                   onClick={() => {
                                     setEditingItemId(item.id);
@@ -3897,11 +3908,15 @@ Date: ${new Date().toLocaleString()}
                                 className="w-28 pl-4.5 pr-2 py-1 bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none rounded-lg text-[11px] font-mono text-right font-bold text-white transition-all"
                               />
                               <button 
-                                onClick={() => setItemToDelete({ type: 'income', id: item.id, name: item.label })}
-                                className="p-1 bg-rose-550/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                title="Remove Income Source"
+                                onClick={() => handleUpdateIncomeStream(item.id, { isHidden: !item.isHidden })}
+                                className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                  item.isHidden 
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
+                                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                                }`}
+                                title={item.isHidden ? 'Unhide Income Category' : 'Hide Income Category'}
                               >
-                                <Trash2 size={12} />
+                                {item.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
                               </button>
                             </div>
                           </div>
@@ -4680,13 +4695,6 @@ Date: ${new Date().toLocaleString()}
                                 title={item.isHidden ? 'Unhide Savings Goal' : 'Hide Savings Goal'}
                               >
                                 {item.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-                              </button>
-                              <button 
-                                onClick={() => setItemToDelete({ type: 'savings', id: item.id, name: item.label })}
-                                className="p-1 bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                                title="Remove Savings Goal"
-                              >
-                                <Trash2 size={10} />
                               </button>
                             </div>
                           </div>
