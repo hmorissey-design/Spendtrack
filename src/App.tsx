@@ -750,8 +750,8 @@ export default function App() {
     return tomorrow.getDate() === 1;
   }, []);
 
-  const isThreeDayTrial = useMemo(() => {
-    return !subscriptionState.isSubscribed && subscriptionState.tier === 'trial' && (subscriptionState.trialDaysTotal || 3) === 3;
+  const isTrialActive = useMemo(() => {
+    return !subscriptionState.isSubscribed && subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0;
   }, [subscriptionState]);
 
   const hasEnteredBudgetData = useMemo(() => {
@@ -2241,19 +2241,12 @@ Date: ${new Date().toLocaleString()}
                 {subscriptionState.isSubscribed ? (
                   'PRO'
                 ) : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? (
-                  subscriptionState.trialDaysTotal === 30 ? (
-                    <>
-                      <span className="sm:hidden">$1 Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
-                      <span className="hidden sm:inline">$1 Extended Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="sm:hidden">3d Trial</span>
-                      <span className="hidden sm:inline">3-Day Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
-                    </>
-                  )
+                  <>
+                    <span className="sm:hidden">5d Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
+                    <span className="hidden sm:inline">5-Day Trial ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
+                  </>
                 ) : (
-                  'Expired'
+                  'Demo Mode'
                 )}
               </span>
             </button>
@@ -2450,7 +2443,7 @@ Date: ${new Date().toLocaleString()}
                     </div>
                     {isDemoMode && (
                       <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
-                        Requires $1 Trial
+                        Requires Subscription / Trial
                       </span>
                     )}
                   </button>
@@ -2529,7 +2522,7 @@ Date: ${new Date().toLocaleString()}
 
         {/* Contextual Savings & Budget Tip Card OR Demo Mode Announcement Banner */}
         <div className="px-3 pt-1.5 pb-0.5 shrink-0">
-          {!subscriptionState.isSubscribed && (subscriptionState.tier === 'free_preview' || subscriptionState.status === 'preview') ? (
+          {!subscriptionState.isSubscribed && SubscriptionManager.isPaywalled(subscriptionState) ? (
             <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-amber-500/10 border border-amber-500/30 rounded-2xl p-3 sm:p-3.5 shadow-lg backdrop-blur-md">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-2.5">
@@ -2539,11 +2532,11 @@ Date: ${new Date().toLocaleString()}
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        Demo Mode
+                        Demo / Preview Mode
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      👋 <strong>You're in Demo Mode</strong> — explore freely! Feel free to click around and try every feature, but heads up: nothing you enter will be saved. Ready to save your work? Start your fully-featured 30-day trial for just $1 — tap the button above!
+                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day free trial with any plan!
                     </p>
                   </div>
                 </div>
@@ -2552,7 +2545,7 @@ Date: ${new Date().toLocaleString()}
                   className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles size={14} className="fill-slate-950" />
-                  <span>Start $1 Trial</span>
+                  <span>Start 5-Day Free Trial</span>
                 </button>
               </div>
             </div>
@@ -2889,7 +2882,7 @@ Date: ${new Date().toLocaleString()}
               )}
 
               {/* Reconciliation Reminder Banner (Only on last day of month, not during 3-day trial, and only if user has entered budget data) */}
-              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && isLastDayOfMonth && !isThreeDayTrial && hasEnteredBudgetData && (
+              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && isLastDayOfMonth && !isTrialActive && hasEnteredBudgetData && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl shrink-0">

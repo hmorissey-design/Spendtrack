@@ -40,7 +40,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         let updated: SubscriptionState;
         if (tier === 'trial') {
           updated = SubscriptionManager.startTrial();
-          setSimulationSuccessMsg('🎉 3-Day Trial activated successfully!');
+          setSimulationSuccessMsg('🎉 5-Day Free Trial activated successfully!');
         } else {
           updated = SubscriptionManager.activatePlan(tier);
           setSimulationSuccessMsg(`🎉 ${tier === 'yearly' ? 'Yearly ($14.99/yr)' : 'Monthly ($1.99/mo)'} Subscription activated successfully!`);
@@ -105,15 +105,13 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               <>
                 <Zap className="w-4 h-4 text-amber-300" />
                 <span>
-                  {subscriptionState.trialDaysTotal === 30
-                    ? `Active $1 Extended Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'day' : 'days'} remaining`
-                    : `Active Plan: Free 3-Day Full Access Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'day' : 'days'} remaining`}
+                  Active Plan: Free 5-Day Full Access Trial — {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} remaining
                 </span>
               </>
             ) : (
               <>
                 <AlertCircle className="w-4 h-4 text-rose-300" />
-                <span>Free 3-Day Full Access Trial Ended — Subscribe to Unlock Unlimited Access & Cloud Sync</span>
+                <span>Free 5-Day Trial Ended — Subscribe below with a 5-Day Free Trial to unlock unlimited access & cloud sync</span>
               </>
             )}
           </div>
@@ -129,108 +127,96 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </div>
           )}
 
-          {/* Pricing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* Tier 1: 30-Day Trial */}
-            <div
-              onClick={() => setSelectedTier('trial')}
-              className={`relative cursor-pointer p-5 rounded-xl border-2 transition-all ${
-                selectedTier === 'trial'
-                  ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40'
-              }`}
-            >
-              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                30-Day Extended Trial
-              </div>
-              <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                $1.00
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                One-time payment
-              </div>
-              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Try all features & multi-device cloud sync for 30 days.
-              </p>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCheckout('trial');
-                }}
-                disabled={isProcessing}
-                className="mt-4 w-full py-2 px-3 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
-              >
-                {subscriptionState.tier === 'trial' && subscriptionState.trialDaysTotal === 30 && trialDaysLeft > 0 ? 'Active $1 Trial' : 'Start $1 Trial'}
-              </button>
+          {/* Trial Value Proposition Banner */}
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+              <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
             </div>
+          </div>
 
-            {/* Tier 2: Monthly */}
+          {/* Pricing Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+
+            {/* Tier 1: Monthly with 5-Day Trial */}
             <div
               onClick={() => setSelectedTier('monthly')}
-              className={`relative cursor-pointer p-5 rounded-xl border-2 transition-all ${
+              className={`relative cursor-pointer p-6 rounded-2xl border-2 transition-all flex flex-col justify-between ${
                 selectedTier === 'monthly'
-                  ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md'
+                  ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md ring-1 ring-emerald-600'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40'
               }`}
             >
-              <div className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                Monthly Plan
+              <div>
+                <div className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider mb-2">
+                  5-Day Free Trial Included
+                </div>
+                <div className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  Monthly Subscription
+                </div>
+                <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
+                  $1.99 <span className="text-sm font-normal text-slate-500">/mo</span>
+                </div>
+                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                  $0 today • Billed $1.99/mo after 5 days
+                </div>
+                <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Flexible month-to-month subscription. Complete cloud sync & unlimited access.
+                </p>
               </div>
-              <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                $1.99 <span className="text-sm font-normal text-slate-500">/mo</span>
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Billed monthly
-              </div>
-              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Flexible month-to-month subscription. Cancel anytime with 1-click.
-              </p>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCheckout('monthly');
                 }}
                 disabled={isProcessing}
-                className="mt-4 w-full py-2 px-3 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
+                className="mt-6 w-full py-2.5 px-4 text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
-                {subscriptionState.tier === 'monthly' ? 'Current Plan' : 'Subscribe Monthly'}
+                {subscriptionState.tier === 'monthly' ? 'Current Plan' : 'Start 5-Day Free Trial ($1.99/mo)'}
               </button>
             </div>
 
-            {/* Tier 3: Yearly (Popular) */}
+            {/* Tier 2: Yearly with 5-Day Trial (Popular) */}
             <div
               onClick={() => setSelectedTier('yearly')}
-              className={`relative cursor-pointer p-5 rounded-xl border-2 transition-all ${
+              className={`relative cursor-pointer p-6 rounded-2xl border-2 transition-all flex flex-col justify-between ${
                 selectedTier === 'yearly'
-                  ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg ring-1 ring-emerald-600'
+                  ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xl ring-2 ring-emerald-500'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40'
               }`}
             >
-              <div className="absolute -top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider shadow-sm">
-                Save 37%
+              <div className="absolute -top-3.5 right-4 px-3 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 uppercase tracking-wider shadow-md">
+                Best Value — Save 37%
               </div>
-              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                Yearly Plan
+
+              <div>
+                <div className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wider mb-2">
+                  5-Day Free Trial Included
+                </div>
+                <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  Yearly Subscription
+                </div>
+                <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
+                  $14.99 <span className="text-sm font-normal text-slate-500">/yr</span>
+                </div>
+                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                  Just $1.25 / month • $0 today (Billed Day 6)
+                </div>
+                <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Best value for uninterrupted multi-device expense tracking, backups & analytics.
+                </p>
               </div>
-              <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                $14.99 <span className="text-sm font-normal text-slate-500">/yr</span>
-              </div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-                Just $1.25 / month
-              </div>
-              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Best value for continuous multi-device expense tracking & backups.
-              </p>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCheckout('yearly');
                 }}
                 disabled={isProcessing}
-                className="mt-4 w-full py-2 px-3 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
+                className="mt-6 w-full py-2.5 px-4 text-xs font-black uppercase tracking-wider rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
-                {subscriptionState.tier === 'yearly' ? 'Current Plan' : 'Subscribe Yearly'}
+                {subscriptionState.tier === 'yearly' ? 'Current Plan' : 'Start 5-Day Free Trial ($14.99/yr)'}
               </button>
             </div>
 
