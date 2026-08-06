@@ -155,38 +155,56 @@ export const CloudDb = {
 
       // 5. Upload Income Streams
       if (incomeStreams.length > 0) {
-        const incBatch = writeBatch(db);
-        for (const inc of incomeStreams) {
-          incBatch.set(doc(db, 'incomeStreams', inc.id), cleanUndefined({
-            ...inc,
-            userId
-          }), { merge: true });
+        try {
+          const incBatch = writeBatch(db);
+          for (const inc of incomeStreams) {
+            const incId = String(inc.id || `inc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+            incBatch.set(doc(db, 'incomeStreams', incId), cleanUndefined({
+              ...inc,
+              id: incId,
+              userId
+            }), { merge: true });
+          }
+          await incBatch.commit();
+        } catch (incErr) {
+          console.error('Error uploading incomeStreams batch:', incErr);
         }
-        await incBatch.commit();
       }
 
       // 6. Upload Fixed Expenses
       if (fixedExpenses.length > 0) {
-        const fixBatch = writeBatch(db);
-        for (const fix of fixedExpenses) {
-          fixBatch.set(doc(db, 'fixedExpenses', fix.id), cleanUndefined({
-            ...fix,
-            userId
-          }), { merge: true });
+        try {
+          const fixBatch = writeBatch(db);
+          for (const fix of fixedExpenses) {
+            const fixId = String(fix.id || `fix_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+            fixBatch.set(doc(db, 'fixedExpenses', fixId), cleanUndefined({
+              ...fix,
+              id: fixId,
+              userId
+            }), { merge: true });
+          }
+          await fixBatch.commit();
+        } catch (fixErr) {
+          console.error('Error uploading fixedExpenses batch:', fixErr);
         }
-        await fixBatch.commit();
       }
 
       // 7. Upload Savings Goals
       if (savingsGoals.length > 0) {
-        const savBatch = writeBatch(db);
-        for (const sav of savingsGoals) {
-          savBatch.set(doc(db, 'savingsGoals', sav.id), cleanUndefined({
-            ...sav,
-            userId
-          }), { merge: true });
+        try {
+          const savBatch = writeBatch(db);
+          for (const sav of savingsGoals) {
+            const savId = String(sav.id || `sav_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+            savBatch.set(doc(db, 'savingsGoals', savId), cleanUndefined({
+              ...sav,
+              id: savId,
+              userId
+            }), { merge: true });
+          }
+          await savBatch.commit();
+        } catch (savErr) {
+          console.error('Error uploading savingsGoals batch:', savErr);
         }
-        await savBatch.commit();
       }
 
       console.log('Local data successfully uploaded & synced to Firestore');
@@ -507,16 +525,17 @@ export const CloudDb = {
   },
 
   async saveSavingsGoalToCloud(userId: string, goal: any): Promise<void> {
-    if (!userId) return;
+    if (!userId || !goal) return;
     try {
-      await setDoc(doc(db, 'savingsGoals', goal.id), { ...goal, userId, updatedAt: Date.now() }, { merge: true });
+      const gId = String(goal.id || `sav_${Date.now()}`);
+      await setDoc(doc(db, 'savingsGoals', gId), cleanUndefined({ ...goal, id: gId, userId, updatedAt: Date.now() }), { merge: true });
     } catch (e) {
       console.error('Error saving goal to cloud:', e);
     }
   },
 
   async deleteSavingsGoalFromCloud(userId: string, goalId: string): Promise<void> {
-    if (!userId) return;
+    if (!userId || !goalId) return;
     try {
       await deleteDoc(doc(db, 'savingsGoals', goalId));
     } catch (e) {
@@ -525,16 +544,17 @@ export const CloudDb = {
   },
 
   async saveIncomeStreamToCloud(userId: string, stream: any): Promise<void> {
-    if (!userId) return;
+    if (!userId || !stream) return;
     try {
-      await setDoc(doc(db, 'incomeStreams', stream.id), { ...stream, userId, updatedAt: Date.now() }, { merge: true });
+      const sId = String(stream.id || `inc_${Date.now()}`);
+      await setDoc(doc(db, 'incomeStreams', sId), cleanUndefined({ ...stream, id: sId, userId, updatedAt: Date.now() }), { merge: true });
     } catch (e) {
       console.error('Error saving income stream to cloud:', e);
     }
   },
 
   async deleteIncomeStreamFromCloud(userId: string, streamId: string): Promise<void> {
-    if (!userId) return;
+    if (!userId || !streamId) return;
     try {
       await deleteDoc(doc(db, 'incomeStreams', streamId));
     } catch (e) {
@@ -543,9 +563,10 @@ export const CloudDb = {
   },
 
   async saveFixedExpenseToCloud(userId: string, fixedExp: any): Promise<void> {
-    if (!userId) return;
+    if (!userId || !fixedExp) return;
     try {
-      await setDoc(doc(db, 'fixedExpenses', fixedExp.id), { ...fixedExp, userId, updatedAt: Date.now() }, { merge: true });
+      const fId = String(fixedExp.id || `fix_${Date.now()}`);
+      await setDoc(doc(db, 'fixedExpenses', fId), cleanUndefined({ ...fixedExp, id: fId, userId, updatedAt: Date.now() }), { merge: true });
     } catch (e) {
       console.error('Error saving fixed expense to cloud:', e);
     }

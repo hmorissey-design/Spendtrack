@@ -692,24 +692,12 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_income_streams', JSON.stringify(incomeStreams));
-      const uid = auth.currentUser?.uid || currentUser?.uid;
-      if (uid) {
-        incomeStreams.forEach(stream => {
-          CloudDb.saveIncomeStreamToCloud(uid, stream).catch(e => console.error(e));
-        });
-      }
     } catch (e) {}
   }, [incomeStreams]);
 
   useEffect(() => {
     try {
       localStorage.setItem('expensetrack_fixed_expenses', JSON.stringify(fixedExpenses));
-      const uid = auth.currentUser?.uid || currentUser?.uid;
-      if (uid) {
-        fixedExpenses.forEach(fix => {
-          CloudDb.saveFixedExpenseToCloud(uid, fix).catch(e => console.error(e));
-        });
-      }
     } catch (e) {}
   }, [fixedExpenses]);
 
@@ -717,12 +705,6 @@ export default function App() {
     try {
       localStorage.setItem('expensetrack_savings_goals', JSON.stringify(savingsGoals));
       setCategories(LocalDb.getCategories(selectedMonth));
-      const uid = auth.currentUser?.uid || currentUser?.uid;
-      if (uid) {
-        savingsGoals.forEach(goal => {
-          CloudDb.saveSavingsGoalToCloud(uid, goal).catch(e => console.error(e));
-        });
-      }
     } catch (e) {}
   }, [savingsGoals, selectedMonth]);
 
@@ -886,7 +868,15 @@ export default function App() {
   };
 
   const handleUpdateIncomeStream = (id: string, amount: number) => {
-    setIncomeStreams(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+    setIncomeStreams(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const uid = currentUser?.uid || auth.currentUser?.uid;
+      if (uid) {
+        const item = updated.find(i => i.id === id);
+        if (item) CloudDb.saveIncomeStreamToCloud(uid, item).catch(console.error);
+      }
+      return updated;
+    });
   };
 
   const refreshPlannerStatesFromStorage = () => {
@@ -925,17 +915,37 @@ export default function App() {
       amount
     };
     setIncomeStreams(prev => [...prev, newItem]);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.saveIncomeStreamToCloud(uid, newItem).catch(console.error);
+    }
     setNewIncomeName('');
     setNewIncomeAmount('');
     setFormErrors(prev => ({ ...prev, income: null }));
   };
 
   const handleUpdateFixedExpense = (id: string, amount: number) => {
-    setFixedExpenses(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+    setFixedExpenses(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const uid = currentUser?.uid || auth.currentUser?.uid;
+      if (uid) {
+        const item = updated.find(i => i.id === id);
+        if (item) CloudDb.saveFixedExpenseToCloud(uid, item).catch(console.error);
+      }
+      return updated;
+    });
   };
 
   const handleUpdateSavingsGoal = (id: string, amount: number) => {
-    setSavingsGoals(prev => prev.map(item => item.id === id ? { ...item, amount } : item));
+    setSavingsGoals(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, amount } : item);
+      const uid = currentUser?.uid || auth.currentUser?.uid;
+      if (uid) {
+        const item = updated.find(i => i.id === id);
+        if (item) CloudDb.saveSavingsGoalToCloud(uid, item).catch(console.error);
+      }
+      return updated;
+    });
   };
 
   const handleAddFixedExpense = (e: React.FormEvent) => {
@@ -956,6 +966,10 @@ export default function App() {
       amount
     };
     setFixedExpenses(prev => [...prev, newItem]);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.saveFixedExpenseToCloud(uid, newItem).catch(console.error);
+    }
     setNewFixedName('');
     setNewFixedAmount('');
     setFormErrors(prev => ({ ...prev, fixed: null }));
@@ -988,6 +1002,10 @@ export default function App() {
       allocationPercent: finalAlloc
     };
     setSavingsGoals(prev => [...prev, newItem]);
+    const uid = currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+      CloudDb.saveSavingsGoalToCloud(uid, newItem).catch(console.error);
+    }
     setNewSavingsName('');
     setNewSavingsAmount('');
     setNewSavingsTarget('');
