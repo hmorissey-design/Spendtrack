@@ -58,6 +58,7 @@ import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings'
 import { CategoryManager } from './components/CategoryManager';
 import { AuthModal } from './components/AuthModal';
 import { SubscriptionModal } from './components/SubscriptionModal';
+import { HelpSection } from './components/HelpSection';
 import { auth, onAuthStateChanged, User } from './firebase';
 import { CloudDb, SyncQueue } from './utils/cloudDb';
 import appLogo from './assets/images/loosebudget_logo_1785685735427.jpg';
@@ -728,6 +729,7 @@ export default function App() {
   const [newDiscretionaryName, setNewDiscretionaryName] = useState('');
   const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
+  const [savingsGoalError, setSavingsGoalError] = useState<string | null>(null);
 
   // Reconciliation states
   const [showReconciliationModal, setShowReconciliationModal] = useState(false);
@@ -967,16 +969,36 @@ export default function App() {
   };
 
   const handleUpdateSavingsGoal = (id: string, updates: number | Partial<{ label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }>) => {
+    setSavingsGoalError(null);
     setSavingsGoals(prev => {
+      let errText = '';
       const updated = prev.map(item => {
         if (item.id === id) {
           if (typeof updates === 'number') return { ...item, amount: updates };
+          if (typeof updates === 'object' && updates.isHidden === true && !item.isHidden) {
+            const tgt = parseFloat(item.targetAmount as any) || 0;
+            const cur = Math.max(parseFloat(item.currentAmount as any) || 0, parseFloat(item.amount as any) || 0);
+            const alloc = parseFloat(item.allocationPercent as any) || 0;
+            if (tgt > 0 || cur > 0 || alloc > 0) {
+              const nonZeroFields: string[] = [];
+              if (tgt > 0) nonZeroFields.push(`Target Amount (${currencySymbol}${tgt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`);
+              if (cur > 0) nonZeroFields.push(`Amount Saved (${currencySymbol}${cur.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`);
+              if (alloc > 0) nonZeroFields.push(`Allocation % (${alloc}%)`);
+              
+              errText = `To hide "${item.label}", Target Amount, Amount Saved, and Allocation % must all be set to 0 first. (Currently non-zero: ${nonZeroFields.join(', ')})`;
+              return item;
+            }
+          }
           return { ...item, ...updates };
         }
         return item;
       });
+
+      if (errText) {
+        setSavingsGoalError(errText);
+      }
       const uid = currentUser?.uid || auth.currentUser?.uid;
-      if (uid) {
+      if (uid && !errText) {
         const item = updated.find(i => i.id === id);
         if (item) CloudDb.saveSavingsGoalToCloud(uid, item).catch(console.error);
       }
@@ -2542,7 +2564,7 @@ Date: ${new Date().toLocaleString()}
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Feel free to click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day bonus free trial with any plan below!
+                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Feel free to click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day bonus free trial with any plan!
                     </p>
                   </div>
                 </div>
@@ -4373,14 +4395,14 @@ Date: ${new Date().toLocaleString()}
                       1. Daily Spending
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal font-bold">
-                      Note: You can add new expenses anytime by tapping the prominent "+" button located at the bottom center of the navigation bar.
+                      Note: You can add new expenses anytime by tapping the prominent &quot;+&quot; button located at the bottom center of the navigation bar.
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal">
-                      Your Main page for tracking budgets, how fast your're spending, and taking quick actions.
+                      Your Main page for tracking budgets, how fast your&apos;re spending, and taking quick actions.
                     </p>
                     <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
                       <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
-                      <li><strong className="text-gray-300">Daily Spending:</strong> Compares total spent against any budget you've assigned that category.</li>
+                      <li><strong className="text-gray-300">Daily Spending:</strong> Compares total spent against any budget you&apos;ve assigned that category.</li>
                       <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
                       <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
                       <li><strong className="text-gray-300">NOTE on Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing easy tracking and reporting of them without impacting your personal spending information.</li>
@@ -4446,10 +4468,10 @@ Date: ${new Date().toLocaleString()}
                       5. Add or Edit New Transaction Screen
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
-                      When in the Add Edit Transaction Screen you can adjust the order the Category icons are displayed according to your preference. Just Click on the <strong className="text-gray-300">"Arrange Icons"</strong> and proceed to drag and drop the icons into the order you prefer. Click on <strong className="text-gray-300">"Done Arranging"</strong> when you have finished.
+                      When in the Add Edit Transaction Screen you can adjust the order the Category icons are displayed according to your preference. Just Click on the <strong className="text-gray-300">&quot;Arrange Icons&quot;</strong> and proceed to drag and drop the icons into the order you prefer. Click on <strong className="text-gray-300">&quot;Done Arranging&quot;</strong> when you have finished.
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
-                      If you don't choose a category the app will assign the expense to <span className="font-bold underline text-[#eeeeee]">Uncategorized</span>. You can change it later if you wish or, if you are just tracking your overall spending and not specific categories, you can leave it as Uncategorized.
+                      If you don&apos;t choose a category the app will assign the expense to <span className="font-bold underline text-[#eeeeee]">Uncategorized</span>. You can change it later if you wish or, if you are just tracking your overall spending and not specific categories, you can leave it as Uncategorized.
                     </p>
                     <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
                       Note that the Description field is optional <strong>EXCEPT for Business Expenses</strong>.
@@ -4485,7 +4507,7 @@ Date: ${new Date().toLocaleString()}
                   <p className="text-[9.5px] text-gray-400 leading-normal">
                     LooseBudget is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
                     All transactions reside <strong>strictly on your device</strong>. 
-                    You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>"Reset All Data"</strong>. 
+                    You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>&quot;Reset All Data&quot;</strong>. 
                   </p>
                 </div>
 
@@ -4515,8 +4537,6 @@ Date: ${new Date().toLocaleString()}
                     </button>
                   </div>
                 </div>
-
-
 
                 {/* Summary signature */}
                 <div className="border-t border-white/5 pt-3.5 text-center">
@@ -4605,6 +4625,22 @@ Date: ${new Date().toLocaleString()}
                     </div>
                   </div>
 
+                  {savingsGoalError && (
+                    <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs flex items-start justify-between gap-2 shadow-md animate-in fade-in duration-150">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                        <div className="text-[11px] leading-snug font-medium text-rose-200">{savingsGoalError}</div>
+                      </div>
+                      <button 
+                        onClick={() => setSavingsGoalError(null)} 
+                        className="text-rose-400 hover:text-rose-100 p-1 rounded-lg hover:bg-rose-500/20 transition-colors shrink-0 cursor-pointer"
+                        title="Dismiss"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     {safeSavingsGoals.map((item, index) => {
                       const curAmt = parseFloat(item.currentAmount as any) || 0;
@@ -4621,7 +4657,7 @@ Date: ${new Date().toLocaleString()}
                           }`}
                         >
                           {/* Line 1: Goal name and actions (full-width header) */}
-                          <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-1.5">
+                          <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-2">
                             <div className="flex items-center gap-1.5 min-w-0">
                               {editingItemId === item.id ? (
                                 <input 
@@ -4632,7 +4668,7 @@ Date: ${new Date().toLocaleString()}
                                     if (e.key === 'Enter') {
                                       if (editingItemValue.trim()) {
                                         if (isDuplicateName(editingItemValue, 'savings', item.id)) {
-                                          alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                          setSavingsGoalError(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                           setEditingItemId(null);
                                           return;
                                         }
@@ -4646,7 +4682,7 @@ Date: ${new Date().toLocaleString()}
                                   onBlur={() => {
                                     if (editingItemValue.trim()) {
                                       if (isDuplicateName(editingItemValue, 'savings', item.id)) {
-                                        alert(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                        setSavingsGoalError(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
                                         setEditingItemId(null);
                                         return;
                                       }
@@ -4654,16 +4690,16 @@ Date: ${new Date().toLocaleString()}
                                     }
                                     setEditingItemId(null);
                                   }}
-                                  className="px-1.5 py-0.5 bg-black/60 border border-pink-500/30 text-xs text-white rounded-lg outline-none w-28 font-medium font-sans"
+                                  className="px-2 py-1 bg-black/60 border border-pink-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
                                   autoFocus
                                 />
                               ) : (
-                                <div className="flex items-center gap-1 min-w-0">
-                                  <span className={`text-xs font-extrabold truncate max-w-[150px] sm:max-w-[200px] ${item.isHidden ? 'text-gray-500 line-through' : 'text-white'}`} title={item.label}>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className={`text-xs font-extrabold truncate max-w-[130px] sm:max-w-[200px] ${item.isHidden ? 'text-gray-500 line-through' : 'text-white'}`} title={item.label}>
                                     {item.label}
                                   </span>
                                   {item.isHidden && (
-                                    <span className="text-[7.5px] bg-pink-500/15 text-pink-400 border border-pink-500/20 px-1 py-0.2 rounded font-mono font-bold uppercase shrink-0">
+                                    <span className="text-[9px] bg-pink-500/15 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase shrink-0">
                                       Hidden
                                     </span>
                                   )}
@@ -4672,29 +4708,29 @@ Date: ${new Date().toLocaleString()}
                                       setEditingItemId(item.id);
                                       setEditingItemValue(item.label);
                                     }}
-                                    className="p-0.5 text-gray-500 hover:text-pink-400 transition-all cursor-pointer rounded shrink-0 bg-transparent border-0"
+                                    className="p-1.5 text-gray-400 hover:text-pink-400 transition-all cursor-pointer rounded-lg shrink-0 hover:bg-white/5 border-0"
                                     title="Edit Name"
                                   >
-                                    <Pencil size={9} />
+                                    <Pencil size={12} />
                                   </button>
                                 </div>
                               )}
                             </div>
                             
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 px-1.5 py-0.5 rounded font-mono font-bold">
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[11px] sm:text-xs bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2 py-1 rounded-lg font-mono font-bold">
                                 {percentSaved}% Saved
                               </span>
                               <button 
                                 onClick={() => handleUpdateSavingsGoal(item.id, { isHidden: !item.isHidden })}
-                                className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                className={`p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl border transition-all cursor-pointer active:scale-95 ${
                                   item.isHidden 
-                                    ? 'bg-pink-500/10 border-pink-500/30 text-pink-400 hover:bg-pink-500/20' 
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                                    ? 'bg-pink-500/20 border-pink-500/40 text-pink-300 hover:bg-pink-500/30' 
+                                    : 'bg-white/10 border-white/15 text-gray-300 hover:text-white hover:bg-white/20'
                                 }`}
-                                title={item.isHidden ? 'Unhide Savings Goal' : 'Hide Savings Goal'}
+                                title={item.isHidden ? 'Unhide Savings Goal' : 'Hide Savings Goal (Target, Saved, and Allocation % must be 0)'}
                               >
-                                {item.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+                                {item.isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
                             </div>
                           </div>
