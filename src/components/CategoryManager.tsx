@@ -79,6 +79,7 @@ interface CategoryManagerProps {
   onCategoryUpdated: (cat: Category, isDefault?: boolean) => boolean | void;
   onCategoryDeleted: (id: string) => void;
   onFixedExpenseUpdated?: (id: string, updates: Partial<{ label: string; amount: number; isHidden: boolean }>) => void;
+  onSavingsGoalUpdated?: (id: string, updates: Partial<{ label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }>) => void;
   defaultCategoryId: string;
   currencySymbol: string;
   isOpen: boolean;
@@ -93,6 +94,7 @@ export function CategoryManager({
   onCategoryUpdated,
   onCategoryDeleted,
   onFixedExpenseUpdated,
+  onSavingsGoalUpdated,
   defaultCategoryId,
   currencySymbol,
   isOpen,
@@ -194,6 +196,11 @@ export function CategoryManager({
       if (onFixedExpenseUpdated) {
         onFixedExpenseUpdated(realId, { isHidden: !cat.isHidden });
       }
+    } else if (cat.id.startsWith('SAVINGS_')) {
+      const realId = cat.id.replace('SAVINGS_', '');
+      if (onSavingsGoalUpdated) {
+        onSavingsGoalUpdated(realId, { isHidden: !cat.isHidden });
+      }
     } else {
       const updated = { ...cat, isHidden: !cat.isHidden };
       onCategoryUpdated(updated);
@@ -211,6 +218,7 @@ export function CategoryManager({
     
     const isUncategorized = typeof editingCategory === 'object' && editingCategory !== null && editingCategory.id === 'cat_uncategorized';
     const isFixed = typeof editingCategory === 'object' && editingCategory !== null && (editingCategory.id.startsWith('FIXED_') || (editingCategory as any).categoryType === 'fixed');
+    const isSavings = typeof editingCategory === 'object' && editingCategory !== null && (editingCategory.id.startsWith('SAVINGS_') || (editingCategory as any).categoryType === 'savings');
     
     let parsedLimit = isUncategorized ? 0 : parseFloat(formLimit);
     if (!isUncategorized && (isNaN(parsedLimit) || parsedLimit < 0)) {
@@ -240,6 +248,12 @@ export function CategoryManager({
           onFixedExpenseUpdated(realId, { label: formName.trim(), amount: parsedLimit, isHidden: formIsHidden });
         }
         setSuccessMsg('Updated Known Expense successfully.');
+      } else if (isSavings) {
+        const realId = editingCategory.id.replace('SAVINGS_', '');
+        if (onSavingsGoalUpdated) {
+          onSavingsGoalUpdated(realId, { label: formName.trim().replace(/^SAVINGS\s*-\s*/i, ''), isHidden: formIsHidden });
+        }
+        setSuccessMsg('Updated Savings Goal successfully.');
       } else {
         const updatedCat: Category = {
           ...editingCategory,

@@ -5130,6 +5130,7 @@ Date: ${new Date().toLocaleString()}
           onCategoryUpdated={handleUpdateCategory}
           onCategoryDeleted={handleDeleteCategory}
           onFixedExpenseUpdated={handleUpdateFixedExpense}
+          onSavingsGoalUpdated={handleUpdateSavingsGoal}
           defaultCategoryId={defaultCategoryId}
           currencySymbol={currencySymbol}
           isOpen={showCategoryManager}

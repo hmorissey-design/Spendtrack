@@ -411,7 +411,8 @@ export const CloudDb = {
           id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
-          frequency: data.frequency
+          frequency: data.frequency,
+          isHidden: !!data.isHidden
         });
       });
 
@@ -436,7 +437,8 @@ export const CloudDb = {
           id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
-          dueDate: data.dueDate
+          dueDate: data.dueDate,
+          isHidden: !!data.isHidden
         });
       });
 
@@ -463,7 +465,8 @@ export const CloudDb = {
           amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
           currentAmount: Number(data.currentAmount) || 0,
-          allocationPercent: Number(data.allocationPercent) || 0
+          allocationPercent: Number(data.allocationPercent) || 0,
+          isHidden: !!data.isHidden
         });
       });
 
@@ -759,7 +762,8 @@ export const CloudDb = {
           id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
-          frequency: data.frequency
+          frequency: data.frequency,
+          isHidden: !!data.isHidden
         });
       });
 
@@ -800,7 +804,8 @@ export const CloudDb = {
           id: cloudId,
           label: data.label,
           amount: Number(data.amount) || 0,
-          dueDate: data.dueDate
+          dueDate: data.dueDate,
+          isHidden: !!data.isHidden
         });
       });
 
@@ -843,7 +848,8 @@ export const CloudDb = {
           amount: Number(data.amount) || 0,
           targetAmount: Number(data.targetAmount) || 0,
           currentAmount: Number(data.currentAmount) || 0,
-          allocationPercent: Number(data.allocationPercent) || 0
+          allocationPercent: Number(data.allocationPercent) || 0,
+          isHidden: !!data.isHidden
         });
       });
 
