@@ -312,20 +312,22 @@ export default function App() {
     }
   }, []);
 
-  // Initialize states
-  const [activeTab, setActiveTab ] = useState<ActiveTab>('dashboard');
+  // Subscription & Paywall state management
+  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(() => {
+    return SubscriptionManager.getSubscriptionState();
+  });
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  // Initialize active tab - default to 'help' guide in Demo / Preview mode, 'dashboard' for subscribed users
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    return !subscriptionState.isSubscribed ? 'help' : 'dashboard';
+  });
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
 
   // Firebase Auth & Cloud Sync states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  // Subscription & Paywall state management
-  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(() => {
-    return SubscriptionManager.getSubscriptionState();
-  });
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state & Dev Mode
   const logoTapCountRef = useRef<number>(0);

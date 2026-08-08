@@ -84,7 +84,7 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
       answer: (
         <div className="space-y-3 text-xs leading-relaxed text-slate-300">
           <p className="text-slate-200 font-medium leading-relaxed">
-            LooseBudget is works the way YOU want it to. You can simply track daily Expenses ( to see where your money is disappearing to ) or Set up Savings Goals that you control . The philosophy is that a budget should NOT feel like a prison sentence where you are confined every hour of the day ! LooseBudget allows you to enjoy life while helping you save .
+            LooseBudget works the way YOU want it to. You can simply track daily Expenses ( to see where your money is disappearing to ) or Set up Savings Goals that you control . The philosophy is that a budget should NOT feel like a prison sentence where you are confined every hour of the day ! LooseBudget allows you to enjoy life while helping you save .
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-2">
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -115,12 +115,21 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
       question: 'Where do I start when setting up my first budget?',
       tags: ['setup', 'first steps', 'income', 'plan'],
       answer: (
-        <div className="space-y-2 text-xs leading-relaxed text-slate-300">
-          <p>Follow these 3 quick steps on the <strong>Budget Plan</strong> tab:</p>
-          <ol className="list-decimal pl-4 space-y-1.5 text-slate-300">
-            <li><strong>Add your Monthly Net Income:</strong> Include all expected paychecks for the month.</li>
-            <li><strong>List Fixed / Known Expenses:</strong> Rent, mortgage, car insurance, utilities, subscriptions.</li>
-            <li><strong>Set Category Spending Limits & Savings %:</strong> Allocate remaining funds into groceries, dining out, gas, and savings goals until $0 remains unallocated.</li>
+        <div className="space-y-3 text-xs leading-relaxed text-slate-300">
+          <p>Click on the <strong>BUDGET PLAN</strong> tab:</p>
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-[11px]">
+            💡 <strong>Income Tip:</strong> If income varies use an average or &quot;worst case&quot; scenario amount.
+          </div>
+          <ol className="list-decimal pl-4 space-y-2 text-slate-300">
+            <li>
+              <strong>Enter DAILY Expenses First:</strong> The Most important part is to enter the DAILY Expenses first ! You can add the Known and Savings Goals if and when you are ready later on . These are the expenses we&apos;ll concentrate on in the initial few weeks since you have the most control of them . Of course you can do it all as well , The Choice is up to you ! IF you aren&apos;t sure, put in your best guess . You can come back anytime to update it !
+            </li>
+            <li>
+              <strong>List Known Expenses:</strong> These are usually items that remain constant from month to month. These days MOST are paid automatically. You will never have to enter these as transactions. We assume that the amounts will be spent as entered sometime during the month.
+            </li>
+            <li>
+              <strong>Check &amp; Balance:</strong> Now you have a much better idea of how much you actually have to allocate to Daily Expenses . Check the Budget Balance and , if necessary, tinker with the amounts budgeted in Daily Expenses until its at least zero or above .
+            </li>
           </ol>
         </div>
       ),
@@ -379,7 +388,7 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
               LooseBudget Help & FAQ Guide
             </h1>
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Find instant answers regarding Zero-Based budgeting, Savings Goal rules, reconciliation, cloud sync, and account features.
+              Find answers to Daily Expenses, Business Expenses, Savings Goals , Reconciliation, Cloud Sync and other features
             </p>
           </div>
 
