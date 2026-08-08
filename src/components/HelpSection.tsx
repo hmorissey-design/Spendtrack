@@ -79,30 +79,33 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
     {
       id: 'faq_getting_started_1',
       category: 'getting_started',
-      question: 'How does LooseBudget work? (Zero-Based Budgeting)',
-      tags: ['intro', 'zero based', 'overview', 'how to use'],
+      question: 'How Does Loose Budget Work?',
+      tags: ['intro', 'loose budget', 'overview', 'how to use', 'walk don\'t run'],
       answer: (
         <div className="space-y-3 text-xs leading-relaxed text-slate-300">
-          <p>
-            LooseBudget uses a zero-based envelope framework: every dollar of income you receive is given a specific job before the month starts.
+          <p className="text-slate-200 font-medium leading-relaxed">
+            LooseBudget is works the way YOU want it to. You can simply track daily Expenses ( to see where your money is disappearing to ) or Set up Savings Goals that you control . The philosophy is that a budget should NOT feel like a prison sentence where you are confined every hour of the day ! LooseBudget allows you to enjoy life while helping you save .
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
-            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <span className="font-bold text-emerald-400 block mb-1">1. Income Streams</span>
-              Set your monthly net income (salary, side hustle, bonuses).
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-2">
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <span className="font-bold text-emerald-400 block mb-1 text-xs">Walk don&apos;t run !</span>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Anyone can make a budget but, if you think you&apos;re spending $200 a month on coffee breaks while in reality it&apos;s $385 ... No approach in the world will save you. The only thing you actually need to track are the DAILY Expenses that you control .
+              </p>
             </div>
-            <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <span className="font-bold text-blue-400 block mb-1">2. Allocations</span>
-              Distribute 100% of income into Fixed Bills, Category Limits, & Savings Goals.
+            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <span className="font-bold text-blue-400 block mb-1 text-xs">See how much &quot;Spending&quot; money you actually have.</span>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                When you are ready, use the Budget tab to list all of your fixed expenses. You don&apos;t need to enter them each month. But you do need to see what is automatically coming out of your income each month. You&apos;d be surprised how many people just have a ballpark idea !
+              </p>
             </div>
-            <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <span className="font-bold text-purple-400 block mb-1">3. Daily Tracking</span>
-              Log expenses as you spend. Unspent discretionary funds roll over safely!
+            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+              <span className="font-bold text-purple-400 block mb-1 text-xs">Savings Goals</span>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Again, it&apos;s totally optional , but available to you . When you are ready you can list things you want to save for . Maybe you have none, that&apos;s fine. Most of us want to buy a new piece of furniture, or save for car repair bills , maybe a vacation ? It&apos;s whatever you want it to be . The system will do the math for you
+              </p>
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 italic">
-            💡 Pro-tip: Your total allocations should equal exactly 100% of your income so no cash sits unaccounted for.
-          </p>
         </div>
       ),
     },

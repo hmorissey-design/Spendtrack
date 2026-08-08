@@ -75,33 +75,58 @@ export const SubscriptionManager = {
   },
 
   /**
-   * Calculates remaining trial days based on trialStartDate and total trialDays (default 5)
+   * Calculates remaining trial hours based on trialStartDate and total trialDays (48 hours = 2 days)
    */
-  getTrialDaysRemaining(state?: SubscriptionState): number {
+  getTrialHoursRemaining(state?: SubscriptionState): number {
     const sub = state || this.getSubscriptionState();
     if (sub.isSubscribed || sub.status === 'active') {
-      return 5; // Active subscriber
+      return 120; // Active subscriber
     }
     if (!sub.trialStartDate) return 0;
 
-    const startDate = new Date(sub.trialStartDate);
-    const now = new Date();
-    const diffTime = Math.max(0, now.getTime() - startDate.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const totalDays = !sub.isSubscribed ? Math.min(2, sub.trialDaysTotal || 2) : 2;
-    const remaining = totalDays - diffDays;
+    const totalMs = totalDays * 24 * 60 * 60 * 1000; // 48 hours = 172,800,000 ms
+    const elapsedMs = Math.max(0, Date.now() - sub.trialStartDate);
+    const remainingMs = Math.max(0, totalMs - elapsedMs);
 
-    return Math.max(0, remaining);
+    return remainingMs / (1000 * 60 * 60);
   },
 
   /**
-   * Checks if user trial has expired and user is not subscribed
+   * Calculates remaining trial days based on trialHoursRemaining
+   */
+  getTrialDaysRemaining(state?: SubscriptionState): number {
+    const hours = this.getTrialHoursRemaining(state);
+    return Math.ceil(hours / 24);
+  },
+
+  /**
+   * Returns human-friendly remaining trial time (e.g. "48h left", "1d 12h left", "5h left")
+   */
+  getTrialTimeRemainingText(state?: SubscriptionState): string {
+    const sub = state || this.getSubscriptionState();
+    if (sub.isSubscribed || sub.status === 'active') return 'Active';
+
+    const hoursLeft = this.getTrialHoursRemaining(sub);
+    if (hoursLeft <= 0) return 'Expired';
+
+    if (hoursLeft >= 24) {
+      const days = Math.floor(hoursLeft / 24);
+      const hours = Math.round(hoursLeft % 24);
+      return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+    } else {
+      const hours = Math.ceil(hoursLeft);
+      return `${hours}h`;
+    }
+  },
+
+  /**
+   * Checks if user trial has expired (48 hours from trialStartDate) and user is not subscribed
    */
   isPaywalled(state?: SubscriptionState): boolean {
     const sub = state || this.getSubscriptionState();
     if (sub.isSubscribed || sub.status === 'active') return false;
-    const remainingDays = this.getTrialDaysRemaining(sub);
-    return remainingDays <= 0;
+    return this.getTrialHoursRemaining(sub) <= 0;
   },
 
   /**

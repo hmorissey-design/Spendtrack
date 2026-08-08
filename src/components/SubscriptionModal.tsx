@@ -22,7 +22,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const trialDaysLeft = SubscriptionManager.getTrialDaysRemaining(subscriptionState);
+  const trialHoursLeft = SubscriptionManager.getTrialHoursRemaining(subscriptionState);
+  const trialTimeLeftText = SubscriptionManager.getTrialTimeRemainingText(subscriptionState);
 
   const handleCheckout = (tier: 'trial' | 'monthly' | 'yearly') => {
     setIsProcessing(true);
@@ -101,11 +102,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <ShieldCheck className="w-4 h-4 text-emerald-300" />
                 <span>Active Subscription ({subscriptionState.tier === 'yearly' ? 'Yearly' : 'Monthly'})</span>
               </>
-            ) : trialDaysLeft > 0 ? (
+            ) : trialHoursLeft > 0 ? (
               <>
                 <Zap className="w-4 h-4 text-amber-300" />
                 <span>
-                  Active Plan: Free 2-Day Full Access Preview — {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} remaining
+                  Active Plan: Free 2-Day Full Access Preview — {trialTimeLeftText} remaining
                 </span>
               </>
             ) : (

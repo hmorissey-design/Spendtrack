@@ -730,6 +730,7 @@ export default function App() {
   const [newDiscretionaryLimit, setNewDiscretionaryLimit] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [savingsGoalError, setSavingsGoalError] = useState<string | null>(null);
+  const [showDraftHelp, setShowDraftHelp] = useState(false);
 
   // Reconciliation states
   const [showReconciliationModal, setShowReconciliationModal] = useState(false);
@@ -2268,10 +2269,10 @@ Date: ${new Date().toLocaleString()}
               <span className="font-sans">
                 {subscriptionState.isSubscribed ? (
                   'PRO'
-                ) : SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? (
+                ) : SubscriptionManager.getTrialHoursRemaining(subscriptionState) > 0 ? (
                   <>
-                    <span className="sm:hidden">2d Preview ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d)</span>
-                    <span className="hidden sm:inline">2-Day Preview ({SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d left)</span>
+                    <span className="sm:hidden">Preview ({SubscriptionManager.getTrialTimeRemainingText(subscriptionState)})</span>
+                    <span className="hidden sm:inline">2-Day Preview ({SubscriptionManager.getTrialTimeRemainingText(subscriptionState)} left)</span>
                   </>
                 ) : (
                   'Demo Mode'
@@ -2560,7 +2561,7 @@ Date: ${new Date().toLocaleString()}
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        Demo / Preview Mode ({SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0 ? `${SubscriptionManager.getTrialDaysRemaining(subscriptionState)}d Preview` : 'Preview Expired'})
+                        Demo / Preview Mode ({SubscriptionManager.getTrialHoursRemaining(subscriptionState) > 0 ? `${SubscriptionManager.getTrialTimeRemainingText(subscriptionState)} Preview` : 'Preview Expired'})
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
@@ -4366,183 +4367,211 @@ Date: ${new Date().toLocaleString()}
 
           {/* TAB 6: HELP GUIDE */}
           {activeTab === 'help' && (
-            <div className="space-y-2 animate-in fade-in duration-200" id="tab_help">
-              <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3.5">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-[#10b981]">
-                      <HelpCircle size={15} />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
-                    </div>
-                  </div>
+            <div className="space-y-3">
+              {/* Draft Toggle Bar */}
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between gap-2 shadow-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                  <span className="text-amber-200 text-[11px] font-medium truncate">
+                    {showDraftHelp ? 'Previewing New Draft Help Guide' : 'Showing Published Help Guide'}
+                  </span>
                 </div>
-
-                {/* Introductory section */}
-                <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
-                  Welcome to <strong>LooseBudget</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
-                </p>
-
-                {/* Screens */}
-                <div className="space-y-2 font-sans">
-                  
-                  {/* Daily Spending Screen Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <LayoutDashboard size={11} className="shrink-0" />
-                      1. Daily Spending
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal font-bold">
-                      Note: You can add new expenses anytime by tapping the prominent &quot;+&quot; button located at the bottom center of the navigation bar.
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal">
-                      Your Main page for tracking budgets, how fast your&apos;re spending, and taking quick actions.
-                    </p>
-                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
-                      <li><strong className="text-gray-300">Daily Spending:</strong> Compares total spent against any budget you&apos;ve assigned that category.</li>
-                      <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
-                      <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
-                      <li><strong className="text-gray-300">NOTE on Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing easy tracking and reporting of them without impacting your personal spending information.</li>
-                    </ul>
-                  </div>
-
-                  {/* History Screen Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <History size={11} className="shrink-0" />
-                      2. History
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal">
-                      Review, manage, search, and export your entire chronological expense ledger.
-                    </p>
-                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Modifying Records:</strong> Tap the <strong>pencil (Edit) icon</strong> to update any transaction, or tap the <strong>trash (Delete) icon</strong> to erase history.</li>
-                      <li><strong className="text-gray-300">Multi-Channel Filter Bar:</strong> Search transaction notes instantly. Refine your list by choosing specific categories or payment methods (Cash, Card, Digital Wallet, Other). Payment methods are entirely optional and only there to allow you to track if you wish.</li>
-                      <li><strong className="text-gray-300">Custom Date Range Calendars:</strong> By default the transactions shown are in the month that is currently showing on the top. If you want to see a specific date or range of dates you can tap the Start Date or End Date fields to open calendar picker dropdowns. Filter your list between custom days across different months.</li>
-                      <li><strong className="text-gray-300">Excel / CSV Spreadsheet Export:</strong> Click the <strong>CSV</strong> button to download your filtered transactions directly to open in Excel, Numbers, or Google Sheets.</li>
-                      <li><strong className="text-gray-300">Audit-Ready PDF Statements:</strong> Click the <strong>PDF</strong> button to create a report for your own purposes or to submit for Business Expense reimbursements or records.</li>
-                    </ul>
-                  </div>
-
-                  {/* Analytics Screen Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <PieChart size={11} className="shrink-0" />
-                      3. Insights
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal">
-                      Visual dashboards analyzing your monthly monetary trends and spend characteristics.
-                    </p>
-                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
-                      <li><strong className="text-gray-300">Category Spending Bars:</strong> Displays individual category totals. Click any bar to instantly switch to the History tab to see just the transactions for that category. Colors change to green (in budget), yellow (over 85%), or red (over-budget).</li>
-                      <li><strong className="text-gray-300">Cumulative Spending this Month:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
-                      <li><strong className="text-gray-300">Daily Spending:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
-                    </ul>
-                  </div>
-
-                  {/* Settings Screen Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <Sliders size={11} className="shrink-0" />
-                      4. Settings
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal">
-                      Create or Edit categories, budgets and other preferences.
-                    </p>
-                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
-                      <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
-                      <li><strong className="text-gray-300">Change Colour Theme:</strong> Choose your preferred colour.</li>
-                      <li><strong className="text-gray-300">Currency Symbols:</strong> Select the currency symbol you wish to use if not the default $ (e.g., $, €, £, ¥, ₹).</li>
-                      <li><strong className="text-gray-300">BACKUP and RESTORE to your device</strong></li>
-                      <li><strong className="text-gray-300">Reset Data:</strong> Delete all local states to return the database to a fresh, empty install.</li>
-                    </ul>
-                  </div>
-
-                  {/* Add or Edit New Transaction Screen Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <Plus size={11} className="shrink-0" />
-                      5. Add or Edit New Transaction Screen
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
-                      When in the Add Edit Transaction Screen you can adjust the order the Category icons are displayed according to your preference. Just Click on the <strong className="text-gray-300">&quot;Arrange Icons&quot;</strong> and proceed to drag and drop the icons into the order you prefer. Click on <strong className="text-gray-300">&quot;Done Arranging&quot;</strong> when you have finished.
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
-                      If you don&apos;t choose a category the app will assign the expense to <span className="font-bold underline text-[#eeeeee]">Uncategorized</span>. You can change it later if you wish or, if you are just tracking your overall spending and not specific categories, you can leave it as Uncategorized.
-                    </p>
-                    <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
-                      Note that the Description field is optional <strong>EXCEPT for Business Expenses</strong>.
-                    </p>
-                  </div>
-
-                  {/* General Help Section */}
-                  <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                    <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
-                      <HelpCircle size={11} className="shrink-0" />
-                      6. General Help
-                    </p>
-                    <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
-                      <li><strong className="text-gray-300">Menu Navigation:</strong> Move seamlessly between screens using the bottom navigation menu bar.</li>
-                    </ul>
-                  </div>
-
-                </div>
-
-                {/* Legal & Privacy Section */}
-                <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5 font-sans">
-                  <p className="font-extrabold text-[#eeeeee] text-[10px] flex items-center justify-between">
-                    <span className="flex items-center gap-1.5"><ShieldCheck size={11} className="text-emerald-400" /> Privacy & Data Deletion</span>
-                    <a 
-                      href="privacy-policy.html" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[9px] font-medium"
-                    >
-                      Read Policy ↗
-                    </a>
-                  </p>
-                  <p className="text-[9.5px] text-gray-400 leading-normal">
-                    LooseBudget is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
-                    All transactions reside <strong>strictly on your device</strong>. 
-                    You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>&quot;Reset All Data&quot;</strong>. 
-                  </p>
-                </div>
-
-                {/* Feedback & Support Section */}
-                <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 font-sans">
-                  <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
-                    <MessageSquare size={13} className="text-emerald-400" />
-                    <span>Feedback & Support</span>
-                  </p>
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Help us improve LooseBudget! Let us know if you find a bug or have an enhancement suggestion. Form drafts an email directly to the developer.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      onClick={() => handleOpenFeedback('bug')}
-                      className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
-                    >
-                      <AlertTriangle size={11} />
-                      Report Bug
-                    </button>
-                    <button
-                      onClick={() => handleOpenFeedback('enhancement')}
-                      className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
-                    >
-                      <Sparkles size={11} />
-                      Suggest Feature
-                    </button>
-                  </div>
-                </div>
-
-                {/* Summary signature */}
-                <div className="border-t border-white/5 pt-3.5 text-center">
-                  <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">LOOSEBUDGET PRIVATE LEDGER SYSTEM</p>
-                </div>
+                <button
+                  onClick={() => setShowDraftHelp(!showDraftHelp)}
+                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 transition-all cursor-pointer shrink-0 active:scale-95"
+                >
+                  {showDraftHelp ? 'Switch to Published Guide' : 'Preview Draft Help Guide'}
+                </button>
               </div>
+
+              {showDraftHelp ? (
+                <HelpSection
+                  setActiveTab={setActiveTab}
+                  onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
+                  onOpenAuthModal={() => setShowAuthModal(true)}
+                  user={currentUser}
+                  subscriptionState={subscriptionState}
+                />
+              ) : (
+                <div className="space-y-2 animate-in fade-in duration-200" id="tab_help">
+                  <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs space-y-3.5">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg text-[#10b981]">
+                          <HelpCircle size={15} />
+                        </div>
+                        <div>
+                          <h3 className="font-extrabold text-[#eeeeee] leading-tight text-xs uppercase tracking-wider">User Help & Guide</h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Introductory section */}
+                    <p className="text-[10.5px] text-gray-300 leading-normal font-sans">
+                      Welcome to <strong>LooseBudget</strong>! This application operates completely offline and saves all data locally on your device for absolute privacy. Use this guide to master each section of the app.
+                    </p>
+
+                    {/* Screens */}
+                    <div className="space-y-2 font-sans">
+                      
+                      {/* Daily Spending Screen Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <LayoutDashboard size={11} className="shrink-0" />
+                          1. Daily Spending
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal font-bold">
+                          Note: You can add new expenses anytime by tapping the prominent &quot;+&quot; button located at the bottom center of the navigation bar.
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal">
+                          Your Main page for tracking budgets, how fast your&apos;re spending, and taking quick actions.
+                        </p>
+                        <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
+                          <li><strong className="text-gray-300">Monthly Spending Gauge:</strong> A circular tracker showing the percentage of the budget spent. It automatically displays different colors according to your status (green for safe, yellow for warning, red for over-budget).</li>
+                          <li><strong className="text-gray-300">Daily Spending:</strong> Compares total spent against any budget you&apos;ve assigned that category.</li>
+                          <li><strong className="text-gray-300">Pacing Alerts:</strong> Monitors spending throughout the month. If you are spending too fast compared to the point you are in the month, a caution message will display.</li>
+                          <li><strong className="text-gray-300">Category Spending Chart:</strong> An interactive pie chart displaying proportions of expenditures. Hover to view precise sums, or click category segments to filter those transactions.</li>
+                          <li><strong className="text-gray-300">NOTE on Business Expenses:</strong> Purchases categorized as <em>Business Expenses</em> are treated as reimbursable. They do not deduct from your personal monthly spending, allowing easy tracking and reporting of them without impacting your personal spending information.</li>
+                        </ul>
+                      </div>
+
+                      {/* History Screen Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <History size={11} className="shrink-0" />
+                          2. History
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal">
+                          Review, manage, search, and export your entire chronological expense ledger.
+                        </p>
+                        <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
+                          <li><strong className="text-gray-300">Modifying Records:</strong> Tap the <strong>pencil (Edit) icon</strong> to update any transaction, or tap the <strong>trash (Delete) icon</strong> to erase history.</li>
+                          <li><strong className="text-gray-300">Multi-Channel Filter Bar:</strong> Search transaction notes instantly. Refine your list by choosing specific categories or payment methods (Cash, Card, Digital Wallet, Other). Payment methods are entirely optional and only there to allow you to track if you wish.</li>
+                          <li><strong className="text-gray-300">Custom Date Range Calendars:</strong> By default the transactions shown are in the month that is currently showing on the top. If you want to see a specific date or range of dates you can tap the Start Date or End Date fields to open calendar picker dropdowns. Filter your list between custom days across different months.</li>
+                          <li><strong className="text-gray-300">Excel / CSV Spreadsheet Export:</strong> Click the <strong>CSV</strong> button to download your filtered transactions directly to open in Excel, Numbers, or Google Sheets.</li>
+                          <li><strong className="text-gray-300">Audit-Ready PDF Statements:</strong> Click the <strong>PDF</strong> button to create a report for your own purposes or to submit for Business Expense reimbursements or records.</li>
+                        </ul>
+                      </div>
+
+                      {/* Analytics Screen Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <PieChart size={11} className="shrink-0" />
+                          3. Insights
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal">
+                          Visual dashboards analyzing your monthly monetary trends and spend characteristics.
+                        </p>
+                        <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1">
+                          <li><strong className="text-gray-300">Category Spending Bars:</strong> Displays individual category totals. Click any bar to instantly switch to the History tab to see just the transactions for that category. Colors change to green (in budget), yellow (over 85%), or red (over-budget).</li>
+                          <li><strong className="text-gray-300">Cumulative Spending this Month:</strong> A dynamic cumulative line chart pacing your expenditure curve against your set monthly boundary. Pre-allocates active boundaries and conceals upcoming future days.</li>
+                          <li><strong className="text-gray-300">Daily Spending:</strong> Bar charts modeling daily spikes, signaling large transaction days.</li>
+                        </ul>
+                      </div>
+
+                      {/* Settings Screen Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <Sliders size={11} className="shrink-0" />
+                          4. Settings
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal">
+                          Create or Edit categories, budgets and other preferences.
+                        </p>
+                        <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
+                          <li><strong className="text-gray-300">Custom Category Manager:</strong> Create, edit, and delete spending categories with chosen icons, custom colors, and targeted individual budgets.</li>
+                          <li><strong className="text-gray-300">Change Colour Theme:</strong> Choose your preferred colour.</li>
+                          <li><strong className="text-gray-300">Currency Symbols:</strong> Select the currency symbol you wish to use if not the default $ (e.g., $, €, £, ¥, ₹).</li>
+                          <li><strong className="text-gray-300">BACKUP and RESTORE to your device</strong></li>
+                          <li><strong className="text-gray-300">Reset Data:</strong> Delete all local states to return the database to a fresh, empty install.</li>
+                        </ul>
+                      </div>
+
+                      {/* Add or Edit New Transaction Screen Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <Plus size={11} className="shrink-0" />
+                          5. Add or Edit New Transaction Screen
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
+                          When in the Add Edit Transaction Screen you can adjust the order the Category icons are displayed according to your preference. Just Click on the <strong className="text-gray-300">&quot;Arrange Icons&quot;</strong> and proceed to drag and drop the icons into the order you prefer. Click on <strong className="text-gray-300">&quot;Done Arranging&quot;</strong> when you have finished.
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
+                          If you don&apos;t choose a category the app will assign the expense to <span className="font-bold underline text-[#eeeeee]">Uncategorized</span>. You can change it later if you wish or, if you are just tracking your overall spending and not specific categories, you can leave it as Uncategorized.
+                        </p>
+                        <p className="text-[9.5px] text-gray-400 leading-normal font-sans">
+                          Note that the Description field is optional <strong>EXCEPT for Business Expenses</strong>.
+                        </p>
+                      </div>
+
+                      {/* General Help Section */}
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                        <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-1">
+                          <HelpCircle size={11} className="shrink-0" />
+                          6. General Help
+                        </p>
+                        <ul className="text-[9.5px] text-gray-400 list-disc list-inside pl-1 space-y-1 font-sans">
+                          <li><strong className="text-gray-300">Menu Navigation:</strong> Move seamlessly between screens using the bottom navigation menu bar.</li>
+                        </ul>
+                      </div>
+
+                    </div>
+
+                    {/* Legal & Privacy Section */}
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl space-y-1.5 font-sans">
+                      <p className="font-extrabold text-[#eeeeee] text-[10px] flex items-center justify-between">
+                        <span className="flex items-center gap-1.5"><ShieldCheck size={11} className="text-emerald-400" /> Privacy & Data Deletion</span>
+                        <a 
+                          href="privacy-policy.html" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 text-[9px] font-medium"
+                        >
+                          Read Policy ↗
+                        </a>
+                      </p>
+                      <p className="text-[9.5px] text-gray-400 leading-normal">
+                        LooseBudget is offline-first. We do not transfer, collect, or store your finance logs on external servers. 
+                        All transactions reside <strong>strictly on your device</strong>. 
+                        You can instantly erase your local files at any time from the <strong>Settings tab</strong> by clicking <strong>&quot;Reset All Data&quot;</strong>. 
+                      </p>
+                    </div>
+
+                    {/* Feedback & Support Section */}
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 font-sans">
+                      <p className="font-extrabold text-[#eeeeee] text-[11px] flex items-center gap-1.5">
+                        <MessageSquare size={13} className="text-emerald-400" />
+                        <span>Feedback & Support</span>
+                      </p>
+                      <p className="text-[10px] text-gray-400 leading-relaxed">
+                        Help us improve LooseBudget! Let us know if you find a bug or have an enhancement suggestion. Form drafts an email directly to the developer.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => handleOpenFeedback('bug')}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
+                        >
+                          <AlertTriangle size={11} />
+                          Report Bug
+                        </button>
+                        <button
+                          onClick={() => handleOpenFeedback('enhancement')}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 rounded-lg transition-colors cursor-pointer active:scale-95"
+                        >
+                          <Sparkles size={11} />
+                          Suggest Feature
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Summary signature */}
+                    <div className="border-t border-white/5 pt-3.5 text-center">
+                      <p className="text-[9px] text-gray-500 uppercase tracking-widest font-mono">LOOSEBUDGET PRIVATE LEDGER SYSTEM</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
