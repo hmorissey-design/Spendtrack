@@ -472,13 +472,10 @@ export default function App() {
         defaultList.forEach(defItem => {
           if (existingMap.has(defItem.id)) {
             const existing = existingMap.get(defItem.id)!;
-            if (existing.label !== defItem.label) {
-              modified = true;
-            }
             mergedList.push({
               id: defItem.id,
-              label: defItem.label,
-              amount: existing.amount
+              label: existing.label || defItem.label,
+              amount: existing.amount !== undefined ? existing.amount : defItem.amount
             });
             existingMap.delete(defItem.id);
           } else {
@@ -571,13 +568,10 @@ export default function App() {
         defaultList.forEach(defItem => {
           if (existingMap.has(defItem.id)) {
             const existing = existingMap.get(defItem.id)!;
-            if (existing.label !== defItem.label) {
-              modified = true;
-            }
             mergedList.push({
               id: defItem.id,
-              label: defItem.label,
-              amount: existing.amount,
+              label: existing.label || defItem.label,
+              amount: existing.amount !== undefined ? existing.amount : defItem.amount,
               isHidden: (existing as any).isHidden
             });
             existingMap.delete(defItem.id);
@@ -636,7 +630,7 @@ export default function App() {
           if (existingMap.has(defGoal.id)) {
             const existing = existingMap.get(defGoal.id)!;
             let updated = { ...existing };
-            if (updated.label !== defGoal.label) {
+            if (!updated.label) {
               updated.label = defGoal.label;
               modified = true;
             }
@@ -3890,7 +3884,7 @@ Date: ${new Date().toLocaleString()}
                                         setEditingItemId(null);
                                         return;
                                       }
-                                      setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                      handleUpdateIncomeStream(item.id, { label: editingItemValue.trim() });
                                     }
                                     setEditingItemId(null);
                                   } else if (e.key === 'Escape') {
@@ -3904,7 +3898,7 @@ Date: ${new Date().toLocaleString()}
                                       setEditingItemId(null);
                                       return;
                                     }
-                                    setIncomeStreams(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    handleUpdateIncomeStream(item.id, { label: editingItemValue.trim() });
                                   }
                                   setEditingItemId(null);
                                 }}
@@ -4055,7 +4049,7 @@ Date: ${new Date().toLocaleString()}
                                         setEditingItemId(null);
                                         return;
                                       }
-                                      setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                      handleUpdateFixedExpense(item.id, { label: editingItemValue.trim() });
                                     }
                                     setEditingItemId(null);
                                   } else if (e.key === 'Escape') {
@@ -4074,7 +4068,7 @@ Date: ${new Date().toLocaleString()}
                                       setEditingItemId(null);
                                       return;
                                     }
-                                    setFixedExpenses(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                    handleUpdateFixedExpense(item.id, { label: editingItemValue.trim() });
                                   }
                                   setEditingItemId(null);
                                 }}
@@ -4512,7 +4506,7 @@ Date: ${new Date().toLocaleString()}
                                           setEditingItemId(null);
                                           return;
                                         }
-                                        setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                        handleUpdateSavingsGoal(item.id, { label: editingItemValue.trim() });
                                       }
                                       setEditingItemId(null);
                                     } else if (e.key === 'Escape') {
@@ -4526,7 +4520,7 @@ Date: ${new Date().toLocaleString()}
                                         setEditingItemId(null);
                                         return;
                                       }
-                                      setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, label: editingItemValue.trim() } : x));
+                                      handleUpdateSavingsGoal(item.id, { label: editingItemValue.trim() });
                                     }
                                     setEditingItemId(null);
                                   }}
