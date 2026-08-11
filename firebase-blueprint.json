@@ -91,6 +91,24 @@
         "lastReconciliationMonth": { "type": "string", "description": "Last month reconciliation was run" }
       },
       "required": ["userId"]
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "description": "Lemon Squeezy verified user subscription records",
+      "properties": {
+        "email": { "type": "string", "description": "Customer purchase email" },
+        "status": { "type": "string", "description": "Subscription status (active / cancelled / trialing)" },
+        "tier": { "type": "string", "description": "Plan tier (monthly / yearly)" },
+        "orderId": { "type": "string", "description": "Lemon Squeezy order ID" },
+        "updatedAt": { "type": "number", "description": "Timestamp updated" }
+      },
+      "required": ["email", "status", "tier"]
+    }
+  },
+  "firestore": {
+    "subscriptions/{email}": {
+      "schema": { "$ref": "#/entities/subscriptions" },
+      "description": "Lemon Squeezy verified subscription state indexed by customer email"
     }
   }
 }

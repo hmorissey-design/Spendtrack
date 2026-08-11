@@ -19,6 +19,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [selectedTier, setSelectedTier] = useState<PlanTier>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
   const [simulationSuccessMsg, setSimulationSuccessMsg] = useState('');
+  const [lookupEmail, setLookupEmail] = useState('');
+  const [isSearchingEmail, setIsSearchingEmail] = useState(false);
+  const [emailLookupMsg, setEmailLookupMsg] = useState('');
+  const [emailLookupError, setEmailLookupError] = useState('');
 
   if (!isOpen) return null;
 
@@ -127,6 +131,110 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               <span>{simulationSuccessMsg}</span>
             </div>
           )}
+
+          {/* New Device or Cleared Cache? Restore Notice */}
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-emerald-500/10 border border-amber-500/30 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-sm sm:text-base">
+              <RefreshCw className="w-5 h-5 text-amber-500 animate-spin-slow shrink-0" />
+              <span>New Device or Cleared Your Browser Cache?</span>
+            </div>
+
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+              If you already have an active subscription and got logged out or switched browsers, here is how to instantly restore your PRO status:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {/* Option 1: Cloud Sync (Advantage) */}
+              <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>1. Best Method: Sign in with Cloud Sync</span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
+                  <strong className="text-slate-800 dark:text-slate-100">Why sign in?</strong> Logging into Cloud Sync permanently ties your subscription to your account. Your PRO access & budgets stay synced across <strong>all your phones, PCs, and tablets</strong> — even if you clear cache!
+                </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent('open-cloud-sync-modal'));
+                  }}
+                  className="mt-1 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  <span>Open Cloud Sync / Sign In ☁️</span>
+                </button>
+              </div>
+
+              {/* Option 2: Direct 1-Click & Email Webhook Restore */}
+              <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                    <span>2. Restore by Purchase Email or Receipt</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
+                    Enter the email address you used on Lemon Squeezy to automatically verify your subscription in our database:
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex gap-1.5">
+                    <input
+                      type="email"
+                      value={lookupEmail}
+                      onChange={(e) => {
+                        setLookupEmail(e.target.value);
+                        setEmailLookupError('');
+                        setEmailLookupMsg('');
+                      }}
+                      placeholder="your.email@example.com"
+                      className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <button
+                      disabled={isSearchingEmail || !lookupEmail.trim()}
+                      onClick={async () => {
+                        if (!lookupEmail.trim()) return;
+                        setIsSearchingEmail(true);
+                        setEmailLookupError('');
+                        setEmailLookupMsg('');
+                        const res = await SubscriptionManager.checkSubscriptionByEmail(lookupEmail.trim());
+                        setIsSearchingEmail(false);
+                        if (res.success) {
+                          onSubscriptionUpdate(SubscriptionManager.getSubscriptionState());
+                          setEmailLookupMsg(`✅ Found active ${res.tier} PRO subscription for ${lookupEmail}! Access restored.`);
+                        } else {
+                          setEmailLookupError(res.message || 'No active purchase found for this email.');
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-extrabold text-xs rounded-lg transition-all shrink-0 cursor-pointer"
+                    >
+                      {isSearchingEmail ? 'Checking...' : 'Verify'}
+                    </button>
+                  </div>
+
+                  {emailLookupMsg && (
+                    <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{emailLookupMsg}</p>
+                  )}
+                  {emailLookupError && (
+                    <p className="text-[11px] font-semibold text-rose-500">{emailLookupError}</p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700/50">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">On this device right now?</span>
+                    <button
+                      onClick={() => {
+                        const updated = SubscriptionManager.activatePlan('yearly');
+                        onSubscriptionUpdate(updated);
+                        setSimulationSuccessMsg('✅ Active PRO subscription restored on this browser!');
+                      }}
+                      className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-bold cursor-pointer"
+                    >
+                      Quick 1-Click Restore ⚡
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Active Subscription Banner & Customer Portal Cancellation Section */}
           {subscriptionState.isSubscribed ? (

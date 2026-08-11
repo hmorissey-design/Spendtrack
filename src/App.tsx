@@ -380,15 +380,9 @@ export default function App() {
 
       const isSuccessSignal = payment === 'success' || success === 'true' || status === 'success' || Boolean(plan);
 
-      if (isSuccessSignal && plan) {
-        let updated: SubscriptionState;
-        if (plan === 'trial') {
-          updated = SubscriptionManager.startTrial();
-        } else if (plan === 'yearly' || plan === 'monthly') {
-          updated = SubscriptionManager.activatePlan(plan as 'yearly' | 'monthly');
-        } else {
-          updated = SubscriptionManager.startTrial();
-        }
+      if (isSuccessSignal) {
+        const activePlan = (plan === 'monthly' || plan === 'yearly') ? (plan as 'monthly' | 'yearly') : 'yearly';
+        const updated = SubscriptionManager.activatePlan(activePlan);
         setSubscriptionState(updated);
         // Clean URL query params without triggering page reload
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -401,6 +395,15 @@ export default function App() {
     if (SubscriptionManager.isPaywalled(subscriptionState)) {
       setShowSubscriptionModal(true);
     }
+
+    // 3. Custom event listener for opening cloud sync auth modal
+    const handleOpenCloudSync = () => {
+      setShowAuthModal(true);
+    };
+    window.addEventListener('open-cloud-sync-modal', handleOpenCloudSync);
+    return () => {
+      window.removeEventListener('open-cloud-sync-modal', handleOpenCloudSync);
+    };
   }, []);
 
   // Delay rendering charts slightly to let elements mount and establish positive dimensions.

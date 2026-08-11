@@ -176,6 +176,29 @@ export const SubscriptionManager = {
   },
 
   /**
+   * Query backend webhook database to restore PRO status by purchase email
+   */
+  async checkSubscriptionByEmail(email: string): Promise<{ success: boolean; tier?: PlanTier; message?: string }> {
+    try {
+      const res = await fetch('/api/check-subscription-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.found && data.isSubscribed) {
+        const activeTier: PlanTier = data.tier === 'monthly' ? 'monthly' : 'yearly';
+        this.activatePlan(activeTier);
+        return { success: true, tier: activeTier };
+      }
+      return { success: false, message: 'No active subscription record found for this email.' };
+    } catch (err) {
+      console.error('Failed to verify subscription email:', err);
+      return { success: false, message: 'Unable to reach verification server. Please try again or use receipt link.' };
+    }
+  },
+
+  /**
    * Get Lemon Squeezy Checkout URL based on environment variable or fallback configuration
    */
   getCheckoutUrl(tier: 'trial' | 'monthly' | 'yearly'): string {
