@@ -117,12 +117,18 @@ function DirectAmountInput({
   min = 0,
   max
 }: DirectAmountInputProps) {
+  const formatInitial = (val: number) => {
+    if (val === undefined || val === null || isNaN(val)) return '';
+    const rounded = Math.round((val + Number.EPSILON) * 100) / 100;
+    return rounded.toString();
+  };
+
   const [localValue, setLocalValue] = useState<string>(
-    initialValue !== undefined && initialValue !== null ? initialValue.toString() : ''
+    formatInitial(initialValue)
   );
 
   useEffect(() => {
-    setLocalValue(initialValue !== undefined && initialValue !== null ? initialValue.toString() : '');
+    setLocalValue(formatInitial(initialValue));
   }, [initialValue]);
 
   const handleBlurOrSubmit = () => {
@@ -134,12 +140,13 @@ function DirectAmountInput({
       finalVal = Math.min(max, finalVal);
     }
     
-    finalVal = Math.round(finalVal * 100) / 100;
+    finalVal = Math.round((finalVal + Number.EPSILON) * 100) / 100;
+    const roundedInitial = Math.round(((initialValue || 0) + Number.EPSILON) * 100) / 100;
     
-    if (finalVal !== initialValue) {
+    if (finalVal !== roundedInitial) {
       onUpdate(finalVal);
     } else {
-      setLocalValue(initialValue !== undefined && initialValue !== null ? initialValue.toString() : '');
+      setLocalValue(formatInitial(initialValue));
     }
   };
 
@@ -977,10 +984,28 @@ export default function App() {
       let errText = '';
       const updated = prev.map(item => {
         if (item.id === id) {
-          if (typeof updates === 'number') return { ...item, amount: updates };
+          if (typeof updates === 'number') {
+            const cleanAmt = Math.round(((updates || 0) + Number.EPSILON) * 100) / 100;
+            return { ...item, amount: cleanAmt };
+          }
+
+          let cleanUpdates = { ...updates };
+          if (cleanUpdates.targetAmount !== undefined) {
+            cleanUpdates.targetAmount = Math.round(((Number(cleanUpdates.targetAmount) || 0) + Number.EPSILON) * 100) / 100;
+          }
+          if (cleanUpdates.currentAmount !== undefined) {
+            cleanUpdates.currentAmount = Math.round(((Number(cleanUpdates.currentAmount) || 0) + Number.EPSILON) * 100) / 100;
+          }
+          if (cleanUpdates.amount !== undefined) {
+            cleanUpdates.amount = Math.round(((Number(cleanUpdates.amount) || 0) + Number.EPSILON) * 100) / 100;
+          }
+
           if (typeof updates === 'object' && updates.isHidden === true && !item.isHidden) {
-            const tgt = parseFloat(item.targetAmount as any) || 0;
-            const cur = Math.max(parseFloat(item.currentAmount as any) || 0, parseFloat(item.amount as any) || 0);
+            const tgt = Math.round(((parseFloat(item.targetAmount as any) || 0) + Number.EPSILON) * 100) / 100;
+            const cur = Math.max(
+              Math.round(((parseFloat(item.currentAmount as any) || 0) + Number.EPSILON) * 100) / 100,
+              Math.round(((parseFloat(item.amount as any) || 0) + Number.EPSILON) * 100) / 100
+            );
             const alloc = parseFloat(item.allocationPercent as any) || 0;
             if (tgt > 0 || cur > 0 || alloc > 0) {
               const nonZeroFields: string[] = [];
@@ -992,7 +1017,7 @@ export default function App() {
               return item;
             }
           }
-          return { ...item, ...updates };
+          return { ...item, ...cleanUpdates };
         }
         return item;
       });
@@ -1043,8 +1068,8 @@ export default function App() {
       setFormErrors(prev => ({ ...prev, savings: `The name "${newSavingsName.trim()}" is already in use for another savings goal.` }));
       return;
     }
-    const amount = parseFloat(newSavingsAmount) || 0;
-    const targetAmount = parseFloat(newSavingsTarget) || 0;
+    const amount = Math.round(((parseFloat(newSavingsAmount) || 0) + Number.EPSILON) * 100) / 100;
+    const targetAmount = Math.round(((parseFloat(newSavingsTarget) || 0) + Number.EPSILON) * 100) / 100;
     const currentAmount = 0;
     const allocationPercent = parseFloat(newSavingsPercent) || 0;
 
@@ -1475,7 +1500,7 @@ Date: ${new Date().toLocaleString()}
       const goalId = newExpenseData.category.substring(8);
       setSavingsGoals(prev => prev.map(goal => {
         if (goal.id === goalId) {
-          const updatedAmount = (goal.currentAmount || 0) - newExpenseData.amount;
+          const updatedAmount = Math.round((((goal.currentAmount || 0) - newExpenseData.amount) + Number.EPSILON) * 100) / 100;
           return { ...goal, currentAmount: updatedAmount };
         }
         return goal;
@@ -1507,7 +1532,7 @@ Date: ${new Date().toLocaleString()}
         newGoals = newGoals.map(goal => {
           if (goal.id === prevGoalId) {
             goalsUpdated = true;
-            return { ...goal, currentAmount: (goal.currentAmount || 0) + prevExpense.amount };
+            return { ...goal, currentAmount: Math.round((((goal.currentAmount || 0) + prevExpense.amount) + Number.EPSILON) * 100) / 100 };
           }
           return goal;
         });
@@ -1519,7 +1544,7 @@ Date: ${new Date().toLocaleString()}
         newGoals = newGoals.map(goal => {
           if (goal.id === newGoalId) {
             goalsUpdated = true;
-            const updatedAmount = (goal.currentAmount || 0) - updatedData.amount;
+            const updatedAmount = Math.round((((goal.currentAmount || 0) - updatedData.amount) + Number.EPSILON) * 100) / 100;
             return { ...goal, currentAmount: updatedAmount };
           }
           return goal;
@@ -1548,7 +1573,7 @@ Date: ${new Date().toLocaleString()}
       const goalId = expenseToDeleteObj.category.substring(8);
       setSavingsGoals(prev => prev.map(goal => {
         if (goal.id === goalId) {
-          return { ...goal, currentAmount: (goal.currentAmount || 0) + expenseToDeleteObj.amount };
+          return { ...goal, currentAmount: Math.round((((goal.currentAmount || 0) + expenseToDeleteObj.amount) + Number.EPSILON) * 100) / 100 };
         }
         return goal;
       }));
@@ -4576,15 +4601,7 @@ Date: ${new Date().toLocaleString()}
                               <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
                               <DirectAmountInput 
                                 initialValue={parseFloat(item.targetAmount as any) || 0}
-                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
-                                  if (x.id === item.id) {
-                                    return { 
-                                      ...x, 
-                                      targetAmount: val
-                                    };
-                                  }
-                                  return x;
-                                }))}
+                                onUpdate={(val) => handleUpdateSavingsGoal(item.id, { targetAmount: val })}
                                 currencySymbol={currencySymbol}
                                 className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
                               />
@@ -4595,15 +4612,7 @@ Date: ${new Date().toLocaleString()}
                               <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
                               <DirectAmountInput 
                                 initialValue={curAmt}
-                                onUpdate={(val) => setSavingsGoals(prev => prev.map(x => {
-                                  if (x.id === item.id) {
-                                    return { 
-                                      ...x, 
-                                      currentAmount: Math.max(0, val)
-                                    };
-                                  }
-                                  return x;
-                                }))}
+                                onUpdate={(val) => handleUpdateSavingsGoal(item.id, { currentAmount: Math.max(0, val) })}
                                 currencySymbol={currencySymbol}
                                 className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
                               />
@@ -4624,7 +4633,7 @@ Date: ${new Date().toLocaleString()}
                                     alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");
                                     finalVal = 10;
                                   }
-                                  setSavingsGoals(prev => prev.map(x => x.id === item.id ? { ...x, allocationPercent: finalVal } : x));
+                                  handleUpdateSavingsGoal(item.id, { allocationPercent: finalVal });
                                 }}
                                 isPercent={true}
                                 max={100}
@@ -5240,7 +5249,7 @@ Date: ${new Date().toLocaleString()}
                       {tempSavingsGoals.map((item) => {
                         const currentPercent = parseFloat(item.allocationPercent) || 0;
                         const allocatedPortion = reconciledSurplus * (currentPercent / 100);
-                        const updatedAmount = (item.currentAmount || 0) + allocatedPortion;
+                        const updatedAmount = Math.round((((item.currentAmount || 0) + allocatedPortion) + Number.EPSILON) * 100) / 100;
                         const percentSaved = (item.targetAmount || 0) > 0 ? Math.min(100, Math.max(0, Math.round((updatedAmount / (item.targetAmount || 0)) * 100))) : 0;
 
                         return (
@@ -5455,6 +5464,7 @@ Date: ${new Date().toLocaleString()}
                           } catch (e) {}
                         }
 
+                        const uid = currentUser?.uid || auth.currentUser?.uid;
                         setSavingsGoals(prev => prev.map(originalGoal => {
                           const tempGoal = tempSavingsGoals.find(t => t.id === originalGoal.id);
                           if (!tempGoal) return originalGoal;
@@ -5467,13 +5477,19 @@ Date: ${new Date().toLocaleString()}
                             ? baselines[originalGoal.id] 
                             : (originalGoal.currentAmount || 0);
 
-                          const updatedAmount = Math.round((baseAmount + allocatedPortion) * 100) / 100;
+                          const updatedAmount = Math.round(((baseAmount + allocatedPortion) + Number.EPSILON) * 100) / 100;
 
-                          return {
+                          const updatedGoal = {
                             ...originalGoal,
                             allocationPercent: percent,
                             currentAmount: updatedAmount
                           };
+
+                          if (uid) {
+                            CloudDb.saveSavingsGoalToCloud(uid, updatedGoal).catch(console.error);
+                          }
+
+                          return updatedGoal;
                         }));
 
                         setShowReconciliationModal(false);

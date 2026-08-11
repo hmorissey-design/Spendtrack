@@ -462,9 +462,9 @@ export const CloudDb = {
         savingsGoals.push({
           id: cloudId,
           label: data.label,
-          amount: Number(data.amount) || 0,
-          targetAmount: Number(data.targetAmount) || 0,
-          currentAmount: Number(data.currentAmount) || 0,
+          amount: Math.round(((Number(data.amount) || 0) + Number.EPSILON) * 100) / 100,
+          targetAmount: Math.round(((Number(data.targetAmount) || 0) + Number.EPSILON) * 100) / 100,
+          currentAmount: Math.round(((Number(data.currentAmount) || 0) + Number.EPSILON) * 100) / 100,
           allocationPercent: Number(data.allocationPercent) || 0,
           isHidden: !!data.isHidden
         });
@@ -845,9 +845,9 @@ export const CloudDb = {
         savingsGoals.push({
           id: cloudId,
           label: data.label,
-          amount: Number(data.amount) || 0,
-          targetAmount: Number(data.targetAmount) || 0,
-          currentAmount: Number(data.currentAmount) || 0,
+          amount: Math.round(((Number(data.amount) || 0) + Number.EPSILON) * 100) / 100,
+          targetAmount: Math.round(((Number(data.targetAmount) || 0) + Number.EPSILON) * 100) / 100,
+          currentAmount: Math.round(((Number(data.currentAmount) || 0) + Number.EPSILON) * 100) / 100,
           allocationPercent: Number(data.allocationPercent) || 0,
           isHidden: !!data.isHidden
         });

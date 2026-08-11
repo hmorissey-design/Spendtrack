@@ -167,12 +167,15 @@ function autoHealAndMigrateSchema(): void {
           let goalsModified = false;
           goals = goals.map((g: any) => {
             const updated = { ...g };
-            if (typeof updated.targetAmount !== 'number' || isNaN(updated.targetAmount)) {
-              updated.targetAmount = Number(updated.targetAmount) || 0;
+            const round2 = (n: any) => Math.round(((Number(n) || 0) + Number.EPSILON) * 100) / 100;
+            const cleanTarget = round2(updated.targetAmount);
+            if (updated.targetAmount !== cleanTarget) {
+              updated.targetAmount = cleanTarget;
               goalsModified = true;
             }
-            if (typeof updated.currentAmount !== 'number' || isNaN(updated.currentAmount)) {
-              updated.currentAmount = Number(updated.currentAmount) || 0;
+            const cleanCurrent = round2(updated.currentAmount);
+            if (updated.currentAmount !== cleanCurrent) {
+              updated.currentAmount = cleanCurrent;
               goalsModified = true;
             }
             if (typeof updated.allocationPercent !== 'number' || isNaN(updated.allocationPercent)) {
