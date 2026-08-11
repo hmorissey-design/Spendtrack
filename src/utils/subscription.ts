@@ -162,6 +162,20 @@ export const SubscriptionManager = {
   },
 
   /**
+   * Cancel or reset subscription state
+   */
+  cancelSubscription(): SubscriptionState {
+    const newState: SubscriptionState = {
+      tier: 'trial',
+      status: 'canceled',
+      trialDaysTotal: 2,
+      isSubscribed: false,
+    };
+    this.saveSubscriptionState(newState);
+    return newState;
+  },
+
+  /**
    * Get Lemon Squeezy Checkout URL based on environment variable or fallback configuration
    */
   getCheckoutUrl(tier: 'trial' | 'monthly' | 'yearly'): string {

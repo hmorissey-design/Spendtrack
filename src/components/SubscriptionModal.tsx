@@ -128,13 +128,74 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </div>
           )}
 
-          {/* Trial Value Proposition Banner */}
-          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
-              <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Bonus Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
+          {/* Active Subscription Banner & Customer Portal Cancellation Section */}
+          {subscriptionState.isSubscribed ? (
+            <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 text-white shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div>
+                  <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Active PRO Subscription</span>
+                  </div>
+                  <h3 className="text-lg font-extrabold text-white mt-1">
+                    {subscriptionState.tier === 'yearly' ? 'Yearly Plan ($14.99 / year)' : 'Monthly Plan ($1.99 / month)'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Full access enabled across all mobile & desktop devices with live cloud backup.
+                  </p>
+                </div>
+
+                <a
+                  href={import.meta.env.VITE_LEMON_SQUEEZY_STORE_URL || "https://app.lemonsqueezy.com/my-orders"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                >
+                  <span>Manage / Cancel via Customer Portal</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-white" />
+                </a>
+              </div>
+
+              <div className="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/80 text-xs text-slate-300 leading-relaxed flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-amber-300">How to cancel or manage your billing:</span>
+                  <p className="mt-1">
+                    Lemon Squeezy handles all payment processing and subscription billing. To update payment methods, download official VAT invoices, or cancel auto-renewal with 1 click:
+                  </p>
+                  <ol className="list-decimal list-inside mt-1.5 space-y-1 text-slate-300 font-medium">
+                    <li>Click the <strong>Manage / Cancel via Customer Portal</strong> button above (or go to <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline font-bold">app.lemonsqueezy.com/my-orders</a>).</li>
+                    <li>Enter the email address you used at checkout.</li>
+                    <li>Open the login link sent to your email to view your subscription and click <strong>Cancel Subscription</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-800 text-xs">
+                <span className="text-slate-400">Need to reset your local app subscription state?</span>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to cancel / reset your local subscription status in LooseBudget?')) {
+                      const updated = SubscriptionManager.cancelSubscription();
+                      onSubscriptionUpdate(updated);
+                      setSimulationSuccessMsg('Local subscription status reset.');
+                    }
+                  }}
+                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold underline cursor-pointer"
+                >
+                  Cancel / Reset App Subscription Status
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Trial Value Proposition Banner */
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Bonus Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
+              </div>
+            </div>
+          )}
 
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
