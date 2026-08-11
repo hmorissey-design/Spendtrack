@@ -26,7 +26,7 @@ app.use(express.json({
 // API Route: Lemon Squeezy Webhook Receiver
 app.post("/api/lemon-squeezy-webhook", async (req: any, res: any) => {
   try {
-    const webhookSecret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
+    const webhookSecret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET || 'CoverdaleCancun';
     const signature = req.headers["x-signature"];
 
     // Validate Signature if secret is configured

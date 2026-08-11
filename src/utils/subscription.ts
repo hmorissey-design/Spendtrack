@@ -204,13 +204,13 @@ export const SubscriptionManager = {
   getCheckoutUrl(tier: 'trial' | 'monthly' | 'yearly'): string {
     const env = import.meta.env;
     if (tier === 'monthly') {
-      return env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/82e0d56b-82f8-42d5-88c4-44c547f540d6';
+      return env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243';
     }
     if (tier === 'yearly') {
-      return env.VITE_LEMON_SQUEEZY_YEARLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/0be2aa11-aecf-4a78-8d2c-9e66317ab504';
+      return env.VITE_LEMON_SQUEEZY_YEARLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/31565abb-965a-45f7-9ab5-14ed83529fd4';
     }
     if (tier === 'trial') {
-      return env.VITE_LEMON_SQUEEZY_TRIAL_URL || env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/82e0d56b-82f8-42d5-88c4-44c547f540d6';
+      return env.VITE_LEMON_SQUEEZY_TRIAL_URL || env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243';
     }
     if (env.VITE_LEMON_SQUEEZY_STORE_URL) {
       return env.VITE_LEMON_SQUEEZY_STORE_URL;
