@@ -374,9 +374,13 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search);
       const payment = params.get('payment');
+      const success = params.get('success');
+      const status = params.get('status');
       const plan = params.get('plan');
 
-      if (payment === 'success' && plan) {
+      const isSuccessSignal = payment === 'success' || success === 'true' || status === 'success' || Boolean(plan);
+
+      if (isSuccessSignal && plan) {
         let updated: SubscriptionState;
         if (plan === 'trial') {
           updated = SubscriptionManager.startTrial();
