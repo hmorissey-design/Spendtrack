@@ -228,20 +228,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   {emailLookupError && (
                     <p className="text-[11px] font-semibold text-rose-500">{emailLookupError}</p>
                   )}
-
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700/50">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">On this device right now?</span>
-                    <button
-                      onClick={() => {
-                        const updated = SubscriptionManager.activatePlan('yearly');
-                        onSubscriptionUpdate(updated);
-                        setSimulationSuccessMsg('✅ Active PRO subscription restored on this browser!');
-                      }}
-                      className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-bold cursor-pointer"
-                    >
-                      Quick 1-Click Restore ⚡
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -288,22 +274,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <li>Open the login link sent to your email to view your subscription and click <strong>Cancel Subscription</strong>.</li>
                   </ol>
                 </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-800 text-xs">
-                <span className="text-slate-400">Need to reset your local app subscription state?</span>
-                <button
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to cancel / reset your local subscription status in LooseBudget?')) {
-                      const updated = SubscriptionManager.cancelSubscription();
-                      onSubscriptionUpdate(updated);
-                      setSimulationSuccessMsg('Local subscription status reset.');
-                    }
-                  }}
-                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold underline cursor-pointer"
-                >
-                  Cancel / Reset App Subscription Status
-                </button>
               </div>
             </div>
           ) : (
