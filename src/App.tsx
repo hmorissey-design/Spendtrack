@@ -873,11 +873,34 @@ export default function App() {
         currentAmount: 0,
         allocationPercent: 25
       };
-      setSavingsGoals(prev => [...prev, newItem]);
+      updateAndSyncSavingsGoals(prev => [...prev, newItem]);
     }
 
     setQuickAddName('');
     setQuickAddAmount('');
+  };
+
+  const updateAndSyncSavingsGoals = (
+    newGoalsOrUpdater: { id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }[] | ((prev: { id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }[]) => { id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }[])
+  ) => {
+    setSavingsGoals(prev => {
+      const nextGoals = typeof newGoalsOrUpdater === 'function' ? newGoalsOrUpdater(prev) : newGoalsOrUpdater;
+      
+      try {
+        localStorage.setItem('expensetrack_savings_goals', JSON.stringify(nextGoals));
+      } catch (e) {
+        console.error('Error saving savings goals to local storage:', e);
+      }
+
+      const uid = currentUser?.uid || auth.currentUser?.uid;
+      if (uid) {
+        nextGoals.forEach(goal => {
+          CloudDb.saveSavingsGoalToCloud(uid, goal).catch(console.error);
+        });
+      }
+
+      return nextGoals;
+    });
   };
 
   const handleUpdateIncomeStream = (id: string, updates: number | Partial<{ label: string; amount: number; isHidden?: boolean }>) => {
@@ -980,8 +1003,8 @@ export default function App() {
 
   const handleUpdateSavingsGoal = (id: string, updates: number | Partial<{ label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }>) => {
     setSavingsGoalError(null);
-    setSavingsGoals(prev => {
-      let errText = '';
+    let errText = '';
+    updateAndSyncSavingsGoals(prev => {
       const updated = prev.map(item => {
         if (item.id === id) {
           if (typeof updates === 'number') {
@@ -1024,11 +1047,6 @@ export default function App() {
 
       if (errText) {
         setSavingsGoalError(errText);
-      }
-      const uid = currentUser?.uid || auth.currentUser?.uid;
-      if (uid && !errText) {
-        const item = updated.find(i => i.id === id);
-        if (item) CloudDb.saveSavingsGoalToCloud(uid, item).catch(console.error);
       }
       return updated;
     });
@@ -1087,11 +1105,7 @@ export default function App() {
       currentAmount,
       allocationPercent: finalAlloc
     };
-    setSavingsGoals(prev => [...prev, newItem]);
-    const uid = currentUser?.uid || auth.currentUser?.uid;
-    if (uid) {
-      CloudDb.saveSavingsGoalToCloud(uid, newItem).catch(console.error);
-    }
+    updateAndSyncSavingsGoals(prev => [...prev, newItem]);
     setNewSavingsName('');
     setNewSavingsAmount('');
     setNewSavingsTarget('');
@@ -1112,7 +1126,6 @@ export default function App() {
   };
 
   const handleDeleteSavingsGoal = (id: string) => {
-    setSavingsGoals(prev => prev.filter(item => item.id !== id));
     SyncQueue.addPendingDelete('savings', id);
     const uid = currentUser?.uid || auth.currentUser?.uid;
     if (uid) {
@@ -1120,6 +1133,7 @@ export default function App() {
         SyncQueue.removePendingDelete('savings', id);
       }).catch(e => console.error(e));
     }
+    updateAndSyncSavingsGoals(prev => prev.filter(item => item.id !== id));
   };
 
   const handleAddDiscretionaryCategory = (e: React.FormEvent) => {
@@ -1498,7 +1512,7 @@ Date: ${new Date().toLocaleString()}
     LocalDb.addExpense(newExpenseData);
     if (newExpenseData.category.startsWith('SAVINGS_')) {
       const goalId = newExpenseData.category.substring(8);
-      setSavingsGoals(prev => prev.map(goal => {
+      updateAndSyncSavingsGoals(prev => prev.map(goal => {
         if (goal.id === goalId) {
           const updatedAmount = Math.round((((goal.currentAmount || 0) - newExpenseData.amount) + Number.EPSILON) * 100) / 100;
           return { ...goal, currentAmount: updatedAmount };
@@ -1552,7 +1566,7 @@ Date: ${new Date().toLocaleString()}
       }
 
       if (goalsUpdated) {
-        setSavingsGoals(newGoals);
+        updateAndSyncSavingsGoals(newGoals);
       }
 
       LocalDb.updateExpense(fullUpdatedExpense);
@@ -1571,7 +1585,7 @@ Date: ${new Date().toLocaleString()}
     const expenseToDeleteObj = expenses.find(e => e.id === id);
     if (expenseToDeleteObj && expenseToDeleteObj.category.startsWith('SAVINGS_')) {
       const goalId = expenseToDeleteObj.category.substring(8);
-      setSavingsGoals(prev => prev.map(goal => {
+      updateAndSyncSavingsGoals(prev => prev.map(goal => {
         if (goal.id === goalId) {
           return { ...goal, currentAmount: Math.round((((goal.currentAmount || 0) + expenseToDeleteObj.amount) + Number.EPSILON) * 100) / 100 };
         }
@@ -5464,8 +5478,7 @@ Date: ${new Date().toLocaleString()}
                           } catch (e) {}
                         }
 
-                        const uid = currentUser?.uid || auth.currentUser?.uid;
-                        setSavingsGoals(prev => prev.map(originalGoal => {
+                        updateAndSyncSavingsGoals(prev => prev.map(originalGoal => {
                           const tempGoal = tempSavingsGoals.find(t => t.id === originalGoal.id);
                           if (!tempGoal) return originalGoal;
                           
@@ -5479,17 +5492,11 @@ Date: ${new Date().toLocaleString()}
 
                           const updatedAmount = Math.round(((baseAmount + allocatedPortion) + Number.EPSILON) * 100) / 100;
 
-                          const updatedGoal = {
+                          return {
                             ...originalGoal,
                             allocationPercent: percent,
                             currentAmount: updatedAmount
                           };
-
-                          if (uid) {
-                            CloudDb.saveSavingsGoalToCloud(uid, updatedGoal).catch(console.error);
-                          }
-
-                          return updatedGoal;
                         }));
 
                         setShowReconciliationModal(false);
