@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Check, Sparkles, ExternalLink, Zap, RefreshCw, X, AlertCircle, Download } from 'lucide-react';
 import { SubscriptionState, PlanTier } from '../types';
 import { SubscriptionManager } from '../utils/subscription';
@@ -23,6 +23,17 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [isSearchingEmail, setIsSearchingEmail] = useState(false);
   const [emailLookupMsg, setEmailLookupMsg] = useState('');
   const [emailLookupError, setEmailLookupError] = useState('');
+
+  const modalOverlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (modalOverlayRef.current) {
+        modalOverlayRef.current.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -57,8 +68,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-3 sm:my-8 shrink-0">
+    <div ref={modalOverlayRef} className="fixed inset-0 z-50 flex justify-center items-start p-2 sm:p-5 md:p-8 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-2 sm:my-6 shrink-0">
         
         {/* Top Banner Header */}
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white p-5 sm:p-8 relative">
@@ -73,11 +84,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             {/* Top Return to App Button */}
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl border border-emerald-400/40 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-xs sm:text-sm rounded-xl border border-emerald-400/40 shadow-lg backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
               title="Return to LooseBudget App"
             >
               <X className="w-4 h-4 text-white" />
-              <span className="tracking-wide uppercase font-sans">Return to App ↩</span>
+              <span className="tracking-wide uppercase font-sans">RETURN TO APP ↩</span>
             </button>
           </div>
 
