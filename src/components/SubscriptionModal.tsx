@@ -48,7 +48,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           setSimulationSuccessMsg('🎉 5-Day Free Trial activated successfully!');
         } else {
           updated = SubscriptionManager.activatePlan(tier);
-          setSimulationSuccessMsg(`🎉 ${tier === 'yearly' ? 'Yearly ($14.99/yr)' : 'Monthly ($1.99/mo)'} Subscription activated successfully!`);
+          setSimulationSuccessMsg(`🎉 ${tier === 'yearly' ? 'Yearly ($14.99 CAD/yr)' : 'Monthly ($1.99 CAD/mo)'} Subscription activated successfully!`);
         }
         onSubscriptionUpdate(updated);
         setIsProcessing(false);
@@ -246,7 +246,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <span>Active PRO Subscription</span>
                   </div>
                   <h3 className="text-lg font-extrabold text-white mt-1">
-                    {subscriptionState.tier === 'yearly' ? 'Yearly Plan ($14.99 / year)' : 'Monthly Plan ($1.99 / month)'}
+                    {subscriptionState.tier === 'yearly' ? 'Yearly Plan ($14.99 CAD / year)' : 'Monthly Plan ($1.99 CAD / month)'}
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Full access enabled across all mobile & desktop devices with live cloud backup.
@@ -300,10 +300,17 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
               <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
-                <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Bonus Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
+                <span className="font-bold text-amber-500 dark:text-amber-400">🎁 Both plans include a 5-Day Bonus Free Trial!</span> Choose Monthly or Yearly below — you won't be charged anything today ($0 CAD today). Payments process automatically starting on Day 6, and you can cancel anytime with 1 click.
               </div>
             </div>
           )}
+
+          {/* CAD Currency Clarification Notice */}
+          <div className="text-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300">
+              🇨🇦 All subscription prices are listed in Canadian Dollars (CAD)
+            </span>
+          </div>
 
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
@@ -325,10 +332,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   Monthly Subscription
                 </div>
                 <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                  $1.99 <span className="text-sm font-normal text-slate-500">/mo</span>
+                  $1.99 <span className="text-sm font-normal text-slate-500">CAD / mo</span>
                 </div>
                 <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                  $0 today • Billed $1.99/mo after 5 days
+                  $0 today • Billed $1.99 CAD/mo after 5 days
                 </div>
                 <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Flexible month-to-month subscription. Complete cloud sync & unlimited access.
@@ -343,7 +350,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 disabled={isProcessing}
                 className="mt-6 w-full py-2.5 px-4 text-xs font-black uppercase tracking-wider rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
-                {subscriptionState.tier === 'monthly' ? 'Current Plan' : 'Start 5-Day Free Trial ($1.99/mo)'}
+                {subscriptionState.tier === 'monthly' ? 'Current Plan' : 'Start 5-Day Free Trial ($1.99 CAD/mo)'}
               </button>
             </div>
 
@@ -368,10 +375,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   Yearly Subscription
                 </div>
                 <div className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                  $14.99 <span className="text-sm font-normal text-slate-500">/yr</span>
+                  $14.99 <span className="text-sm font-normal text-slate-500">CAD / yr</span>
                 </div>
                 <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                  Just $1.25 / month • $0 today (Billed Day 6)
+                  Just $1.25 CAD / month • $0 today (Billed Day 6)
                 </div>
                 <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Best value for uninterrupted multi-device expense tracking, backups & analytics.
@@ -386,7 +393,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 disabled={isProcessing}
                 className="mt-6 w-full py-2.5 px-4 text-xs font-black uppercase tracking-wider rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
-                {subscriptionState.tier === 'yearly' ? 'Current Plan' : 'Start 5-Day Free Trial ($14.99/yr)'}
+                {subscriptionState.tier === 'yearly' ? 'Current Plan' : 'Start 5-Day Free Trial ($14.99 CAD/yr)'}
               </button>
             </div>
 

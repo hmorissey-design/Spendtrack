@@ -321,7 +321,7 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
             Every new install starts with a <strong>2-Day Full Access Preview</strong> requiring $0 and no credit card.
           </p>
           <p>
-            When you subscribe to Monthly ($1.99/mo) or Yearly ($14.99/yr), you automatically unlock an additional <strong>5-Day Bonus Free Trial</strong>. You won't be charged anything until Day 6, and you can cancel anytime with 1 click.
+            When you subscribe to Monthly ($1.99 CAD/mo) or Yearly ($14.99 CAD/yr), you automatically unlock an additional <strong>5-Day Bonus Free Trial</strong>. You won't be charged anything until Day 6, and you can cancel anytime with 1 click.
           </p>
         </div>
       ),
