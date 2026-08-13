@@ -325,10 +325,8 @@ export default function App() {
   });
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Initialize active tab - default to 'help' guide in Demo / Preview mode, 'dashboard' for subscribed users
-  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
-    return !subscriptionState.isSubscribed ? 'help' : 'dashboard';
-  });
+  // Initialize active tab - default to 'dashboard' (Daily Overview)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
 
