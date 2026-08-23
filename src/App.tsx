@@ -329,6 +329,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
   const [renderCharts, setRenderCharts] = useState(false);
+  const [showHiddenSavingsGoals, setShowHiddenSavingsGoals] = useState(false);
 
   // Firebase Auth & Cloud Sync states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -694,7 +695,7 @@ export default function App() {
       return categories.some(item => item.id !== excludeId && !item.isHidden && item.name.trim().toLowerCase() === cleanName);
     }
     if (section === 'savings') {
-      return savingsGoals.some(item => item.id !== excludeId && item.label.trim().toLowerCase() === cleanName);
+      return savingsGoals.some(item => item.id !== excludeId && !item.isHidden && item.label.trim().toLowerCase() === cleanName);
     }
     return false;
   };
@@ -795,7 +796,7 @@ export default function App() {
         }
       }
 
-      setTempSavingsGoals(savingsGoals.map(g => {
+      setTempSavingsGoals(savingsGoals.filter(g => !g.isHidden).map(g => {
         const baselineAmount = (hasRunReconciliationThisMonth && baselines[g.id] !== undefined)
           ? baselines[g.id]
           : (g.currentAmount || 0);
@@ -4420,10 +4421,13 @@ Date: ${new Date().toLocaleString()}
           {/* TAB 7: SAVINGS GOALS (DEDICATED VIEW) */}
           {activeTab === 'savings' && (() => {
             const safeSavingsGoals = Array.isArray(savingsGoals) ? savingsGoals : [];
-            const totalSavedAmt = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
-            const totalTargetAmt = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.targetAmount as any) || 0), 0);
+            const activeSavingsGoals = safeSavingsGoals.filter(g => !g.isHidden);
+            const hiddenSavingsGoals = safeSavingsGoals.filter(g => g.isHidden);
+
+            const totalSavedAmt = activeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.currentAmount as any) || 0), 0);
+            const totalTargetAmt = activeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.targetAmount as any) || 0), 0);
             const overallSavingsPercent = totalTargetAmt > 0 ? Math.min(100, Math.round((totalSavedAmt / totalTargetAmt) * 100)) : 0;
-            const totalAllocationPercent = safeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
+            const totalAllocationPercent = activeSavingsGoals.reduce((sum, g) => sum + (parseFloat(g.allocationPercent as any) || 0), 0);
 
             return (
               <div className="space-y-4 animate-in fade-in duration-200" id="tab_savings">
@@ -4491,7 +4495,7 @@ Date: ${new Date().toLocaleString()}
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Active Targets</span>
                       <span className="text-[8px] bg-pink-500/10 text-pink-400 border border-pink-500/15 font-bold px-1.5 py-0.2 rounded font-mono">
-                        {safeSavingsGoals.length} GOALS
+                        {activeSavingsGoals.length} GOALS
                       </span>
                     </div>
                   </div>
@@ -4512,31 +4516,52 @@ Date: ${new Date().toLocaleString()}
                     </div>
                   )}
 
-                  <div className="space-y-3">
-                    {safeSavingsGoals.map((item, index) => {
-                      const curAmt = parseFloat(item.currentAmount as any) || 0;
-                      const tgtAmt = parseFloat(item.targetAmount as any) || 0;
-                      const percentSaved = tgtAmt > 0 ? Math.min(100, Math.round((curAmt / tgtAmt) * 100)) : 0;
-                      const isEven = index % 2 === 0;
-                      return (
-                        <div 
-                          key={item.id} 
-                          className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
-                            isEven 
-                              ? 'bg-slate-900/95 border-slate-800 hover:bg-slate-900 hover:border-slate-700' 
-                              : 'bg-pink-950/10 border-pink-500/10 hover:bg-pink-950/15 hover:border-pink-500/20'
-                          }`}
-                        >
-                          {/* Line 1: Goal name and actions (full-width header) */}
-                          <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {editingItemId === item.id ? (
-                                <input 
-                                  type="text"
-                                  value={editingItemValue}
-                                  onChange={(e) => setEditingItemValue(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
+                  {activeSavingsGoals.length === 0 ? (
+                    <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5 text-center text-gray-400 text-xs space-y-1">
+                      <PiggyBank size={28} className="mx-auto text-pink-400/50 mb-1" />
+                      <p className="font-bold text-gray-300">No Active Savings Goals</p>
+                      <p className="text-[10px] text-gray-500">Create a new savings goal below or restore hidden goals.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeSavingsGoals.map((item, index) => {
+                        const curAmt = parseFloat(item.currentAmount as any) || 0;
+                        const tgtAmt = parseFloat(item.targetAmount as any) || 0;
+                        const percentSaved = tgtAmt > 0 ? Math.min(100, Math.round((curAmt / tgtAmt) * 100)) : 0;
+                        const isEven = index % 2 === 0;
+                        return (
+                          <div 
+                            key={item.id} 
+                            className={`p-2.5 px-3 rounded-xl flex flex-col gap-2 border transition-all duration-200 group ${
+                              isEven 
+                                ? 'bg-slate-900/95 border-slate-800 hover:bg-slate-900 hover:border-slate-700' 
+                                : 'bg-pink-950/10 border-pink-500/10 hover:bg-pink-950/15 hover:border-pink-500/20'
+                            }`}
+                          >
+                            {/* Line 1: Goal name and actions (full-width header) */}
+                            <div className="flex items-center justify-between w-full border-b border-white/[0.04] pb-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {editingItemId === item.id ? (
+                                  <input 
+                                    type="text"
+                                    value={editingItemValue}
+                                    onChange={(e) => setEditingItemValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        if (editingItemValue.trim()) {
+                                          if (isDuplicateName(editingItemValue, 'savings', item.id)) {
+                                            setSavingsGoalError(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
+                                            setEditingItemId(null);
+                                            return;
+                                          }
+                                          handleUpdateSavingsGoal(item.id, { label: editingItemValue.trim() });
+                                        }
+                                        setEditingItemId(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingItemId(null);
+                                      }
+                                    }}
+                                    onBlur={() => {
                                       if (editingItemValue.trim()) {
                                         if (isDuplicateName(editingItemValue, 'savings', item.id)) {
                                           setSavingsGoalError(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
@@ -4546,120 +4571,162 @@ Date: ${new Date().toLocaleString()}
                                         handleUpdateSavingsGoal(item.id, { label: editingItemValue.trim() });
                                       }
                                       setEditingItemId(null);
-                                    } else if (e.key === 'Escape') {
-                                      setEditingItemId(null);
-                                    }
-                                  }}
-                                  onBlur={() => {
-                                    if (editingItemValue.trim()) {
-                                      if (isDuplicateName(editingItemValue, 'savings', item.id)) {
-                                        setSavingsGoalError(`The name "${editingItemValue.trim()}" is already in use in another section or category. Please choose a unique name.`);
-                                        setEditingItemId(null);
-                                        return;
-                                      }
-                                      handleUpdateSavingsGoal(item.id, { label: editingItemValue.trim() });
-                                    }
-                                    setEditingItemId(null);
-                                  }}
-                                  className="px-2 py-1 bg-black/60 border border-pink-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
-                                  autoFocus
-                                />
-                              ) : (
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className={`text-xs font-extrabold truncate max-w-[130px] sm:max-w-[200px] ${item.isHidden ? 'text-gray-500 line-through' : 'text-white'}`} title={item.label}>
-                                    {item.label}
-                                  </span>
-                                  {item.isHidden && (
-                                    <span className="text-[9px] bg-pink-500/15 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase shrink-0">
-                                      Hidden
-                                    </span>
-                                  )}
-                                  <button 
-                                    onClick={() => {
-                                      setEditingItemId(item.id);
-                                      setEditingItemValue(item.label);
                                     }}
-                                    className="p-1.5 text-gray-400 hover:text-pink-400 transition-all cursor-pointer rounded-lg shrink-0 hover:bg-white/5 border-0"
-                                    title="Edit Name"
-                                  >
-                                    <Pencil size={12} />
-                                  </button>
-                                </div>
-                              )}
+                                    className="px-2 py-1 bg-black/60 border border-pink-500/30 text-xs text-white rounded-lg outline-none w-32 font-medium font-sans"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="text-xs font-extrabold truncate max-w-[130px] sm:max-w-[200px] text-white" title={item.label}>
+                                      {item.label}
+                                    </span>
+                                    <button 
+                                      onClick={() => {
+                                        setEditingItemId(item.id);
+                                        setEditingItemValue(item.label);
+                                      }}
+                                      className="p-1.5 text-gray-400 hover:text-pink-400 transition-all cursor-pointer rounded-lg shrink-0 hover:bg-white/5 border-0"
+                                      title="Edit Name"
+                                    >
+                                      <Pencil size={12} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[11px] sm:text-xs bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2 py-1 rounded-lg font-mono font-bold">
+                                  {percentSaved}% Saved
+                                </span>
+                                <button 
+                                  onClick={() => handleUpdateSavingsGoal(item.id, { isHidden: true })}
+                                  className="p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/20 transition-all cursor-pointer active:scale-95"
+                                  title="Hide Savings Goal (Target, Saved, and Allocation % must be 0)"
+                                >
+                                  <EyeOff size={16} />
+                                </button>
+                                <button 
+                                  onClick={() => setItemToDelete({ id: item.id, name: item.label, type: 'savings' })}
+                                  className="p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all cursor-pointer active:scale-95"
+                                  title="Delete Savings Goal"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
                             </div>
-                            
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[11px] sm:text-xs bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2 py-1 rounded-lg font-mono font-bold">
-                                {percentSaved}% Saved
-                              </span>
-                              <button 
-                                onClick={() => handleUpdateSavingsGoal(item.id, { isHidden: !item.isHidden })}
-                                className={`p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl border transition-all cursor-pointer active:scale-95 ${
-                                  item.isHidden 
-                                    ? 'bg-pink-500/20 border-pink-500/40 text-pink-300 hover:bg-pink-500/30' 
-                                    : 'bg-white/10 border-white/15 text-gray-300 hover:text-white hover:bg-white/20'
-                                }`}
-                                title={item.isHidden ? 'Unhide Savings Goal' : 'Hide Savings Goal (Target, Saved, and Allocation % must be 0)'}
-                              >
-                                {item.isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </button>
+
+                            {/* Line 2: Three adjustable value fields stacked vertically with names above */}
+                            <div className="grid grid-cols-3 gap-2.5 w-full pt-1.5">
+                              {/* Desired target input */}
+                              <div className="flex flex-col gap-1 text-left">
+                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
+                                <DirectAmountInput 
+                                  initialValue={parseFloat(item.targetAmount as any) || 0}
+                                  onUpdate={(val) => handleUpdateSavingsGoal(item.id, { targetAmount: val })}
+                                  currencySymbol={currencySymbol}
+                                  className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
+                                />
+                              </div>
+
+                              {/* Current saved amount input (Editable - allow moving funds between goals) */}
+                              <div className="flex flex-col gap-1 text-left">
+                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
+                                <DirectAmountInput 
+                                  initialValue={curAmt}
+                                  onUpdate={(val) => handleUpdateSavingsGoal(item.id, { currentAmount: Math.max(0, val) })}
+                                  currencySymbol={currencySymbol}
+                                  className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
+                                />
+                              </div>
+
+                              {/* Allocation percent input */}
+                              <div className="flex flex-col gap-1 text-left">
+                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Alloc</span>
+                                <DirectAmountInput 
+                                  initialValue={parseFloat(item.allocationPercent as any) || 0}
+                                  onUpdate={(val) => {
+                                    let finalVal = val;
+                                    if (finalVal < 0) {
+                                      alert("Allocation percentage cannot be negative.");
+                                      finalVal = Math.max(0, parseFloat(item.allocationPercent as any) || 0);
+                                    }
+                                    if (item.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
+                                      alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");
+                                      finalVal = 10;
+                                    }
+                                    handleUpdateSavingsGoal(item.id, { allocationPercent: finalVal });
+                                  }}
+                                  isPercent={true}
+                                  max={100}
+                                  className="w-full pl-2 pr-5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
+                                />
+                              </div>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                          {/* Line 2: Three adjustable value fields stacked vertically with names above */}
-                          <div className="grid grid-cols-3 gap-2.5 w-full pt-1.5">
-                            {/* Desired target input */}
-                            <div className="flex flex-col gap-1 text-left">
-                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
-                              <DirectAmountInput 
-                                initialValue={parseFloat(item.targetAmount as any) || 0}
-                                onUpdate={(val) => handleUpdateSavingsGoal(item.id, { targetAmount: val })}
-                                currencySymbol={currencySymbol}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
-                              />
-                            </div>
-
-                            {/* Current saved amount input (Editable - allow moving funds between goals) */}
-                            <div className="flex flex-col gap-1 text-left">
-                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
-                              <DirectAmountInput 
-                                initialValue={curAmt}
-                                onUpdate={(val) => handleUpdateSavingsGoal(item.id, { currentAmount: Math.max(0, val) })}
-                                currencySymbol={currencySymbol}
-                                className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
-                              />
-                            </div>
-
-                            {/* Allocation percent input */}
-                            <div className="flex flex-col gap-1 text-left">
-                              <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Alloc</span>
-                              <DirectAmountInput 
-                                initialValue={parseFloat(item.allocationPercent as any) || 0}
-                                onUpdate={(val) => {
-                                  let finalVal = val;
-                                  if (finalVal < 0) {
-                                    alert("Allocation percentage cannot be negative.");
-                                    finalVal = Math.max(0, parseFloat(item.allocationPercent as any) || 0);
-                                  }
-                                  if (item.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
-                                    alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");
-                                    finalVal = 10;
-                                  }
-                                  handleUpdateSavingsGoal(item.id, { allocationPercent: finalVal });
-                                }}
-                                isPercent={true}
-                                max={100}
-                                className="w-full pl-2 pr-5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
-                              />
-                            </div>
-                          </div>
+                  {/* Collapsible Hidden Goals Section */}
+                  {hiddenSavingsGoals.length > 0 && (
+                    <div className="pt-2 border-t border-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setShowHiddenSavingsGoals(prev => !prev)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 text-[10px] font-bold text-gray-400 hover:text-gray-200 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <EyeOff size={13} className="text-gray-500" />
+                          <span>Hidden Savings Goals ({hiddenSavingsGoals.length})</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <span className="text-[9px] text-gray-500 flex items-center gap-1">
+                          {showHiddenSavingsGoals ? 'Collapse' : 'Expand'}
+                          <ChevronDown size={12} className={`transition-transform duration-200 ${showHiddenSavingsGoals ? 'rotate-180' : ''}`} />
+                        </span>
+                      </button>
+
+                      {showHiddenSavingsGoals && (
+                        <div className="mt-2 space-y-1.5 animate-in fade-in duration-150">
+                          {hiddenSavingsGoals.map(item => (
+                            <div 
+                              key={item.id} 
+                              className="p-2 px-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-xs"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs font-semibold text-gray-400 line-through truncate">{item.label}</span>
+                                <span className="text-[8px] bg-white/5 text-gray-400 border border-white/10 px-1.5 py-0.2 rounded font-mono uppercase">
+                                  Hidden
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateSavingsGoal(item.id, { isHidden: false })}
+                                  className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                                  title="Restore / Unhide Goal"
+                                >
+                                  <Eye size={12} />
+                                  <span>Unhide</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setItemToDelete({ id: item.id, name: item.label, type: 'savings' })}
+                                  className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                                  title="Delete permanently"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {(() => {
-                    if (savingsGoals.length > 0 && totalAllocationPercent !== 100) {
+                    if (activeSavingsGoals.length > 0 && totalAllocationPercent !== 100) {
                       return (
                         <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[10px] rounded-xl leading-normal text-left font-sans flex items-start gap-1.5 mt-1">
                           <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
