@@ -363,10 +363,10 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Amount Entry - BIGGER AND MORE NOTICEABLE */}
         <div>
-          <div className="relative rounded-2xl bg-black/45 border border-white/5 py-2.5 px-3.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/50 focus-within:bg-black/80 transition-all flex flex-col items-center justify-center">
-            <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1 font-sans">AMOUNT</span>
+          <div className="relative rounded-2xl bg-black/45 border border-white/5 py-3 px-4 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/50 focus-within:bg-black/80 transition-all flex flex-col items-center justify-center">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 font-sans">Amount</span>
             <div className="flex items-center justify-center w-full min-w-0">
-              <span className="text-3xl font-extrabold text-emerald-500 mr-1.5 select-none font-mono">$</span>
+              <span className="text-3xl font-extrabold text-emerald-500 mr-1.5 select-none tnum">$</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -374,7 +374,7 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 onBlur={handleAmountBlur}
-                className="w-full max-w-[220px] bg-transparent border-0 text-2xl font-extrabold text-emerald-400 focus:text-white text-center font-mono outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
+                className="w-full max-w-[240px] bg-transparent border-0 text-3xl font-extrabold text-emerald-400 focus:text-white text-center tnum tracking-tight outline-hidden focus:ring-0 focus:outline-hidden placeholder-emerald-800/35 p-0"
                 required
                 ref={amountInputRef}
               />
@@ -382,9 +382,9 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
 
             {/* Available Savings Goal Balance Badge */}
             {selectedSavingsGoal && (
-              <div className="mt-2 w-full px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 rounded-xl flex items-center justify-between text-xs text-pink-300 font-sans">
+              <div className="mt-2.5 w-full px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 rounded-xl flex items-center justify-between text-xs text-pink-300 font-sans">
                 <span>Available in <strong>{selectedSavingsGoal.label}</strong>:</span>
-                <span className="font-extrabold text-pink-200 font-mono">${availableSavingsCapacity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="font-extrabold text-pink-200 tnum text-sm">${availableSavingsCapacity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
 
@@ -397,11 +397,11 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
                   <button
                     type="button"
                     onClick={() => setAmount(liveVal.toFixed(2))}
-                    className="mt-2.5 px-3 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 text-[10.5px] font-mono font-bold rounded-lg transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1"
+                    className="mt-2.5 px-3 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 tnum"
                     title="Tap to apply calculated total"
                   >
                     <span>Total: ${liveVal.toFixed(2)}</span>
-                    <span className="text-[8px] bg-emerald-500/20 px-1 py-0.5 rounded text-emerald-400">Apply ↵</span>
+                    <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400 font-sans">Apply ↵</span>
                   </button>
                 );
               }

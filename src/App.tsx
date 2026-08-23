@@ -3006,9 +3006,9 @@ Date: ${new Date().toLocaleString()}
               )}
 
               {/* Circular Gauge and Budget stats header */}
-              <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs">
+              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
 
-                <div className="grid grid-cols-12 gap-2.5 items-center">
+                <div className="grid grid-cols-12 gap-3 items-center">
                   {/* Gauge */}
                   <div className="col-span-5 flex flex-col items-center justify-center">
                     <div className="relative w-24 h-24 flex items-center justify-center rounded-full border-4 border-[#1c1c1c] shadow-inner bg-black/40">
@@ -3017,31 +3017,31 @@ Date: ${new Date().toLocaleString()}
                         totals.percent >= 100 ? 'border-t-rose-500 border-r-rose-400' :
                         totals.percent >= 80 ? 'border-t-amber-500 border-r-amber-400' :
                         statusConfig.title.includes('Spending Too Fast') ? 'border-t-yellow-500 border-r-yellow-400' :
-                        'border-t-green-500 border-r-green-400'
+                        'border-t-emerald-500 border-r-emerald-400'
                       }`} style={{ transform: `rotate(${(totals.percent / 100) * 180}deg)` }}></span>
                       
                       <div className="text-center z-10">
-                        <span className="text-xl font-bold font-mono text-white">{totals.percent}%</span>
-                        <p className="text-[8px] text-slate-300 font-bold uppercase tracking-wider font-mono">Spent</p>
+                        <span className="text-2xl font-extrabold text-white tnum tracking-tight">{totals.percent}%</span>
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Spent</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Quantitative numbers */}
-                  <div className="col-span-7 space-y-2">
+                  <div className="col-span-7 space-y-2.5">
                     <div>
-                      <span className="text-[10px] font-semibold text-slate-300 block">Spent this month</span>
-                      <span className="text-3xl font-extrabold font-mono text-white block mt-0.5">{currencySymbol}{totals.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="text-xs font-medium text-slate-400 block">Spent this month</span>
+                      <span className="text-3xl font-extrabold text-white block mt-0.5 tnum tracking-tight">{currencySymbol}{totals.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
 
-                    <div className="flex gap-4 border-t border-[#1C1C1C] pt-2">
+                    <div className="flex gap-4 border-t border-white/5 pt-2">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tight block">Budget Limit</span>
-                        <span className="text-xs font-bold text-gray-300 font-mono">{currencySymbol}{totals.limit.toLocaleString()}</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight block">Budget Limit</span>
+                        <span className="text-sm font-bold text-slate-200 tnum">{currencySymbol}{totals.limit.toLocaleString()}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tight block">Budget Remaining</span>
-                        <span className={`text-xs font-extrabold font-mono ${totals.remaining >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight block">Remaining</span>
+                        <span className={`text-sm font-extrabold tnum ${totals.remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {currencySymbol}{totals.remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -3050,11 +3050,11 @@ Date: ${new Date().toLocaleString()}
                 </div>
 
                 {/* Status alert message */}
-                <div className={`mt-2.5 p-1.5 px-2.5 border rounded-xl text-xs flex items-start gap-2 ${statusConfig.color} transition-all`}>
-                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <div className={`mt-3 p-2.5 px-3 border rounded-xl text-xs flex items-start gap-2.5 ${statusConfig.color} transition-all`}>
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block tracking-tight text-[11px]">{statusConfig.title}</span>
-                    <p className="text-[9.5px] leading-snug text-gray-400 mt-0.5">{statusConfig.desc}</p>
+                    <span className="font-bold block tracking-tight text-xs">{statusConfig.title}</span>
+                    <p className="text-[11px] leading-relaxed text-gray-300 mt-0.5">{statusConfig.desc}</p>
                   </div>
                 </div>
               </div>
@@ -3103,31 +3103,31 @@ Date: ${new Date().toLocaleString()}
                         <div className="h-[110px] w-full" />
                       )}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[10px] font-bold font-mono text-white leading-none">{currencySymbol}{totals.totalSpent.toFixed(2)}</span>
-                        <span className="text-[6px] text-gray-500 font-bold tracking-tight uppercase">Spent</span>
+                        <span className="text-xs font-extrabold text-white leading-none tnum">{currencySymbol}{totals.totalSpent.toFixed(2)}</span>
+                        <span className="text-[8px] text-gray-400 font-semibold tracking-tight uppercase mt-0.5">Spent</span>
                       </div>
                     </div>
 
                     <div className="col-span-7 flex flex-col h-[110px]">
-                      <span className="text-[7.5px] text-gray-400 font-bold tracking-wider uppercase block mb-1 shrink-0">Click category to inspect:</span>
+                      <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wide block mb-1 shrink-0">Click to filter:</span>
                       <div className="space-y-1 overflow-y-auto pr-1 flex-1 scrollbar-thin">
                         {categoryStats.map((stat) => (
                           <div 
                             key={stat.id} 
-                            className="flex items-center justify-between text-[9.5px] cursor-pointer hover:bg-white/5 px-1.5 py-0.5 rounded-md transition-all duration-150 group"
+                            className="flex items-center justify-between text-[11px] cursor-pointer hover:bg-white/5 px-2 py-1 rounded-lg transition-all duration-150 group"
                             onClick={() => {
                               setFilterCategories([stat.id]);
                               setActiveTab('history');
                             }}
                             title={`Click to view all ${stat.label} transactions`}
                           >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{
                                 backgroundColor: resolveColorHex(stat.color)
                               }} />
-                              <span className="text-gray-400 truncate font-semibold group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                              <span className="text-gray-300 truncate font-medium group-hover:text-emerald-400 transition-colors">{stat.label}</span>
                             </div>
-                            <span className="font-mono font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors">{currencySymbol}{stat.total.toFixed(2)} →</span>
+                            <span className="font-bold text-white shrink-0 group-hover:text-emerald-400 transition-colors tnum text-xs">{currencySymbol}{stat.total.toFixed(2)} →</span>
                           </div>
                         ))}
                       </div>
@@ -3653,36 +3653,36 @@ Date: ${new Date().toLocaleString()}
                               <p className="text-xs font-bold text-white truncate leading-tight flex items-center gap-1.5 flex-wrap">
                                 <span>{exp.note || (cat?.id.startsWith('SAVINGS_') ? cat.name.replace(/^SAVINGS\s*-\s*/i, '') : cat?.name) || 'Uncategorized'}</span>
                                 {isBusiness && (
-                                  <span className="px-1 py-0.5 text-[7px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase font-mono tracking-wider leading-none shrink-0">
-                                    Business (Export-Only)
+                                  <span className="px-1.5 py-0.5 text-[8px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase tracking-wider leading-none shrink-0">
+                                    Business
                                   </span>
                                 )}
                               </p>
-                              <span className="text-[9px] text-gray-350 font-medium font-mono">
+                              <span className="text-[10px] text-slate-400 font-medium">
                                 {exp.date} • {exp.paymentMethod.replace('_', ' ')}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className={`text-xs font-bold font-mono block mr-1 ${
-                              isBusiness ? 'text-indigo-400 font-semibold' : 'text-rose-400'
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`text-sm font-extrabold tnum block mr-1 ${
+                              isBusiness ? 'text-indigo-400' : 'text-rose-400'
                             }`}>
                               -{currencySymbol}{exp.amount.toFixed(2)}
                             </span>
                             <button
                               onClick={() => setEditingExpense(exp)}
-                              className="p-1 hover:bg-emerald-550/15 text-gray-400 hover:text-emerald-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
+                              className="p-1.5 hover:bg-emerald-500/15 text-gray-400 hover:text-emerald-400 rounded-lg transition-colors cursor-pointer border-0 bg-transparent active:scale-95"
                               title="Edit this transaction"
                             >
-                              <Pencil size={13} />
+                              <Pencil size={14} />
                             </button>
                             <button
                               onClick={() => setExpenseToDelete(exp)}
-                              className="p-1 hover:bg-rose-500/15 text-gray-400 hover:text-rose-400 rounded-md transition-colors cursor-pointer border-0 bg-transparent"
+                              className="p-1.5 hover:bg-rose-500/15 text-gray-400 hover:text-rose-400 rounded-lg transition-colors cursor-pointer border-0 bg-transparent active:scale-95"
                               title="Delete this transaction permanently"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
@@ -3701,7 +3701,7 @@ Date: ${new Date().toLocaleString()}
               <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
                 <div className="flex items-center justify-between mb-3.5">
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans">Spending to date</h3>
-                  <span className="text-[9px] text-gray-400 font-bold font-mono">Tap bar to view ledger</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">Tap bar to view ledger</span>
                 </div>
 
                 {categoryStats.length === 0 ? (
@@ -3726,21 +3726,21 @@ Date: ${new Date().toLocaleString()}
                         >
                           <div className="flex items-start justify-between text-xs">
                             <div className="min-w-0">
-                              <span className="font-semibold text-gray-200 block truncate group-hover:text-green-400 transition-colors">{stat.label}</span>
-                              <span className={`text-[10px] font-mono leading-none ${remaining >= 0 ? 'text-green-400' : 'text-rose-450'}`}>
+                              <span className="font-semibold text-gray-200 block truncate group-hover:text-emerald-400 transition-colors">{stat.label}</span>
+                              <span className={`text-[11px] tnum leading-none ${remaining >= 0 ? 'text-emerald-400 font-medium' : 'text-rose-400 font-semibold'}`}>
                                 {remaining >= 0 ? `${currencySymbol}${remaining.toFixed(2)} remaining` : `${currencySymbol}${Math.abs(remaining).toFixed(2)} over limit`}
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="font-mono text-gray-300 block">{currencySymbol}{stat.total.toFixed(2)} <span className="text-gray-600 font-bold">/ {currencySymbol}{catLimit.toFixed(2)}</span></span>
-                              <span className="text-[10px] text-gray-500 font-bold block group-hover:text-green-400 font-sans transition-colors">({share}%) →</span>
+                              <span className="tnum font-bold text-slate-200 block text-xs">{currencySymbol}{stat.total.toFixed(2)} <span className="text-slate-500 font-normal">/ {currencySymbol}{catLimit.toFixed(2)}</span></span>
+                              <span className="text-[10px] text-slate-400 font-semibold block group-hover:text-emerald-400 transition-colors">({share}%) →</span>
                             </div>
                           </div>
                           <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
                             <div 
                               className={`h-full rounded-full transition-all group-hover:brightness-110 ${
                                 share >= 100 ? 'bg-rose-500' :
-                                share >= 85 ? 'bg-amber-500' : 'bg-green-500'
+                                share >= 85 ? 'bg-amber-500' : 'bg-emerald-500'
                               }`} 
                               style={{ width: `${Math.min(share, 100)}%` }} 
                             />
@@ -3882,15 +3882,15 @@ Date: ${new Date().toLocaleString()}
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Income</span>
-                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 py-0.2 rounded font-mono">
+                          <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-bold px-1.5 py-0.5 rounded font-sans">
                             {incomeStreams.length} SOURCES
                           </span>
                         </div>
-                        <p className="text-[9px] text-gray-400 mt-0.5">Primary salary, side income, investments</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Primary salary, side income, investments</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-extrabold font-mono text-emerald-400">
+                      <span className="text-sm font-extrabold tnum text-emerald-400">
                         {currencySymbol}{totalIncome.toLocaleString()}
                       </span>
                       {accordionOpen.income ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
@@ -4042,15 +4042,15 @@ Date: ${new Date().toLocaleString()}
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Known Expenses</span>
-                          <span className="text-[8px] bg-sky-500/10 text-sky-400 font-bold px-1 py-0.2 rounded font-mono">
+                          <span className="text-[9px] bg-sky-500/10 text-sky-400 font-bold px-1.5 py-0.5 rounded font-sans">
                             {fixedExpenses.length} ITEMS
                           </span>
                         </div>
-                        <p className="text-[9px] text-gray-400 mt-0.5">Recurring commitments, housing & taxes</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Recurring commitments, housing & taxes</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-extrabold font-mono text-sky-400">
+                      <span className="text-sm font-extrabold tnum text-sky-400">
                         {currencySymbol}{totalFixed.toLocaleString()}
                       </span>
                       {accordionOpen.fixed ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
@@ -4448,17 +4448,17 @@ Date: ${new Date().toLocaleString()}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3.5 pt-1">
-                    <div className="p-2.5 rounded-xl bg-white/2 border border-white/5 text-left">
-                      <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Saved</span>
-                      <span className="text-sm font-black text-pink-400 font-mono">{currencySymbol}{totalSavedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="block text-[8px] text-gray-400 mt-0.5">Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)</span>
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-left">
+                      <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Total Saved</span>
+                      <span className="text-base font-extrabold text-pink-400 tnum block">{currencySymbol}{totalSavedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="block text-[10.5px] text-gray-400 mt-1">Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/2 border border-white/5 text-left">
-                      <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Combined Allocations</span>
-                      <span className={`text-sm font-black font-mono ${totalAllocationPercent === 100 ? "text-emerald-400" : "text-rose-400"}`}>{totalAllocationPercent}%</span>
-                      <span className="block text-[8px] text-gray-400 mt-0.5">
-                        {totalAllocationPercent === 100 ? "✅ Perfectly balanced" : "⚠️ Must equal 100%"}
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-left">
+                      <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Combined Allocations</span>
+                      <span className={`text-base font-extrabold tnum block ${totalAllocationPercent === 100 ? "text-emerald-400" : "text-rose-400"}`}>{totalAllocationPercent}%</span>
+                      <span className="block text-[10.5px] text-gray-400 mt-1">
+                        {totalAllocationPercent === 100 ? "✅ Balanced" : "⚠️ Must equal 100%"}
                       </span>
                     </div>
                   </div>
@@ -4595,7 +4595,7 @@ Date: ${new Date().toLocaleString()}
                               </div>
                               
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-[11px] sm:text-xs bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2 py-1 rounded-lg font-mono font-bold">
+                                <span className="text-xs bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2.5 py-1 rounded-lg font-bold tnum">
                                   {percentSaved}% Saved
                                 </span>
                                 <button 
@@ -4619,29 +4619,29 @@ Date: ${new Date().toLocaleString()}
                             <div className="grid grid-cols-3 gap-2.5 w-full pt-1.5">
                               {/* Desired target input */}
                               <div className="flex flex-col gap-1 text-left">
-                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Target</span>
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide pl-0.5">Target</span>
                                 <DirectAmountInput 
                                   initialValue={parseFloat(item.targetAmount as any) || 0}
                                   onUpdate={(val) => handleUpdateSavingsGoal(item.id, { targetAmount: val })}
                                   currencySymbol={currencySymbol}
-                                  className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
+                                  className="w-full pl-5 pr-1.5 py-2 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-sm tnum text-left font-bold text-white transition-colors focus:bg-black/60"
                                 />
                               </div>
 
                               {/* Current saved amount input (Editable - allow moving funds between goals) */}
                               <div className="flex flex-col gap-1 text-left">
-                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Saved</span>
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide pl-0.5">Saved</span>
                                 <DirectAmountInput 
                                   initialValue={curAmt}
                                   onUpdate={(val) => handleUpdateSavingsGoal(item.id, { currentAmount: Math.max(0, val) })}
                                   currencySymbol={currencySymbol}
-                                  className="w-full pl-5 pr-1.5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
+                                  className="w-full pl-5 pr-1.5 py-2 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-sm tnum text-left font-extrabold text-pink-300 transition-colors focus:bg-black/60"
                                 />
                               </div>
 
                               {/* Allocation percent input */}
                               <div className="flex flex-col gap-1 text-left">
-                                <span className="text-[8px] text-gray-400 font-extrabold uppercase tracking-widest pl-0.5">Alloc</span>
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide pl-0.5">Alloc</span>
                                 <DirectAmountInput 
                                   initialValue={parseFloat(item.allocationPercent as any) || 0}
                                   onUpdate={(val) => {
@@ -4658,7 +4658,7 @@ Date: ${new Date().toLocaleString()}
                                   }}
                                   isPercent={true}
                                   max={100}
-                                  className="w-full pl-2 pr-5 py-1.5 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-[13px] font-mono text-left font-bold text-white transition-colors focus:bg-black/60"
+                                  className="w-full pl-2 pr-5 py-2 bg-black/45 border border-white/5 focus:border-pink-500/50 outline-none rounded-lg text-sm tnum text-left font-bold text-white transition-colors focus:bg-black/60"
                                 />
                               </div>
                             </div>

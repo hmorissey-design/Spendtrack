@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
 html, body {
@@ -7,6 +7,15 @@ html, body {
   padding: 0;
   overflow: hidden;
   background-color: #0A0A0A;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern Tabular Figures for Accounting & Numbers */
+.tnum, .font-numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
 }
 
 :root {
@@ -26,8 +35,8 @@ html, body {
 
 @theme {
   --font-serif: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Inter", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "Inter", system-ui, sans-serif; /* Modernized numbers */
 
   /* Dynamically map Tailwind emerald utility colors to custom CSS variables! */
   --color-emerald-50: var(--accent-50);

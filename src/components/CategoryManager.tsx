@@ -414,12 +414,12 @@ export function CategoryManager({
                       </div>
 
                       {cat.id === 'cat_uncategorized' ? (
-                        <span className="text-[11px] text-gray-400 font-medium block mt-0.5 font-sans italic">
+                        <span className="text-xs text-slate-400 font-medium block mt-0.5 font-sans italic">
                           No Budget Limit
                         </span>
                       ) : (
-                        <span className="text-[11px] text-emerald-400 font-bold font-mono block mt-0.5">
-                          {isFixed ? 'Commitment' : 'Budget Limit'}: <span className="text-xs font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
+                        <span className="text-xs text-emerald-400 font-bold block mt-0.5 tnum">
+                          {isFixed ? 'Commitment' : 'Budget Limit'}: <span className="text-sm font-extrabold">{currencySymbol}{displayLimit.toLocaleString()}</span>
                         </span>
                       )}
                     </div>
