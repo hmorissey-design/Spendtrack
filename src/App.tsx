@@ -383,6 +383,11 @@ export default function App() {
       const success = params.get('success');
       const status = params.get('status');
       const plan = params.get('plan');
+      const action = params.get('action');
+
+      if (action === 'add') {
+        setShowAddForm(true);
+      }
 
       const isSuccessSignal = payment === 'success' || success === 'true' || status === 'success' || Boolean(plan);
 
@@ -433,7 +438,34 @@ export default function App() {
     return getLocalMonthString(); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [openAddOnLaunch, setOpenAddOnLaunch] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('expensetrack_open_add_on_launch');
+      return saved === null ? true : saved === 'true';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const handleOpenAddOnLaunchChange = (val: boolean) => {
+    try {
+      localStorage.setItem('expensetrack_open_add_on_launch', String(val));
+    } catch (e) {}
+    setOpenAddOnLaunch(val);
+  };
+
+  const [showAddForm, setShowAddForm] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'add') {
+        return true;
+      }
+      const saved = localStorage.getItem('expensetrack_open_add_on_launch');
+      return saved === null ? true : saved === 'true';
+    } catch (e) {
+      return true;
+    }
+  });
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
@@ -3848,6 +3880,8 @@ Date: ${new Date().toLocaleString()}
                 isCloudSynced={!!currentUser}
                 onWipeCloudDatabase={handleWipeCloudDatabase}
                 onOpenCategoryManager={() => setShowCategoryManager(true)}
+                openAddOnLaunch={openAddOnLaunch}
+                onOpenAddOnLaunchChange={handleOpenAddOnLaunchChange}
               />
             </div>
           )}
