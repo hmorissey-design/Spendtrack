@@ -76,7 +76,7 @@ class DeepLinkManagerService {
       // Determine action from path or query
       const action = searchParams.get('action') || (pathname.includes('add') ? 'add' : pathname.includes('transaction') ? 'transaction' : 'add');
 
-      // 1. Natural Language Voice Query (e.g. from Google Assistant, Gemini voice routines, or speech dictation)
+      // 1. Natural Language Voice Query (e.g. from shortcuts, Tasker, Macrodroid, or speech dictation)
       const voiceText = searchParams.get('text') || searchParams.get('q') || searchParams.get('speech') || searchParams.get('voice') || searchParams.get('prompt') || searchParams.get('query');
       
       let amount: number | undefined = undefined;

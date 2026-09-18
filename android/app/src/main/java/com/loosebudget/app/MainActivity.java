@@ -9,22 +9,20 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WalletBridgePlugin.class);
-        handleVoiceIntent(getIntent());
+        handleIncomingIntent(getIntent());
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onNewIntent(Intent intent) {
-        handleVoiceIntent(intent);
+        handleIncomingIntent(intent);
         super.onNewIntent(intent);
     }
 
-    private void handleVoiceIntent(Intent intent) {
+    private void handleIncomingIntent(Intent intent) {
         if (intent == null) return;
         String action = intent.getAction();
-        if ("android.intent.action.CREATE_NOTE".equals(action) ||
-            "com.google.android.gms.actions.CREATE_NOTE".equals(action) ||
-            Intent.ACTION_SEND.equals(action)) {
+        if (Intent.ACTION_SEND.equals(action)) {
             String text = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (text == null) {
                 text = intent.getStringExtra(Intent.EXTRA_SUBJECT);

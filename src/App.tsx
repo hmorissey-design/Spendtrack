@@ -45,8 +45,8 @@ import {
   Lock,
   Cloud,
   Smartphone,
-  Zap,
-  Bell
+  Bell,
+  Mic
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -62,6 +62,7 @@ import { AuthModal } from './components/AuthModal';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { FirstTimeVendorModal } from './components/FirstTimeVendorModal';
 import { WalletSyncModal } from './components/WalletSyncModal';
+import { VoiceExpenseModal } from './components/VoiceExpenseModal';
 import { 
   parseNotificationText, 
   suggestCategoryForVendor, 
@@ -351,6 +352,7 @@ export default function App() {
 
   // Digital Wallet & Notification Monitoring states
   const [showWalletSyncModal, setShowWalletSyncModal] = useState<boolean>(false);
+  const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
   const [firstTimeVendorData, setFirstTimeVendorData] = useState<{
     vendorName: string;
     amount: number;
@@ -361,14 +363,6 @@ export default function App() {
     suggestedCategoryId: string;
     rawText: string;
     notifId?: string;
-  } | null>(null);
-
-  const [autoPostToast, setAutoPostToast] = useState<{
-    message: string;
-    vendor: string;
-    amount: number;
-    categoryName: string;
-    expenseId: string;
   } | null>(null);
 
   // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state & Dev Mode
@@ -1592,8 +1586,28 @@ Date: ${new Date().toLocaleString()}
     LocalDb.setDefaultCategoryId(id);
     setDefaultCategoryIdState(id);
   };
-  const handleAddExpense = (newExpenseData: Omit<Expense, 'id' | 'createdAt'>) => {
-    LocalDb.addExpense(newExpenseData);
+  const handleAddExpense = (newExpenseData: Omit<Expense, 'id' | 'createdAt'>): Expense => {
+    const created = LocalDb.addExpense(newExpenseData);
+
+    // Auto-learn vendor rule if note specifies a merchant name
+    const rawNote = newExpenseData.note?.trim();
+    if (rawNote && !newExpenseData.category.startsWith('SAVINGS_')) {
+      let cleaned = cleanVendorName(rawNote);
+      cleaned = cleaned.replace(/^(spent|paid|bought|add|note|log|cost|expense|for|in)\s+/i, '').trim();
+      if (cleaned && cleaned.length >= 2 && !/^\d+$/.test(cleaned) && !/^(cash|card|dollars?|bucks?)$/i.test(cleaned)) {
+        try {
+          LocalDb.saveVendorRule({
+            vendorPattern: cleaned.toLowerCase().trim(),
+            displayName: cleaned.trim(),
+            categoryId: newExpenseData.category,
+            autoPost: true
+          });
+        } catch (e) {
+          console.warn('Could not auto-save learned vendor rule:', e);
+        }
+      }
+    }
+
     if (newExpenseData.category.startsWith('SAVINGS_')) {
       const goalId = newExpenseData.category.substring(8);
       updateAndSyncSavingsGoals(prev => prev.map(goal => {
@@ -1611,6 +1625,7 @@ Date: ${new Date().toLocaleString()}
       loadDatabaseState(selectedMonth);
     }
     setShowAddForm(false);
+    return created;
   };
 
   // Process raw payment notification text (from Native Android, Webhook polling, or manual simulator/paste)
@@ -1679,19 +1694,6 @@ Date: ${new Date().toLocaleString()}
           detectedAt: Date.now()
         });
 
-        // Show deduplication toast notification
-        setAutoPostToast({
-          message: `🛡️ Duplicate Filtered: ${parsed.vendor} (${currencySymbol}${parsed.amount.toFixed(2)}) was already captured ${dupCheck.timeDiffSeconds}s ago via ${dupCheck.matchedTransaction?.source || 'another alert'}.`,
-          vendor: parsed.vendor,
-          amount: parsed.amount,
-          categoryName: 'Duplicate Shield',
-          expenseId: 'duplicate'
-        });
-
-        setTimeout(() => {
-          setAutoPostToast(prev => prev?.expenseId === 'duplicate' ? null : prev);
-        }, 6000);
-
         return;
       }
     }
@@ -1751,19 +1753,6 @@ Date: ${new Date().toLocaleString()}
       }
 
       loadDatabaseState(selectedMonth);
-
-      // Show auto-post toast with instant Undo action
-      setAutoPostToast({
-        message: `⚡ Auto-Posted ${currencySymbol}${parsed.amount.toFixed(2)} at ${existingRule.displayName} to ${targetCatName}`,
-        vendor: existingRule.displayName,
-        amount: parsed.amount,
-        categoryName: targetCatName,
-        expenseId: added.id
-      });
-
-      setTimeout(() => {
-        setAutoPostToast(prev => prev?.expenseId === added.id ? null : prev);
-      }, 7000);
     } else {
       // First time vendor OR autoPost was disabled by user: Prompt user to set category & auto-post choice
       const suggestedCategory = existingRule 
@@ -1853,25 +1842,6 @@ Date: ${new Date().toLocaleString()}
 
     setFirstTimeVendorData(null);
     loadDatabaseState(selectedMonth);
-
-    // Toast notification
-    setAutoPostToast({
-      message: `Recorded ${currencySymbol}${data.amount.toFixed(2)} at ${data.vendorName} • Future auto-post: ${data.autoPost ? 'Active' : 'Off'}`,
-      vendor: data.vendorName,
-      amount: data.amount,
-      categoryName: targetCatName,
-      expenseId: added.id
-    });
-
-    setTimeout(() => {
-      setAutoPostToast(null);
-    }, 5000);
-  };
-
-  const handleUndoAutoPost = (expenseId: string) => {
-    LocalDb.deleteExpense(expenseId);
-    setAutoPostToast(null);
-    loadDatabaseState(selectedMonth);
   };
 
   // Webhook Polling for incoming payment notifications
@@ -1934,7 +1904,7 @@ Date: ${new Date().toLocaleString()}
   }, [categories, selectedMonth, currencySymbol]);
 
   // Deep Link URL Scheme Listener (expensetrack://add or https://.../?action=add)
-  // Supports Google Assistant routines, Tasker, Macrodroid, and voice prompts
+  // Supports quick shortcuts, Tasker, Macrodroid, and voice prompts
   useEffect(() => {
     const unsubDeepLink = DeepLinkManager.subscribe((payload: DeepLinkExpensePayload) => {
       console.log('Received deep link in App:', payload);
@@ -1970,21 +1940,6 @@ Date: ${new Date().toLocaleString()}
         if (user) {
           CloudDb.saveExpenseToCloud(user.uid, added).catch(console.error);
         }
-
-        const catName = categories.find(c => c.id === chosenCatId)?.name || 'Uncategorized';
-
-        setAutoPostToast({
-          message: `🎙️ Voice / Shortcut Logged: ${vendorName} (${currencySymbol}${payload.amount.toFixed(2)}) → ${catName}.`,
-          vendor: vendorName,
-          amount: payload.amount,
-          categoryName: catName,
-          expenseId: added.id
-        });
-
-        setTimeout(() => {
-          setAutoPostToast(prev => prev?.expenseId === added.id ? null : prev);
-        }, 6000);
-
       } else {
         // 2. Pre-fill Add Expense modal so user can confirm or customize
         const prefillData: any = {};
@@ -2051,6 +2006,26 @@ Date: ${new Date().toLocaleString()}
       }
 
       LocalDb.updateExpense(fullUpdatedExpense);
+
+      // Auto-learn this merchant name and category so user never has to re-categorize it again!
+      const rawVendorName = (updatedData.note || prevExpense.note || '').trim();
+      if (rawVendorName && !updatedData.category.startsWith('SAVINGS_')) {
+        let cleaned = cleanVendorName(rawVendorName);
+        cleaned = cleaned.replace(/^(spent|paid|bought|add|note|log|cost|expense|for|in)\s+/i, '').trim();
+        if (cleaned && cleaned.length >= 2 && !/^\d+$/.test(cleaned) && !/^(cash|card|dollars?|bucks?)$/i.test(cleaned)) {
+          try {
+            LocalDb.saveVendorRule({
+              vendorPattern: cleaned.toLowerCase().trim(),
+              displayName: cleaned.trim(),
+              categoryId: updatedData.category,
+              autoPost: true
+            });
+          } catch (e) {
+            console.warn('Could not save learned vendor rule:', e);
+          }
+        }
+      }
+
       const dateMonth = updatedData.date.substring(0, 7); // Get "YYYY-MM"
       if (dateMonth !== selectedMonth) {
         setSelectedMonth(dateMonth);
@@ -2781,6 +2756,17 @@ Date: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 relative z-50 shrink-0">
+            {/* Quick 1-Tap Voice Log Trigger */}
+            <button
+              onClick={() => setShowVoiceModal(true)}
+              className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0 shadow-sm"
+              title="Quick Voice Log (Speak to record expense)"
+              id="btn_voice_log_header"
+            >
+              <Mic size={12} className="text-indigo-400 stroke-[2.5] shrink-0" />
+              <span className="font-sans">Voice</span>
+            </button>
+
             {/* Membership / Trial Status Badge */}
             <button
               onClick={() => setShowSubscriptionModal(true)}
@@ -5311,11 +5297,23 @@ Date: ${new Date().toLocaleString()}
 
         {/* Dynamic bottom floating CTA trigger for quick accessibility */}
         {activeTab !== 'budget_plan' && activeTab !== 'dev_hub' && activeTab !== 'help' && activeTab !== 'budget_full' && (
-          <div className="absolute right-5 bottom-18 z-20">
+          <div className="absolute right-5 bottom-18 z-20 flex flex-col items-center gap-2.5">
+            {/* 1-Tap Voice Log Floating Button */}
+            <button
+              onClick={() => setShowVoiceModal(true)}
+              className="bg-gradient-to-tr from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 text-white p-3 rounded-full shadow-xl hover:shadow-indigo-500/25 transition-all cursor-pointer flex items-center justify-center border border-indigo-400/30 outline-hidden focus:ring-4 focus:ring-indigo-500/30 group"
+              title="Speak to Log Expense (1-Tap Voice)"
+              id="btn_voice_log_floating"
+            >
+              <Mic size={20} className="stroke-[2.5] group-hover:scale-110 transition-transform" />
+            </button>
+
+            {/* Regular Add Expense Floating Button */}
             <button
               onClick={() => setShowAddForm(true)}
               className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center border-0 outline-hidden focus:ring-4 focus:ring-emerald-500/20"
               title="Add Daily Spending Expense"
+              id="btn_add_expense_floating"
             >
               <Plus size={22} className="stroke-[3]" />
             </button>
@@ -6101,48 +6099,6 @@ Date: ${new Date().toLocaleString()}
         }}
       />
 
-      {/* Auto-Post Floating Toast Banner with Undo */}
-      {autoPostToast && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md animate-in slide-in-from-top-4 duration-300">
-          <div className="bg-[#141816] border border-emerald-500/40 rounded-2xl p-3.5 shadow-2xl shadow-emerald-950/50 flex items-center justify-between gap-3 text-slate-100">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400">
-                <Zap size={16} />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-black uppercase text-emerald-400 tracking-wider">
-                    Auto-Posted
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-mono">
-                    {currencySymbol}{autoPostToast.amount.toFixed(2)}
-                  </span>
-                </div>
-                <p className="text-xs font-bold text-white truncate">
-                  {autoPostToast.vendor} <span className="text-emerald-400 font-normal">→ {autoPostToast.categoryName}</span>
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleUndoAutoPost(autoPostToast.expenseId)}
-                className="px-2.5 py-1 bg-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 text-slate-200 border border-white/15 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
-              >
-                Undo
-              </button>
-              <button
-                type="button"
-                onClick={() => setAutoPostToast(null)}
-                className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border-0 bg-transparent"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Digital Wallet Sync Hub Modal */}
       {showWalletSyncModal && (
         <WalletSyncModal
@@ -6179,6 +6135,29 @@ Date: ${new Date().toLocaleString()}
               }).catch(() => {});
             }
             setFirstTimeVendorData(null);
+          }}
+        />
+      )}
+
+      {/* 1-Tap Voice Expense Modal */}
+      {showVoiceModal && (
+        <VoiceExpenseModal
+          isOpen={showVoiceModal}
+          onClose={() => setShowVoiceModal(false)}
+          categories={categories}
+          savingsGoals={savingsGoals}
+          currencySymbol={currencySymbol}
+          onConfirmExpense={(expense) => {
+            handleAddExpense(expense);
+          }}
+          onOpenFullFormWithPrefill={(prefill) => {
+            setDeepLinkPrefill({
+              amount: prefill.amount,
+              note: prefill.vendor || prefill.note,
+              category: prefill.category,
+              paymentMethod: prefill.paymentMethod
+            });
+            setShowAddForm(true);
           }}
         />
       )}

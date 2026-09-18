@@ -31,6 +31,16 @@ export interface MonthlyBudget {
   categoryLimits?: Record<string, number>; // Optional category-specific limits
 }
 
+export interface SavingsGoal {
+  id: string;
+  label: string;
+  amount: number;
+  targetAmount?: number;
+  currentAmount?: number;
+  allocationPercent?: number;
+  isHidden?: boolean;
+}
+
 export type ActiveTab = 'dashboard' | 'history' | 'analytics' | 'budget_plan' | 'help' | 'dev_hub' | 'budget_full' | 'savings';
 
 export type PlanTier = 'free_preview' | 'trial' | 'monthly' | 'yearly';

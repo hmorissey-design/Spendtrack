@@ -4,6 +4,7 @@
  */
 
 import { WalletSource } from '../types';
+import { LocalDb } from './db';
 
 export interface ParsedNotification {
   vendor: string;
@@ -54,6 +55,14 @@ export function cleanVendorName(raw: string): string {
   clean = clean.replace(/[_\-*#]+/g, ' ');
   clean = clean.replace(/^["'“”‘’«»`:\-•\s]+|["'“”‘’«»`:\-•\s]+$/g, '');
   clean = clean.replace(/\s{2,}/g, ' ').trim();
+
+  // Strip leading articles like "the " (e.g. "the Superstore" -> "Superstore")
+  if (/^(?:the|a|an)\s+/i.test(clean)) {
+    const stripped = clean.replace(/^(?:the|a|an)\s+/i, '').trim();
+    if (stripped.length >= 2) {
+      clean = stripped;
+    }
+  }
 
   // Convert ALL CAPS or all lower to Title Case for elegant presentation
   if (clean.length > 0) {
@@ -280,41 +289,70 @@ export function parseNotificationText(
 }
 
 /**
- * Recommends the best category for a newly detected merchant
+ * Recommends the best category for a newly detected merchant.
+ * Checks user's custom learned rules first, then applies smart merchant heuristics.
  */
 export function suggestCategoryForVendor(
   vendor: string, 
   categories: { id: string; name: string }[]
 ): string {
+  if (!vendor || !categories.length) {
+    return categories[0]?.id || 'cat_uncategorized';
+  }
+
+  // 1. Check user's previously learned custom vendor rules FIRST
+  try {
+    const learnedRule = LocalDb.findVendorRule(vendor);
+    if (learnedRule && categories.some(c => c.id === learnedRule.categoryId)) {
+      return learnedRule.categoryId;
+    }
+  } catch (e) {
+    console.warn('Error querying vendor rule:', e);
+  }
+
   const v = (vendor || '').toLowerCase();
 
   const rules: { keywords: string[]; targetCategoryKeywords: string[] }[] = [
     {
-      keywords: ['coffee', 'starbucks', 'dunkin', 'peet', 'tim hortons', 'espresso', 'cafe', 'roasters', 'caribou'],
+      keywords: ['coffee', 'starbucks', 'dunkin', 'peet', 'tim hortons', 'tims', 'espresso', 'cafe', 'roasters', 'caribou'],
       targetCategoryKeywords: ['coffee']
     },
     {
-      keywords: ['grocery', 'groceries', 'market', 'trader joe', 'whole foods', 'safeway', 'kroger', 'aldi', 'publix', 'costco', 'supermarket', 'wegmans', 'heb', 'sprouts', 'walmart'],
+      // Includes US & Canadian grocers (Superstore, Loblaws, Sobeys, Metro, No Frills, etc.)
+      keywords: [
+        'grocery', 'groceries', 'market', 'superstore', 'real canadian superstore', 'loblaw', 'loblaws', 
+        'no frills', 'sobeys', 'metro', 'fortinos', 'zehrs', 'food basics', 'freshco', 'iga', 
+        'save-on-foods', 'farm boy', 'giant tiger', 'trader joe', 'whole foods', 'safeway', 
+        'kroger', 'aldi', 'publix', 'costco', 'supermarket', 'wegmans', 'heb', 'sprouts', 'walmart'
+      ],
       targetCategoryKeywords: ['groceries', 'grocery']
     },
     {
-      keywords: ['gas', 'fuel', 'shell', 'chevron', 'exxon', 'mobil', 'bp', 'citgo', 'texaco', 'speedway', 'wawa', 'circle k', 'auto', 'oil', 'valvoline', 'jiffy lube'],
+      keywords: ['gas', 'fuel', 'shell', 'chevron', 'exxon', 'mobil', 'bp', 'citgo', 'texaco', 'speedway', 'wawa', 'circle k', 'petro-canada', 'esso', 'husky', 'auto', 'oil', 'valvoline', 'jiffy lube'],
       targetCategoryKeywords: ['gas', 'auto']
     },
     {
-      keywords: ['mcdonald', 'burger king', 'wendy', 'taco bell', 'chipotle', 'chick-fil-a', 'kfc', 'popeyes', 'subway', 'domino', 'pizza hut', 'panda express', 'doordash', 'uber eats', 'grubhub', 'delivery', 'five guys', 'in-n-out', 'fast food'],
+      keywords: ['mcdonald', 'burger king', 'wendy', 'taco bell', 'chipotle', 'chick-fil-a', 'kfc', 'popeyes', 'subway', 'domino', 'pizza hut', 'panda express', 'doordash', 'uber eats', 'grubhub', 'delivery', 'five guys', 'in-n-out', 'fast food', 'harveys', 'aw'],
       targetCategoryKeywords: ['fast food', 'delivery']
     },
     {
-      keywords: ['restaurant', 'bistro', 'diner', 'grill', 'steakhouse', 'sushi', 'tavern', 'kitchen', 'trattoria', 'cantina', 'bbq', 'ramen', 'thai', 'pho'],
+      keywords: ['restaurant', 'bistro', 'diner', 'grill', 'steakhouse', 'sushi', 'tavern', 'kitchen', 'trattoria', 'cantina', 'bbq', 'ramen', 'thai', 'pho', 'keg'],
       targetCategoryKeywords: ['restaurant']
     },
     {
-      keywords: ['bar', 'pub', 'brewery', 'brewing', 'lounge', 'tavern', 'taproom', 'beer', 'wine', 'spirits', 'liquor', 'beverage', 'beverage room', 'cheers', 'cocktail', 'saloon', 'drinks'],
+      keywords: ['bar', 'pub', 'brewery', 'brewing', 'lounge', 'tavern', 'taproom', 'beer', 'wine', 'spirits', 'liquor', 'beverage', 'beverage room', 'cheers', 'cocktail', 'saloon', 'drinks', 'lcbo', 'the beer store', 'beer store', 'saq', 'bcl'],
       targetCategoryKeywords: ['bar', 'beer', 'drinks', 'entertainment', 'restaurant']
     },
     {
-      keywords: ['netflix', 'spotify', 'apple music', 'hulu', 'disney', 'cinema', 'amc', 'regal', 'theatre', 'steam', 'playstation', 'nintendo', 'ticketmaster', 'concert', 'hbo', 'youtube'],
+      keywords: ['pharmacy', 'drug', 'shoppers drug mart', 'rexall', 'cvs', 'walgreens', 'health', 'clinic', 'dentist'],
+      targetCategoryKeywords: ['health', 'medical', 'pharmacy']
+    },
+    {
+      keywords: ['canadian tire', 'dollarama', 'target', 'home depot', 'lowes', 'rona', 'hardware', 'ikea'],
+      targetCategoryKeywords: ['home', 'shopping', 'business', 'groceries']
+    },
+    {
+      keywords: ['netflix', 'spotify', 'apple music', 'hulu', 'disney', 'cinema', 'amc', 'cineplex', 'regal', 'theatre', 'steam', 'playstation', 'nintendo', 'ticketmaster', 'concert', 'hbo', 'youtube'],
       targetCategoryKeywords: ['entertainment']
     },
     {

@@ -587,56 +587,60 @@ export function WalletSyncModal({
                 </div>
               </div>
 
-              {/* GOOGLE ASSISTANT / GEMINI & VOICE SHORTCUTS */}
-              <div className="p-4 bg-gradient-to-br from-indigo-950/40 via-black to-blue-950/20 border border-indigo-500/30 rounded-2xl space-y-3 shadow-lg">
+              {/* 1-TAP IN-APP VOICE ENTRY & SMART MERCHANT LEARNING */}
+              <div className="p-4 bg-gradient-to-br from-emerald-950/40 via-black to-indigo-950/20 border border-emerald-500/30 rounded-2xl space-y-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🎙️</span>
                   <div>
                     <h4 className="text-xs font-black text-white uppercase tracking-wider">
-                      Google Assistant &amp; Gemini Voice Bridge
+                      1-Tap In-App Voice &amp; Merchant Learning
                     </h4>
-                    <p className="text-[10px] text-indigo-400 font-semibold">
-                      Zero configuration required • Powered by native Android intents
+                    <p className="text-[10px] text-emerald-400 font-semibold">
+                      Direct voice recording • Auto-enters in 1.2s • Learns your merchants
                     </p>
                   </div>
                 </div>
 
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  No manual routines or configuration needed. Because LooseBudget registers native Android system actions, you can trigger transactions directly through your phone's voice assistant.
+                  Record expenses instantly without opening submenus. Tap the <strong className="text-white">🎙️ Microphone button</strong> on your main dashboard or bottom bar, speak naturally, and LooseBudget automatically parses and logs the transaction.
                 </p>
 
+                {/* Merchant Learning Card */}
+                <div className="p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-xl space-y-1.5 text-left">
+                  <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🧠</span> Smart Merchant Memory
+                  </p>
+                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                    When you speak a local or custom merchant (like <span className="text-white font-medium">&ldquo;Superstore&rdquo;</span>) and edit or confirm its category once (e.g. to <strong className="text-emerald-400">Groceries</strong>), LooseBudget automatically memorizes it. Future entries for that merchant will automatically categorize accurately without you needing to change it again.
+                  </p>
+                </div>
+
+                {/* Example Voice Phrases */}
                 <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-2 text-left">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Zero-Setup Voice Commands:</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Example Voice Commands:</p>
                   <ul className="text-xs text-gray-200 space-y-1.5 pl-0.5">
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-400 font-mono text-xs">💬</span>
                       <div>
-                        <strong className="text-white">&ldquo;Hey Google, open LooseBudget and add $15&rdquo;</strong>
-                        <p className="text-[10px] text-gray-400">Opens the app with $15 pre-filled and suggests categories.</p>
+                        <strong className="text-white">&ldquo;Spent $2 at the Superstore&rdquo;</strong>
+                        <p className="text-[10px] text-gray-400">Extracts $2.00, matches Superstore, and applies your learned Groceries category.</p>
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-indigo-400 font-mono text-xs">💬</span>
                       <div>
-                        <strong className="text-white">&ldquo;Hey Google, note $14.50 at Subway in LooseBudget&rdquo;</strong>
-                        <p className="text-[10px] text-gray-400">Routes through Android's native note action directly to the app.</p>
+                        <strong className="text-white">&ldquo;Starbucks 6 dollars&rdquo;</strong>
+                        <p className="text-[10px] text-gray-400">Logs $6.00 under Coffee &amp; Snacks.</p>
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-amber-400 font-mono text-xs">💬</span>
                       <div>
-                        <strong className="text-white">&ldquo;Hey Google, open LooseBudget&rdquo;</strong>
-                        <p className="text-[10px] text-gray-400">Launches the dashboard immediately.</p>
+                        <strong className="text-white">&ldquo;Gas 45 dollars cash&rdquo;</strong>
+                        <p className="text-[10px] text-gray-400">Extracts $45.00, sets Transportation, and logs as cash payment.</p>
                       </div>
                     </li>
                   </ul>
-                </div>
-
-                <div className="p-3 bg-indigo-950/20 border border-indigo-500/20 rounded-xl space-y-1.5 text-left">
-                  <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">Why Gemini says &ldquo;No permission to post&rdquo;:</p>
-                  <p className="text-[11px] text-gray-300 leading-relaxed">
-                    If your phone uses <strong>Gemini</strong> as the default assistant, Gemini interprets the word <code className="text-amber-300 font-mono text-[10px]">&quot;post&quot;</code> as an external web/cloud API service (like posting to social media or Google Workspace) rather than launching an installed app. Saying <strong className="text-white">&ldquo;Open LooseBudget and add...&rdquo;</strong> or <strong className="text-white">&ldquo;Note in LooseBudget...&rdquo;</strong> tells Gemini to pass control directly to the local Android app without needing any cloud extensions.
-                  </p>
                 </div>
               </div>
 

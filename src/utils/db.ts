@@ -1016,14 +1016,27 @@ export const LocalDb = {
   findVendorRule(vendorName: string): VendorRule | null {
     if (!vendorName) return null;
     const rules = this.getVendorRules();
-    const normalized = vendorName.toLowerCase().trim();
+    if (!rules || rules.length === 0) return null;
+
+    const cleanInput = vendorName.toLowerCase().trim();
+    // Normalize by removing leading articles, punctuation, apostrophes
+    const stripArticle = (s: string) => s.replace(/^(?:the|at|a|an)\s+/i, '').replace(/['’]/g, '').trim();
+    const normalized = stripArticle(cleanInput);
 
     // 1. Exact pattern match
-    let found = rules.find(r => r.vendorPattern === normalized);
+    let found = rules.find(r => stripArticle(r.vendorPattern) === normalized);
     if (found) return found;
 
-    // 2. Substring or includes match (e.g. "starbucks #12" matches rule "starbucks")
-    found = rules.find(r => normalized.includes(r.vendorPattern) || r.vendorPattern.includes(normalized));
+    // 2. Direct case-insensitive match on original string
+    found = rules.find(r => r.vendorPattern === cleanInput);
+    if (found) return found;
+
+    // 3. Substring or includes match (e.g. "superstore #12" matches rule "superstore")
+    found = rules.find(r => {
+      const p = stripArticle(r.vendorPattern);
+      if (!p || p.length < 3) return false;
+      return normalized.includes(p) || p.includes(normalized);
+    });
     return found || null;
   },
 
