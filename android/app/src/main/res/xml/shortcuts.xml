@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Static App Launcher Shortcut for 1-Tap Quick Add -->
+    <shortcut
+        android:shortcutId="add_expense_shortcut"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_add_expense_short"
+        android:shortcutLongLabel="@string/shortcut_add_expense_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.loosebudget.app"
+            android:targetClass="com.loosebudget.app.MainActivity"
+            android:data="expensetrack://add" />
+        <categories android:name="android.intent.category.DEFAULT" />
+    </shortcut>
+</shortcuts>
