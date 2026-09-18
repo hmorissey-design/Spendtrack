@@ -24,11 +24,19 @@ interface ExpenseFormProps {
     paymentMethod?: 'cash' | 'card';
   };
   onOpenCategoryManager?: () => void;
-  onOpenWalletSync?: () => void;
 }
 
 const getLocalYYYYMMDD = () => {
   const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getLocalYesterdayYYYYMMDD = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -48,7 +56,7 @@ const getDarkTextColor = (colorStr: string) => {
   return 'text-slate-800';
 };
 
-export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defaultCategoryId, expenseToEdit, initialPrefill, onOpenCategoryManager, onOpenWalletSync }: ExpenseFormProps) {
+export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defaultCategoryId, expenseToEdit, initialPrefill, onOpenCategoryManager }: ExpenseFormProps) {
   const isMobile = useIsMobileDevice();
   const [amount, setAmount] = useState<string>(
     expenseToEdit 
@@ -391,28 +399,6 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
       {errorCode && (
         <div className="mb-2.5 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-lg flex items-start gap-1.5 font-sans">
           <span>⚠️ {errorCode}</span>
-        </div>
-      )}
-
-      {/* Tap-to-pay wallet auto-detect */}
-      {!expenseToEdit && onOpenWalletSync && (
-        <div className="mb-2.5 flex items-center justify-between bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/20 rounded-xl px-3 py-1.5 shadow-xs">
-          <div className="flex items-center gap-2 min-w-0 pr-1">
-            <Smartphone size={13} className="text-emerald-400 shrink-0" />
-            <span className="text-[10px] text-slate-300 truncate">
-              Detect from Google, Apple or Samsung Wallet
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (onClose) onClose();
-              onOpenWalletSync();
-            }}
-            className="text-[9px] font-mono font-black text-emerald-350 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 px-2 py-0.5 rounded-md transition-all cursor-pointer shrink-0 uppercase tracking-wider"
-          >
-            Auto-Detect ⚡
-          </button>
         </div>
       )}
 

@@ -64,16 +64,18 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- Native Background Transaction Notification Listener Service -->
-        <service
-            android:name=".WalletNotificationService"
-            android:label="LooseBudget Wallet &amp; Banking Transaction Listener"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        <!-- Home Screen Widget: Remaining Budget & 1-Tap Voice Entry -->
+        <receiver
+            android:name=".BudgetVoiceWidgetProvider"
+            android:label="LooseBudget Remaining &amp; Voice Widget"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-        </service>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_budget_voice_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

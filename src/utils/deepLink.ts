@@ -7,7 +7,8 @@ import { App as CapApp } from '@capacitor/app';
 import { parseNotificationText, suggestCategoryForVendor, cleanVendorName } from './notificationParser';
 
 export interface DeepLinkExpensePayload {
-  action?: string; // 'add' | 'transaction' | 'open'
+  action?: string; // 'add' | 'transaction' | 'open' | 'voice'
+  isVoice?: boolean;
   amount?: number;
   vendor?: string;
   category?: string;
@@ -74,7 +75,8 @@ class DeepLinkManagerService {
       const pathname = url.pathname.toLowerCase();
 
       // Determine action from path or query
-      const action = searchParams.get('action') || (pathname.includes('add') ? 'add' : pathname.includes('transaction') ? 'transaction' : 'add');
+      const isVoiceRequested = pathname.includes('voice') || searchParams.get('voice') === '1' || searchParams.get('action') === 'voice';
+      const action = searchParams.get('action') || (isVoiceRequested ? 'voice' : pathname.includes('add') ? 'add' : pathname.includes('transaction') ? 'transaction' : 'add');
 
       // 1. Natural Language Voice Query (e.g. from shortcuts, Tasker, Macrodroid, or speech dictation)
       const voiceText = searchParams.get('text') || searchParams.get('q') || searchParams.get('speech') || searchParams.get('voice') || searchParams.get('prompt') || searchParams.get('query');
@@ -130,10 +132,11 @@ class DeepLinkManagerService {
       const rawAuto = (searchParams.get('auto') || searchParams.get('save') || searchParams.get('instant') || searchParams.get('autosave') || '').toLowerCase();
       const autoSave = rawAuto === 'true' || rawAuto === '1' || rawAuto === 'yes';
 
-      // If we have an action or amount or vendor or voice text, return the payload
-      if (amount || vendor || voiceText || action === 'add' || isCustomScheme) {
+      // If we have an action or amount or vendor or voice text or isVoice, return the payload
+      if (amount || vendor || voiceText || action === 'add' || action === 'voice' || isVoiceRequested || isCustomScheme) {
         return {
           action,
+          isVoice: isVoiceRequested || action === 'voice',
           amount,
           vendor: vendor || (note ? cleanVendorName(note) : undefined),
           category,
@@ -142,7 +145,7 @@ class DeepLinkManagerService {
           paymentMethod,
           autoSave,
           rawText: voiceText || urlString,
-          source: 'voice_deep_link'
+          source: isVoiceRequested ? 'voice_deep_link' : 'deep_link'
         };
       }
 
