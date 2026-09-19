@@ -47,16 +47,16 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./android/gradlew
 
-      - name: Build Android APKs (Release & Debug)
+      - name: Build Android Release APK
         shell: bash
         run: |
           cd android
-          ./gradlew assembleRelease assembleDebug --stacktrace --no-daemon
+          ./gradlew assembleRelease --stacktrace --no-daemon
 
-      - name: Upload APK Artifacts
+      - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: loosebudget-apk
-          path: android/app/build/outputs/apk/**/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
