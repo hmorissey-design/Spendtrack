@@ -68,3 +68,26 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// Automatically copy the built APK to the web app's public folder
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.doLast {
+            def apkDir = file("$buildDir/outputs/apk")
+            def publicDir = file("$rootDir/../public")
+            if (apkDir.exists() && publicDir.exists()) {
+                fileTree(apkDir).matching {
+                    include "**/*.apk"
+                }.each { apkFile ->
+                    println "Auto-copying APK ${apkFile.name} to ${publicDir}/loosebudget.apk"
+                    copy {
+                        from apkFile
+                        into publicDir
+                        rename { 'loosebudget.apk' }
+                    }
+                }
+            }
+        }
+    }
+}
+
