@@ -4,112 +4,101 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:orientation="vertical"
-    android:padding="14dp">
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="14dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
-    <!-- Top Bar: App Title and Status -->
+    <!-- Left Column: Remaining Budget & Health Status -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/widget_budget_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:orientation="vertical"
         android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="LOOSEBUDGET"
-            android:textColor="#10B981"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <TextView
-            android:id="@+id/widget_status"
+        <!-- Top Row: Remaining Label + Health Status Badge -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="On Track"
-            android:textColor="#A7F3D0"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Main Content Row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="6dp">
-
-        <!-- Left Column: Remaining Budget -->
-        <LinearLayout
-            android:id="@+id/widget_budget_container"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <TextView
+                android:id="@+id/widget_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="REMAINING BUDGET"
+                android:text="REMAINING"
                 android:textColor="#9CA3AF"
                 android:textSize="9sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/widget_remaining_amount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="$--.--"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
                 android:textStyle="bold"
-                android:layout_marginTop="2dp" />
+                android:letterSpacing="0.06" />
 
             <TextView
-                android:id="@+id/widget_budget_subtext"
+                android:id="@+id/widget_bullet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tap to view dashboard"
-                android:textColor="#6B7280"
+                android:text=" • "
+                android:textColor="#4B5563"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/widget_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="On Track"
+                android:textColor="#10B981"
                 android:textSize="9sp"
-                android:layout_marginTop="1dp" />
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Right Column: 1-Tap Microphone Action Button -->
-        <LinearLayout
-            android:id="@+id/widget_voice_button"
+        <!-- Big Balance Amount -->
+        <TextView
+            android:id="@+id/widget_remaining_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/widget_mic_button_bg"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:layout_marginStart="8dp">
-
-            <ImageView
-                android:id="@+id/widget_mic_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@mipmap/ic_launcher_foreground"
-                android:tint="#FFFFFF"
-                android:contentDescription="Voice Add Expense" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Voice"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:layout_marginTop="2dp" />
-        </LinearLayout>
+            android:text="$--.--"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:layout_marginTop="2dp" />
     </LinearLayout>
+
+    <!-- Right Side: 1-Tap Microphone Voice Action Button -->
+    <LinearLayout
+        android:id="@+id/widget_voice_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/widget_mic_button_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:layout_marginStart="8dp">
+
+        <ImageView
+            android:id="@+id/widget_mic_icon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_widget_mic"
+            android:tint="#FFFFFF"
+            android:contentDescription="Voice Add Expense" />
+
+        <TextView
+            android:id="@+id/widget_voice_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Voice"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:layout_marginStart="5dp" />
+    </LinearLayout>
+
 </LinearLayout>

@@ -8,5 +8,6 @@
     <string name="shortcut_add_expense_long">Log a new expense manually</string>
     <string name="shortcut_voice_short">Voice Expense</string>
     <string name="shortcut_voice_long">Dictate and log expense with 1-tap voice</string>
+    <string name="widget_name">LooseBudget (3x1) Budget &amp; Voice</string>
     <string name="widget_description">Glance remaining budget and 1-tap voice expense entry</string>
 </resources>

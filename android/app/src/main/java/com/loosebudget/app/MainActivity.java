@@ -8,8 +8,34 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(WidgetBridgePlugin.class);
         handleIncomingIntent(getIntent());
         super.onCreate(savedInstanceState);
+        attachWidgetBridge();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        attachWidgetBridge();
+    }
+
+    private void attachWidgetBridge() {
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().post(() -> {
+                try {
+                    bridge.getWebView().addJavascriptInterface(
+                        new WidgetBridgeInterface(getApplicationContext()),
+                        "AndroidWidgetBridge"
+                    );
+                    // Request web app to immediately synchronize the latest budget stats to the widget
+                    bridge.getWebView().evaluateJavascript(
+                        "if (typeof window.__syncWidgetBudget === 'function') { window.__syncWidgetBudget(); }",
+                        null
+                    );
+                } catch (Exception ignored) {}
+            });
+        }
     }
 
     @Override

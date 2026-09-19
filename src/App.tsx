@@ -2249,13 +2249,42 @@ Date: ${new Date().toLocaleString()}
     };
   }, [expenses, categories, selectedMonth]);
 
-  // Synchronize latest remaining budget for widget & instant glance
+  // Synchronize latest remaining budget for native Android widget & instant glance
   useEffect(() => {
-    try {
-      const remainingStr = `${currencySymbol}${totals.remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      localStorage.setItem('expensetrack_widget_cached_remaining', remainingStr);
-      localStorage.setItem('expensetrack_widget_cached_percent', String(totals.percent));
-    } catch (e) {}
+    const syncNativeWidget = () => {
+      try {
+        const remainingStr = `${currencySymbol}${totals.remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const statusStr = totals.remaining >= 0 ? `${totals.percent}% • On Track` : `Over Budget by ${currencySymbol}${Math.abs(totals.remaining).toFixed(0)}`;
+        
+        // 1. Direct Android WebView JavascriptInterface
+        if (typeof (window as any).AndroidWidgetBridge !== 'undefined' && (window as any).AndroidWidgetBridge.updateBudget) {
+          (window as any).AndroidWidgetBridge.updateBudget(remainingStr, statusStr);
+        }
+
+        // 2. Capacitor Plugins bridge fallback
+        if ((window as any).Capacitor?.Plugins?.WidgetBridge?.updateBudget) {
+          (window as any).Capacitor.Plugins.WidgetBridge.updateBudget({
+            remaining: remainingStr,
+            status: statusStr
+          }).catch(() => {});
+        }
+
+        // 3. Local storage caching
+        localStorage.setItem('expensetrack_widget_cached_remaining', remainingStr);
+        localStorage.setItem('expensetrack_widget_cached_status', statusStr);
+        localStorage.setItem('expensetrack_widget_cached_percent', String(totals.percent));
+      } catch (e) {}
+    };
+
+    // Expose global synchronizer for Android native MainActivity lifecycle
+    (window as any).__syncWidgetBudget = syncNativeWidget;
+
+    // Immediate sync
+    syncNativeWidget();
+
+    // Secondary delayed sync to ensure native bridge binding is ready on cold boot
+    const timer = setTimeout(syncNativeWidget, 1000);
+    return () => clearTimeout(timer);
   }, [totals.remaining, totals.percent, currencySymbol]);
 
   const showBackupReminder = useMemo(() => {
@@ -2639,7 +2668,7 @@ Date: ${new Date().toLocaleString()}
                     }`}
                   >
                     <Wallet size={14} className={activeTab === 'budget_full' ? 'stroke-[2.5] text-emerald-400' : 'stroke-[1.5]'} />
-                    <span>Monthly Budget (Beta)</span>
+                    <span>Monthly Budget</span>
                   </button>
 
                   {/* Savings Goals link */}
@@ -3207,60 +3236,6 @@ Date: ${new Date().toLocaleString()}
                 onOpenVoiceModal={() => setShowVoiceModal(true)}
                 onOpenAddExpense={() => setShowAddForm(true)}
               />
-
-              {/* Circular Gauge and Budget stats header */}
-              <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 shadow-2xs">
-
-                <div className="grid grid-cols-12 gap-3 items-center">
-                  {/* Gauge */}
-                  <div className="col-span-5 flex flex-col items-center justify-center">
-                    <div className="relative w-24 h-24 flex items-center justify-center rounded-full border-4 border-[#1c1c1c] shadow-inner bg-black/40">
-                      {/* Interactive ring highlight colored according to status */}
-                      <span className={`absolute inset-0 rounded-full border-4 border-transparent transition-all ${
-                        totals.percent >= 100 ? 'border-t-rose-500 border-r-rose-400' :
-                        totals.percent >= 80 ? 'border-t-amber-500 border-r-amber-400' :
-                        statusConfig.title.includes('Spending Too Fast') ? 'border-t-yellow-500 border-r-yellow-400' :
-                        'border-t-emerald-500 border-r-emerald-400'
-                      }`} style={{ transform: `rotate(${(totals.percent / 100) * 180}deg)` }}></span>
-                      
-                      <div className="text-center z-10">
-                        <span className="text-2xl font-extrabold text-white tnum tracking-tight">{totals.percent}%</span>
-                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Spent</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quantitative numbers */}
-                  <div className="col-span-7 space-y-2.5">
-                    <div>
-                      <span className="text-xs font-medium text-slate-400 block">Spent this month</span>
-                      <span className="text-3xl font-extrabold text-white block mt-0.5 tnum tracking-tight">{currencySymbol}{totals.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-
-                    <div className="flex gap-4 border-t border-white/5 pt-2">
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight block">Budget Limit</span>
-                        <span className="text-sm font-bold text-slate-200 tnum">{currencySymbol}{totals.limit.toLocaleString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight block">Remaining</span>
-                        <span className={`text-sm font-extrabold tnum ${totals.remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {currencySymbol}{totals.remaining.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status alert message */}
-                <div className={`mt-3 p-2.5 px-3 border rounded-xl text-xs flex items-start gap-2.5 ${statusConfig.color} transition-all`}>
-                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold block tracking-tight text-xs">{statusConfig.title}</span>
-                    <p className="text-[11px] leading-relaxed text-gray-300 mt-0.5">{statusConfig.desc}</p>
-                  </div>
-                </div>
-              </div>
 
               {/* Pie Chart of category allocations directly underneath with tight spacing */}
               <div className="bg-[#111111] rounded-2xl p-3.5 border border-white/5 shadow-2xs">
@@ -5025,8 +5000,8 @@ Date: ${new Date().toLocaleString()}
 
         </div>
 
-        {/* Dynamic bottom floating CTA trigger for quick accessibility */}
-        {activeTab !== 'budget_plan' && activeTab !== 'dev_hub' && activeTab !== 'help' && activeTab !== 'budget_full' && (
+        {/* Dynamic bottom floating CTA trigger for quick accessibility - hidden on Home/Daily screen where the widget is present, visible on other tabs */}
+        {activeTab !== 'dashboard' && activeTab !== 'budget_plan' && activeTab !== 'dev_hub' && activeTab !== 'help' && activeTab !== 'budget_full' && (
           <div className="absolute right-5 bottom-18 z-20 flex flex-col items-center gap-2.5">
             {/* 1-Tap Voice Log Floating Button */}
             <button

@@ -67,7 +67,7 @@
         <!-- Home Screen Widget: Remaining Budget & 1-Tap Voice Entry -->
         <receiver
             android:name=".BudgetVoiceWidgetProvider"
-            android:label="LooseBudget Remaining &amp; Voice Widget"
+            android:label="@string/widget_name"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
