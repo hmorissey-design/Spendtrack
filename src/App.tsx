@@ -47,7 +47,8 @@ import {
   Smartphone,
   Bell,
   Mic,
-  DownloadCloud
+  DownloadCloud,
+  Bookmark
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -2556,28 +2557,7 @@ Date: ${new Date().toLocaleString()}
               </button>
             )}
 
-            {/* Direct PWA Install or Guide Trigger (Hidden in Demo Mode) */}
-            {!isDemoMode && !isPwaInstalled && (
-              pwaInstallable ? (
-                <button
-                  onClick={triggerNativeInstall}
-                  className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 animate-pulse cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0"
-                  title="Install LooseBudget on your device as a native standalone application"
-                >
-                  <Download size={12} className="stroke-[3] shrink-0" />
-                  <span>Install 📲</span>
-                </button>
-              ) : (
-                <button
-                  onClick={triggerOpenInstallGuide}
-                  className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold bg-white/5 hover:bg-white/10 text-emerald-400 border border-emerald-500/15 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0"
-                  title="View instructions to install this PWA app on iPhone, iPad, Android or Desktop"
-                >
-                  <Download size={12} className="text-emerald-400 shrink-0" />
-                  <span>Install 📲</span>
-                </button>
-              )
-            )}
+
 
             {/* Click backdrop overlay to close the dropdown easily */}
             {showGlobalMenu && (
@@ -2753,13 +2733,13 @@ Date: ${new Date().toLocaleString()}
                     <span>Help & Guide</span>
                   </button>
 
-                  {/* PWA Install Guide Link */}
+                  {/* Web Shortcuts & Bookmarks Guide Link */}
                   <button
                     onClick={() => { triggerOpenInstallGuide(); setShowGlobalMenu(false); }}
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
                   >
-                    <Download size={14} className="stroke-[2] text-emerald-400" />
-                    <span>How to Install PWA 📲</span>
+                    <Bookmark size={14} className="stroke-[2] text-emerald-400" />
+                    <span>Web Shortcuts & Bookmarks 🔖</span>
                   </button>
 
 
@@ -5159,54 +5139,51 @@ Date: ${new Date().toLocaleString()}
 
             <div className="flex items-center gap-2.5 border-b border-white/5 pb-3 mb-4">
               <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl flex items-center justify-center">
-                <Download size={18} />
+                <Bookmark size={18} />
               </div>
               <div className="text-left">
-                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install LooseBudget PWA</h3>
-                <p className="text-[10px] text-gray-400 mt-0.5">Add standalone App icon to your home screen or desktop launcher.</p>
+                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Web Shortcuts & Bookmarks</h3>
+                <p className="text-[10px] text-gray-400 mt-0.5">Quick access to app.loosebudget.com with live automatic updates.</p>
               </div>
             </div>
 
             <div className="space-y-4 font-sans text-xs text-left">
+              {/* Chromebook & Desktop */}
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
+                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                  💻 Chromebook & Desktop (Chrome / Edge)
+                </p>
+                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
+                  <li>Click the <strong className="text-white font-semibold">Star icon ⭐️</strong> in the URL bar to bookmark.</li>
+                  <li>Or open menu (3 dots) $\rightarrow$ <strong className="text-white font-semibold">Save and share $\rightarrow$ Create shortcut...</strong></li>
+                  <li>Opening the web shortcut always loads the latest version live from the server automatically!</li>
+                </ol>
+              </div>
+
               {/* iOS Guide */}
               <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
                 <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
                   📱 iPhone & iPad (Safari)
                 </p>
                 <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
-                  <li>Open Safari and visit this website.</li>
                   <li>Tap the <strong className="text-white font-semibold">Share button</strong> (square with up arrow).</li>
-                  <li>Scroll down and tap <strong className="text-white font-semibold">Add to Home Screen</strong>.</li>
-                  <li>Tap <strong className="text-emerald-400 font-bold">Add</strong> at the top right.</li>
+                  <li>Tap <strong className="text-white font-semibold">Add Bookmark</strong> or <strong className="text-white font-semibold">Add to Home Screen</strong>.</li>
                 </ol>
               </div>
 
               {/* Android Guide */}
               <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
                 <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                  🤖 Android (Chrome)
+                  🤖 Android (Native App with Widgets)
                 </p>
-                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
-                  <li>Tap the browser's <strong className="text-white font-semibold">menu icon</strong> (3 dots in top right).</li>
-                  <li>Tap <strong className="text-white font-semibold">Install App</strong> or <strong className="text-white font-semibold">Add to Home screen</strong>.</li>
-                  <li>Follow the prompts on screen to confirm.</li>
-                </ol>
-              </div>
-
-              {/* Desktop Guide */}
-              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                  💻 Desktop (Chrome, Edge)
+                <p className="text-[10.5px] text-gray-300">
+                  Download and install the official <strong className="text-white font-semibold">LooseBudget APK</strong> to enable native 1x1 Voice Quick-Add Home Screen Widgets.
                 </p>
-                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
-                  <li>Click the <strong className="text-white font-semibold">Install icon</strong> (small monitor with download arrow) inside the URL address bar.</li>
-                  <li>Or open settings menu (3 dots) and click <strong className="text-white font-semibold">Save and share → Install app</strong>.</li>
-                </ol>
               </div>
 
               <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-[#161616] p-2.5 border border-white/5 rounded-xl">
-                <CheckCircle size={14} className="text-emerald-400 shrink-0 animate-pulse" />
-                <span>Stand-alone PWA apps consume near-zero memory, loads instantly offline, and can be easily uninstalled at any time.</span>
+                <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+                <span>Web shortcuts load live directly from app.loosebudget.com, so you never have to reinstall when updates release.</span>
               </div>
             </div>
 

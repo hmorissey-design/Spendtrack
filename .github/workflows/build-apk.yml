@@ -9,6 +9,8 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,6 +54,8 @@ jobs:
         run: |
           cd android
           ./gradlew assembleRelease --stacktrace --no-daemon
+          mkdir -p ../public
+          cp app/build/outputs/apk/release/*.apk ../public/loosebudget.apk || true
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
@@ -59,4 +63,18 @@ jobs:
           name: loosebudget-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.2.3
+          name: LooseBudget v1.2.3
+          body: "Latest release build of LooseBudget Android APK with 1x1 Voice Widget support."
+          draft: false
+          prerelease: false
+          files: |
+            android/app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
