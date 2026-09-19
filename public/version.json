@@ -1,0 +1,11 @@
+{
+  "version": "1.2.0",
+  "buildNumber": 2,
+  "releaseDate": "2026-09-19",
+  "releaseNotes": [
+    "New: 1x1 Voice Quick-Add Widget for Android Home Screen",
+    "New: Direct 1-tap voice dictation & instant modal deep linking",
+    "Improved: Automatic keystore signing for smooth in-app APK upgrades"
+  ],
+  "apkDownloadUrl": "https://app.loosebudget.com/download/loosebudget.apk"
+}

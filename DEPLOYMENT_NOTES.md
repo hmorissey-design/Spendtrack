@@ -119,10 +119,19 @@ Web browsers (PWAs) cannot listen to background OS notifications due to Android 
 4. **Direct Website Distribution:** Distributed directly from `loosebudget.com` as an APK download, bypassing Google Play's 30% cut and retaining Lemon Squeezy billing.
 5. **Seamless Cross-Device Sync:** Mobile APK and Desktop web use the exact same Firebase Auth and Firestore backend, synchronizing transactions instantly.
 
-### **Automated APK Build via GitHub Actions**
+### **Automated APK Build via GitHub Actions & Release Keystore**
 When you push code to GitHub:
-- `/.github/workflows/build-apk.yml` builds `app-release-unsigned.apk` automatically under your repository's **Actions** tab.
-- Download the APK, host it on your landing page (e.g. `loosebudget.com/download/loosebudget.apk`), and users can install it on any Android device!
+- `/.github/workflows/build-apk.yml` builds signed release APKs (`app-release.apk`) automatically under your repository's **Actions** tab.
+- **Permanent Release Signing Key:** Stored at `/android/app/loosebudget-release.keystore`
+  - **Alias:** `loosebudget`
+  - **Password:** `loosebudget2026`
+  - **Validity:** 10,000 days (27+ years)
+- Every release APK is signed with this exact key so all user data, budgets, and settings are preserved during updates.
+
+### **In-App 1-Tap APK Updater Workflow**
+1. When you want to distribute an update, increment `version` and `buildNumber` in `/public/version.json` and `build.gradle`.
+2. Push to GitHub — GitHub Actions automatically outputs your signed `app-release.apk`.
+3. Users tap **"Check for Updates"** in Settings (or receive an in-app notice) and can 1-tap download & install the updated APK smoothly!
 
 ---
 

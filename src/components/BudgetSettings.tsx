@@ -10,8 +10,10 @@ import {
   Plus, PlusCircle, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
   Briefcase, Gift, Heart, Home, Laptop, Dumbbell, Plane, Users, Phone, HelpCircle, Tag, X,
   Cloud, CloudUpload, CloudDownload, Image as ImageIcon, Eye, ExternalLink, Calendar, TrendingUp,
-  Beer, Flame, Train, PiggyBank, Database, RefreshCw, EyeOff, FolderCog, Smartphone, Zap
+  Beer, Flame, Train, PiggyBank, Database, RefreshCw, EyeOff, FolderCog, Smartphone, Zap,
+  DownloadCloud, Key
 } from 'lucide-react';
+import { APP_VERSION, APP_BUILD_NUMBER, checkForAppUpdates, VersionInfo } from '../utils/version';
 
 import {
   ResponsiveContainer,
@@ -271,6 +273,28 @@ export function BudgetSettings({
 
   const [showCurrencyManager, setShowCurrencyManager] = useState<boolean>(false);
   const [showThemeManager, setShowThemeManager] = useState<boolean>(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+  const [availableUpdate, setAvailableUpdate] = useState<VersionInfo | null>(null);
+  const [updateCheckStatus, setUpdateCheckStatus] = useState<string>('');
+
+  const handleCheckForUpdates = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateCheckStatus('');
+    try {
+      const update = await checkForAppUpdates();
+      if (update) {
+        setAvailableUpdate(update);
+        setUpdateCheckStatus(`New version v${update.version} is ready!`);
+      } else {
+        setAvailableUpdate(null);
+        setUpdateCheckStatus(`You are on the latest version (v${APP_VERSION}).`);
+      }
+    } catch (e) {
+      setUpdateCheckStatus('Could not reach update server. Check your connection.');
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   const handleExport = () => {
     const dataStr = LocalDb.exportDatabase();
@@ -800,6 +824,67 @@ export function BudgetSettings({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* App Version & 1-Tap APK Updater Card */}
+      <div className="bg-[#111111] text-slate-100 rounded-xl p-3.5 border border-white/5 shadow-2xs space-y-3 animate-in fade-in duration-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5 font-sans">
+              <Smartphone size={15} className="text-emerald-400 shrink-0" /> LooseBudget Version & Updates
+            </h4>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10.5px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                v{APP_VERSION} (Build {APP_BUILD_NUMBER})
+              </span>
+              <span className="text-[9.5px] text-gray-400 font-sans flex items-center gap-1">
+                <Key size={10} className="text-emerald-400" /> Signed Release Key Active
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCheckForUpdates}
+            disabled={isCheckingUpdate}
+            className="py-1.5 px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white rounded-lg text-[10.5px] font-bold font-sans transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw size={12} className={isCheckingUpdate ? "animate-spin text-emerald-400" : "text-emerald-400"} />
+            <span>{isCheckingUpdate ? 'Checking...' : 'Check for Updates'}</span>
+          </button>
+        </div>
+
+        {updateCheckStatus && (
+          <p className="text-[10px] text-gray-400 bg-black/30 p-2 rounded-lg border border-white/5 font-sans">
+            {updateCheckStatus}
+          </p>
+        )}
+
+        {availableUpdate && (
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2 animate-in zoom-in-95">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Sparkles size={13} /> Version v{availableUpdate.version} Available
+              </span>
+              <span className="text-[9.5px] text-gray-400 font-mono">{availableUpdate.releaseDate}</span>
+            </div>
+            {availableUpdate.releaseNotes?.length > 0 && (
+              <ul className="text-[10.5px] text-gray-300 space-y-0.5 list-disc list-inside">
+                {availableUpdate.releaseNotes.map((note, i) => (
+                  <li key={i}>{note}</li>
+                ))}
+              </ul>
+            )}
+            <a
+              href={availableUpdate.apkDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center no-underline cursor-pointer"
+            >
+              <DownloadCloud size={14} /> Download & Install APK Update
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Database Purge Options (Hidden for Cloud-synced users) */}
