@@ -63,8 +63,6 @@ interface BudgetSettingsProps {
   isCloudSynced?: boolean;
   onWipeCloudDatabase?: () => Promise<void>;
   onOpenCategoryManager?: () => void;
-  openAddOnLaunch?: boolean;
-  onOpenAddOnLaunchChange?: (val: boolean) => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -152,9 +150,7 @@ export function BudgetSettings({
   onOpenSubscriptionModal,
   isCloudSynced = false,
   onWipeCloudDatabase,
-  onOpenCategoryManager,
-  openAddOnLaunch = true,
-  onOpenAddOnLaunchChange
+  onOpenCategoryManager
  }: BudgetSettingsProps) {
   const isMobile = useIsMobileDevice();
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
@@ -794,37 +790,7 @@ export function BudgetSettings({
 
 
 
-      {/* Startup Screen / Quick Launch Preference Card */}
-      <div className="bg-[#111111] text-slate-100 rounded-xl p-3 border border-white/5 shadow-2xs animate-in fade-in duration-200">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0 pr-2">
-            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-              <PlusCircle size={15} className="text-emerald-400 shrink-0" /> Open 'Add Expense' on Startup
-            </h4>
-            <p className="text-[10.5px] text-slate-400 mt-1 leading-normal">
-              Automatically display the Add Transaction screen when opening the app for quick logging.
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={openAddOnLaunch}
-              onClick={() => onOpenAddOnLaunchChange?.(!openAddOnLaunch)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                openAddOnLaunch ? 'bg-emerald-600' : 'bg-white/10'
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  openAddOnLaunch ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
+
 
       {/* App Version & 1-Tap APK Updater Card */}
       <div className="bg-[#111111] text-slate-100 rounded-xl p-3.5 border border-white/5 shadow-2xs space-y-3 animate-in fade-in duration-200">

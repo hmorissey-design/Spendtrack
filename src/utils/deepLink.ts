@@ -25,6 +25,7 @@ type DeepLinkListener = (payload: DeepLinkExpensePayload) => void;
 class DeepLinkManagerService {
   private listeners: DeepLinkListener[] = [];
   private initialProcessed = false;
+  private pendingPayload: DeepLinkExpensePayload | null = null;
 
   constructor() {
     this.setupCapacitorListener();
@@ -89,7 +90,8 @@ class DeepLinkManagerService {
 
       // Determine action from path or query
       const isVoiceRequested = pathname.includes('voice') || searchParams.get('voice') === '1' || searchParams.get('action') === 'voice';
-      const action = searchParams.get('action') || (isVoiceRequested ? 'voice' : pathname.includes('add') ? 'add' : pathname.includes('transaction') ? 'transaction' : 'add');
+      const explicitAction = searchParams.get('action') || (pathname.includes('/voice') ? 'voice' : pathname.includes('/add') ? 'add' : pathname.includes('/transaction') ? 'transaction' : undefined);
+      const action = explicitAction || (isVoiceRequested ? 'voice' : undefined);
 
       // 1. Natural Language Voice Query (e.g. from shortcuts, Tasker, Macrodroid, or speech dictation)
       const voiceText = searchParams.get('text') || searchParams.get('q') || searchParams.get('speech') || searchParams.get('voice') || searchParams.get('prompt') || searchParams.get('query');
@@ -146,7 +148,7 @@ class DeepLinkManagerService {
       const autoSave = rawAuto === 'true' || rawAuto === '1' || rawAuto === 'yes';
 
       // If we have an action or amount or vendor or voice text or isVoice, return the payload
-      if (amount || vendor || voiceText || action === 'add' || action === 'voice' || isVoiceRequested || isCustomScheme) {
+      if (amount || vendor || voiceText || action === 'add' || action === 'voice' || isVoiceRequested) {
         return {
           action,
           isVoice: isVoiceRequested || action === 'voice',
@@ -196,6 +198,20 @@ class DeepLinkManagerService {
 
   public subscribe(listener: DeepLinkListener): () => void {
     this.listeners.push(listener);
+    
+    // If a deep link arrived before React subscribed (cold boot), deliver it immediately
+    if (this.pendingPayload) {
+      const payloadToDeliver = this.pendingPayload;
+      this.pendingPayload = null;
+      setTimeout(() => {
+        try {
+          listener(payloadToDeliver);
+        } catch (e) {
+          console.error('Error delivering pending deep link:', e);
+        }
+      }, 50);
+    }
+
     // Check initial window location on subscription
     this.checkInitialUrl(listener);
 
@@ -205,6 +221,10 @@ class DeepLinkManagerService {
   }
 
   private emit(payload: DeepLinkExpensePayload) {
+    if (this.listeners.length === 0) {
+      this.pendingPayload = payload;
+      return;
+    }
     this.listeners.forEach(listener => {
       try {
         listener(payload);

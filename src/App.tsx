@@ -46,7 +46,8 @@ import {
   Cloud,
   Smartphone,
   Bell,
-  Mic
+  Mic,
+  DownloadCloud
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
@@ -54,6 +55,7 @@ import { ActiveTab, Expense, Category, MonthlyBudget, SubscriptionState, VendorR
 import { LocalDb, DEFAULT_CATEGORIES, DEFAULT_INCOME_STREAMS, DEFAULT_FIXED_EXPENSES, DEFAULT_SAVINGS_GOALS } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { SubscriptionManager } from './utils/subscription';
+import { APP_VERSION, checkForAppUpdates, VersionInfo } from './utils/version';
 import { AndroidFrame } from './components/AndroidFrame';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
@@ -398,10 +400,6 @@ export default function App() {
       const plan = params.get('plan');
       const action = params.get('action');
 
-      if (action === 'add') {
-        setShowAddForm(true);
-      }
-
       const isSuccessSignal = payment === 'success' || success === 'true' || status === 'success' || Boolean(plan);
 
       if (isSuccessSignal) {
@@ -451,34 +449,7 @@ export default function App() {
     return getLocalMonthString(); // e.g. "YYYY-MM"
   });
   const [currentBudget, setCurrentBudget] = useState<MonthlyBudget>({ month: '', limitAmount: 1000 });
-  const [openAddOnLaunch, setOpenAddOnLaunch] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('expensetrack_open_add_on_launch');
-      return saved === null ? true : saved === 'true';
-    } catch (e) {
-      return true;
-    }
-  });
-
-  const handleOpenAddOnLaunchChange = (val: boolean) => {
-    try {
-      localStorage.setItem('expensetrack_open_add_on_launch', String(val));
-    } catch (e) {}
-    setOpenAddOnLaunch(val);
-  };
-
-  const [showAddForm, setShowAddForm] = useState<boolean>(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('action') === 'add') {
-        return true;
-      }
-      const saved = localStorage.getItem('expensetrack_open_add_on_launch');
-      return saved === null ? true : saved === 'true';
-    } catch (e) {
-      return true;
-    }
-  });
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [deepLinkPrefill, setDeepLinkPrefill] = useState<{
     amount?: number | string;
@@ -1404,6 +1375,26 @@ Date: ${new Date().toLocaleString()}
   const [showEndDateCalendar, setShowEndDateCalendar] = useState<boolean>(false);
   const [endCalendarYear, setEndCalendarYear] = useState<number>(() => new Date().getFullYear());
   const [endCalendarMonth, setEndCalendarMonth] = useState<number>(() => new Date().getMonth());
+
+  // Automatic In-App APK Update Check State
+  const [appUpdateNotice, setAppUpdateNotice] = useState<VersionInfo | null>(null);
+  const [dismissedUpdateNotice, setDismissedUpdateNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Run an automatic check for new APK releases silently on startup
+    const checkUpdates = async () => {
+      try {
+        const update = await checkForAppUpdates();
+        if (update) {
+          setAppUpdateNotice(update);
+        }
+      } catch (err) {
+        // Silently fail if offline
+      }
+    };
+    const timer = setTimeout(checkUpdates, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const startDateCalendarRef = useRef<HTMLDivElement | null>(null);
   const endDateCalendarRef = useRef<HTMLDivElement | null>(null);
@@ -2809,6 +2800,50 @@ Date: ${new Date().toLocaleString()}
           </div>
         )}
 
+        {/* Automatic In-App APK Update Notification Banner */}
+        {appUpdateNotice && !dismissedUpdateNotice && (
+          <div className="px-3 pt-2 pb-1 shrink-0 z-30 animate-in slide-in-from-top-3 duration-300">
+            <div className="relative overflow-hidden bg-gradient-to-r from-emerald-950/80 via-[#111111] to-emerald-950/80 border border-emerald-500/40 rounded-2xl p-3 sm:p-3.5 shadow-xl shadow-emerald-950/40 backdrop-blur-md">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5 animate-pulse">
+                    <Sparkles size={16} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                        App Update v{appUpdateNotice.version} Available
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                      A new native update is ready! Tap below to download and install the latest features and widgets.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <a
+                    href={appUpdateNotice.apkDownloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                  >
+                    <DownloadCloud size={14} />
+                    <span>Install Update</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setDismissedUpdateNotice(true)}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer border-0 bg-transparent"
+                    title="Dismiss update notice"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Demo Mode Announcement Banner (Hidden when subscribed to maximize space) */}
         {!subscriptionState.isSubscribed && (
           <div className="px-3 pt-1.5 pb-0.5 shrink-0">
@@ -4026,8 +4061,6 @@ Date: ${new Date().toLocaleString()}
                 isCloudSynced={!!currentUser}
                 onWipeCloudDatabase={handleWipeCloudDatabase}
                 onOpenCategoryManager={() => setShowCategoryManager(true)}
-                openAddOnLaunch={openAddOnLaunch}
-                onOpenAddOnLaunchChange={handleOpenAddOnLaunchChange}
               />
             </div>
           )}
