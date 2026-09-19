@@ -1,10 +1,10 @@
 {
-  "version": "1.2.2",
-  "buildNumber": 4,
+  "version": "1.2.3",
+  "buildNumber": 5,
   "releaseDate": "2026-09-19",
   "releaseNotes": [
-    "Updated Savings screen explanation and allocation messaging",
-    "Voice Quick-Add widget cold-boot deep linking reliability improvements"
+    "Dedicated Release APK build pipeline configuration",
+    "Updated Savings Goal allocation messaging and terminology"
   ],
   "apkDownloadUrl": "https://app.loosebudget.com/loosebudget.apk"
 }

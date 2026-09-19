@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const APP_VERSION = '1.2.2';
-export const APP_BUILD_NUMBER = 4;
+export const APP_VERSION = '1.2.3';
+export const APP_BUILD_NUMBER = 5;
 
 export interface VersionInfo {
   version: string;
