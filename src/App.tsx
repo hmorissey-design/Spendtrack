@@ -898,7 +898,7 @@ export default function App() {
       setIncomeStreams(prev => [...prev, newItem]);
     } else if (quickAddSection === 'fixed') {
       if (label.toLowerCase().includes('savings')) {
-        alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+        alert("Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
         return;
       }
       const newItem = {
@@ -4221,7 +4221,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Known Expenses</span>
+                          <span className="font-extrabold text-[#eeeeee] text-[11px] uppercase tracking-wider">Fixed Expenses</span>
                           <span className="text-[9px] bg-sky-500/10 text-sky-400 font-bold px-1.5 py-0.5 rounded font-sans">
                             {fixedExpenses.length} ITEMS
                           </span>
@@ -4242,7 +4242,7 @@ Date: ${new Date().toLocaleString()}
                       
                       {/* Column Header: Budget */}
                       <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase tracking-widest pb-1 border-b border-white/5 px-1">
-                        <span>Known Commitment</span>
+                        <span>Fixed Commitment</span>
                         <span className="pr-6.5">Budget</span>
                       </div>
 
@@ -4258,7 +4258,7 @@ Date: ${new Date().toLocaleString()}
                                   if (e.key === 'Enter') {
                                     if (editingItemValue.trim()) {
                                       if (editingItemValue.toLowerCase().includes('savings')) {
-                                        alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+                                        alert("Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
                                         setEditingItemId(null);
                                         return;
                                       }
@@ -4277,7 +4277,7 @@ Date: ${new Date().toLocaleString()}
                                 onBlur={() => {
                                   if (editingItemValue.trim()) {
                                     if (editingItemValue.toLowerCase().includes('savings')) {
-                                      alert("Known commitment / Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
+                                      alert("Fixed expense names cannot contain the word 'savings' to prevent conflict with Savings Goal categories.");
                                       setEditingItemId(null);
                                       return;
                                     }
@@ -4327,7 +4327,7 @@ Date: ${new Date().toLocaleString()}
                                     ? 'bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20' 
                                     : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                                 }`}
-                                title={item.isHidden ? 'Unhide Known Expense' : 'Hide Known Expense'}
+                                title={item.isHidden ? 'Unhide Fixed Expense' : 'Hide Fixed Expense'}
                               >
                                 {item.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
                               </button>
@@ -4336,11 +4336,11 @@ Date: ${new Date().toLocaleString()}
                         ))}
                       </div>
 
-                      {/* Add Custom Known Expense Mini Form */}
+                      {/* Add Custom Fixed Expense Mini Form */}
                       <form onSubmit={handleAddFixedExpense} className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                         <input 
                           type="text"
-                          placeholder="Add Custom Known Budget Category"
+                          placeholder="Add Custom Fixed Budget Category"
                           value={newFixedName}
                           onChange={(e) => {
                             setNewFixedName(e.target.value);

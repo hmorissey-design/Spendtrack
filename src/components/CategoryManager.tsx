@@ -115,7 +115,7 @@ export function CategoryManager({
   const [formColor, setFormColor] = useState<string>('emerald');
   const [formIsHidden, setFormIsHidden] = useState<boolean>(false);
 
-  // Build complete list of categories (Daily Spending, Known/Fixed Expenses, Business)
+  // Build complete list of categories (Daily Spending, Fixed Expenses, Business)
   const unifiedCategories = useMemo(() => {
     // 1. Get standard categories from props / LocalDb
     const list: Array<Category & { categoryType: 'spending' | 'fixed' | 'business' }> = categories
@@ -131,7 +131,7 @@ export function CategoryManager({
         };
       });
 
-    // 2. Synthesize Known/Fixed Expense categories if not present
+    // 2. Synthesize Fixed Expense categories if not present
     fixedExpenses.forEach(fix => {
       const synthId = `FIXED_${fix.id}`;
       const exists = list.some(c => c.id === synthId || c.name.toLowerCase() === fix.label.toLowerCase());
@@ -247,7 +247,7 @@ export function CategoryManager({
         if (onFixedExpenseUpdated) {
           onFixedExpenseUpdated(realId, { label: formName.trim(), amount: parsedLimit, isHidden: formIsHidden });
         }
-        setSuccessMsg('Updated Known Expense successfully.');
+        setSuccessMsg('Updated Fixed Expense successfully.');
       } else if (isSavings) {
         const realId = editingCategory.id.replace('SAVINGS_', '');
         if (onSavingsGoalUpdated) {
@@ -347,7 +347,7 @@ export function CategoryManager({
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Known Expenses ({unifiedCategories.filter(c => c.categoryType === 'fixed').length})
+              Fixed Expenses ({unifiedCategories.filter(c => c.categoryType === 'fixed').length})
             </button>
           </div>
 
@@ -393,7 +393,7 @@ export function CategoryManager({
                         {/* Type Badges */}
                         {isFixed && (
                           <span className="text-[8px] bg-sky-500/10 text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider shrink-0 border border-sky-500/20">
-                            Known Expense
+                            Fixed Expense
                           </span>
                         )}
                         {isBusiness && (

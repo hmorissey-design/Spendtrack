@@ -610,7 +610,7 @@ export function BudgetSettings({
               <FolderCog size={15} className="text-emerald-400 shrink-0" /> Categories & Category Budgets
             </h3>
             <p className="text-[11px] text-slate-400 mt-1">
-              Configure spending categories, monthly limits, and toggle visibility for Daily Spending, Known Expenses, and Savings Goals.
+              Configure spending categories, monthly limits, and toggle visibility for Daily Spending, Fixed Expenses, and Savings Goals.
             </p>
           </div>
           {onOpenCategoryManager && (

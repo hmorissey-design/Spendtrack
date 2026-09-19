@@ -122,10 +122,10 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
           </div>
           <ol className="list-decimal pl-4 space-y-2 text-slate-300">
             <li>
-              <strong>Enter DAILY Expenses First:</strong> The Most important part is to enter the DAILY Expenses first ! You can add the Known and Savings Goals if and when you are ready later on . These are the expenses we&apos;ll concentrate on in the initial few weeks since you have the most control of them . Of course you can do it all as well , The Choice is up to you ! IF you aren&apos;t sure, put in your best guess . You can come back anytime to update it !
+              <strong>Enter DAILY Expenses First:</strong> The Most important part is to enter the DAILY Expenses first ! You can add the Fixed Expenses and Savings Goals if and when you are ready later on . These are the expenses we&apos;ll concentrate on in the initial few weeks since you have the most control of them . Of course you can do it all as well , The Choice is up to you ! IF you aren&apos;t sure, put in your best guess . You can come back anytime to update it !
             </li>
             <li>
-              <strong>List Known Expenses:</strong> These are usually items that remain constant from month to month. These days MOST are paid automatically. You will never have to enter these as transactions. We assume that the amounts will be spent as entered sometime during the month.
+              <strong>List Fixed Expenses:</strong> These are usually items that remain constant from month to month. These days MOST are paid automatically. You will never have to enter these as transactions. We assume that the amounts will be spent as entered sometime during the month.
             </li>
             <li>
               <strong>Check &amp; Balance:</strong> Now you have a much better idea of how much you actually have to allocate to Daily Expenses . Check the Budget Balance and , if necessary, tinker with the amounts budgeted in Daily Expenses until its at least zero or above .
