@@ -1386,11 +1386,6 @@ Date: ${new Date().toLocaleString()}
 
   const handleAndroidApkDownload = () => {
     setShowApkDownloadInstructionModal(true);
-    try {
-      window.location.href = 'https://app.loosebudget.com/loosebudget.apk';
-    } catch (e) {
-      console.error('Error triggering APK download:', e);
-    }
   };
 
   useEffect(() => {
@@ -5257,74 +5252,63 @@ Date: ${new Date().toLocaleString()}
             </button>
 
             <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-              <div className="p-2.5 bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 rounded-xl flex items-center justify-center animate-bounce shrink-0">
+              <div className="p-2.5 bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 rounded-xl flex items-center justify-center shrink-0">
                 <Download size={20} className="stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Downloading LooseBudget...</h3>
-                <p className="text-[10px] text-emerald-400 font-bold mt-0.5 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-                  Downloading loosebudget.apk to phone
+                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Install App on Phone</h3>
+                <p className="text-[10.5px] text-gray-400 font-medium mt-0.5">
+                  Follow the 2 simple steps below:
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <p className="text-gray-200 font-extrabold text-[11px] uppercase tracking-wide text-emerald-400">
-                To Install on your phone:
-              </p>
-
+            <div className="space-y-3.5 text-xs">
               {/* Step 1 */}
-              <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-xs shrink-0 mt-0.5">
-                  1
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-[11px] shrink-0">
+                    1
+                  </span>
+                  <p className="font-extrabold text-white text-xs">Tap to Download the App File</p>
                 </div>
-                <div>
-                  <p className="font-extrabold text-white text-xs">Open the downloaded file</p>
-                  <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
-                    Swipe down your phone's <strong className="text-white font-semibold">Top Notification Bar</strong> and tap <strong className="text-emerald-400 font-extrabold">loosebudget.apk</strong>.
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    (Or open Chrome menu <strong className="text-white font-semibold">⋮</strong> $\rightarrow$ <strong className="text-white font-semibold">Downloads</strong> $\rightarrow$ tap <strong className="text-emerald-400 font-semibold">loosebudget.apk</strong>).
-                  </p>
-                </div>
+                
+                <a
+                  href="https://app.loosebudget.com/loosebudget.apk"
+                  download="LooseBudget.apk"
+                  className="w-full py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl font-extrabold text-xs transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-md shadow-emerald-950/50 flex items-center justify-center gap-2 no-underline mt-1"
+                >
+                  <Download size={14} className="stroke-[3]" />
+                  <span>Download loosebudget.apk</span>
+                </a>
               </div>
 
               {/* Step 2 */}
-              <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-xs shrink-0 mt-0.5">
-                  2
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-[11px] shrink-0">
+                    2
+                  </span>
+                  <p className="font-extrabold text-white text-xs">Tap "OPEN" to Install</p>
                 </div>
-                <div>
-                  <p className="font-extrabold text-white text-xs">Tap "INSTALL"</p>
-                  <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
-                    Android Installer will pop up. If prompted, select <strong className="text-white font-semibold">Allow from this source / Settings</strong>, then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
-                  </p>
-                </div>
+                <p className="text-[10.5px] text-gray-300 leading-relaxed pl-7">
+                  When Chrome finishes downloading, tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> on Chrome's bottom popup (or swipe down top notification bar and tap <strong className="text-white font-semibold">loosebudget.apk</strong>), then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
+                </p>
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col gap-2">
-              <a
-                href="https://app.loosebudget.com/loosebudget.apk"
-                download="LooseBudget.apk"
-                onClick={() => setShowApkDownloadInstructionModal(false)}
-                className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl font-extrabold text-xs transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 no-underline"
-              >
-                <Download size={15} className="stroke-[3]" />
-                <span>Tap Here to Download & Open APK 📲</span>
-              </a>
+            <div className="pt-1">
               <button
                 onClick={() => setShowApkDownloadInstructionModal(false)}
                 className="w-full py-2 px-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-medium text-xs transition-all cursor-pointer border-0 text-center font-sans"
               >
-                Dismiss
+                Close
               </button>
             </div>
           </div>
         </div>,
         document.body
-      )}
+      ) /* End APK Instruction Modal */}
 
       {itemToDelete && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-in fade-in duration-200">
