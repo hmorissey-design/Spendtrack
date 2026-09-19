@@ -4687,7 +4687,7 @@ Date: ${new Date().toLocaleString()}
                     Unlike the Monthly Budget which sets strict spend limits, Savings are funded dynamically through your **End-of-Month Account Reconciliation** 🔄.
                   </p>
                   <p className="text-[9px] text-gray-400 leading-normal font-sans">
-                    When you reconcile your real chequing/savings accounts at month-end, any actual cash surplus will be distributed across these active targets using their allocation percentage.
+                    Based on your total monthly budget, any actual cash surplus will be distributed to Savings Goals using the allocation percentage you have set
                   </p>
                   <div className="pt-1.5">
                     <button

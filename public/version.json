@@ -1,11 +1,10 @@
 {
-  "version": "1.2.1",
-  "buildNumber": 3,
+  "version": "1.2.2",
+  "buildNumber": 4,
   "releaseDate": "2026-09-19",
   "releaseNotes": [
-    "Fixed Expenses: Renamed Known Expenses to Fixed Expenses across all budget views",
-    "1x1 Voice Quick-Add Widget for Android Home Screen",
-    "Direct 1-tap voice dictation & instant modal deep linking"
+    "Updated Savings screen explanation and allocation messaging",
+    "Voice Quick-Add widget cold-boot deep linking reliability improvements"
   ],
   "apkDownloadUrl": "https://app.loosebudget.com/loosebudget.apk"
 }
