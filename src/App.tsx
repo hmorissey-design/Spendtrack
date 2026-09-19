@@ -1381,6 +1381,23 @@ Date: ${new Date().toLocaleString()}
   const [appUpdateNotice, setAppUpdateNotice] = useState<VersionInfo | null>(null);
   const [dismissedUpdateNotice, setDismissedUpdateNotice] = useState<boolean>(false);
 
+  // APK Download Instruction Modal state & launcher
+  const [showApkDownloadInstructionModal, setShowApkDownloadInstructionModal] = useState<boolean>(false);
+
+  const handleAndroidApkDownload = () => {
+    setShowApkDownloadInstructionModal(true);
+    try {
+      const link = document.createElement('a');
+      link.href = 'https://app.loosebudget.com/loosebudget.apk';
+      link.download = 'LooseBudget.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error triggering APK download:', e);
+    }
+  };
+
   useEffect(() => {
     // Run an automatic check for new APK releases silently on startup
     const checkUpdates = async () => {
@@ -2561,15 +2578,14 @@ Date: ${new Date().toLocaleString()}
 
             {/* Direct 1-Tap APK Download Link exclusively for Android Mobile Web Visitors */}
             {isAndroidMobile() && !isNativeApp() && (
-              <a
-                href="https://app.loosebudget.com/loosebudget.apk"
-                download="LooseBudget.apk"
-                className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0 no-underline animate-pulse"
+              <button
+                onClick={handleAndroidApkDownload}
+                className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0 animate-pulse font-sans"
                 title="Download official Android APK for Home Screen Voice Widgets"
               >
                 <Download size={12} className="stroke-[3] shrink-0" />
                 <span>Install App on Phone 📲</span>
-              </a>
+              </button>
             )}
             {showGlobalMenu && (
               <div 
@@ -2746,15 +2762,16 @@ Date: ${new Date().toLocaleString()}
 
                   {/* Direct Android APK Download - Exclusive for Android Mobile Browsers */}
                   {isAndroidMobile() && !isNativeApp() && (
-                    <a
-                      href="https://app.loosebudget.com/loosebudget.apk"
-                      download="LooseBudget.apk"
-                      onClick={() => setShowGlobalMenu(false)}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all no-underline"
+                    <button
+                      onClick={() => {
+                        setShowGlobalMenu(false);
+                        handleAndroidApkDownload();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer text-left"
                     >
-                      <Download size={14} className="stroke-[2] text-emerald-400" />
+                      <Download size={14} className="stroke-[2] text-emerald-400 shrink-0" />
                       <span>Install App on Phone 📲</span>
-                    </a>
+                    </button>
                   )}
 
                   {/* Web Shortcuts & Bookmarks Guide Link */}
@@ -5203,14 +5220,16 @@ Date: ${new Date().toLocaleString()}
                 <p className="text-[10.5px] text-gray-300 leading-relaxed">
                   Download and install the official <strong className="text-white font-semibold">LooseBudget APK</strong> to enable native 1x1 Voice Quick-Add Home Screen Widgets.
                 </p>
-                <a
-                  href="https://app.loosebudget.com/loosebudget.apk"
-                  download="LooseBudget.apk"
-                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 no-underline cursor-pointer mt-1"
+                <button
+                  onClick={() => {
+                    setShowPwaGuide(false);
+                    handleAndroidApkDownload();
+                  }}
+                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer border-0 mt-1 font-sans"
                 >
                   <Download size={13} className="stroke-[2.5]" />
                   <span>Download Phone App (APK) 📲</span>
-                </a>
+                </button>
               </div>
 
               <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-[#161616] p-2.5 border border-white/5 rounded-xl">
@@ -5225,6 +5244,83 @@ Date: ${new Date().toLocaleString()}
             >
               Got It
             </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* APK Download & Installation Guide Portal Modal for Android Users */}
+      {showApkDownloadInstructionModal && createPortal(
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[99999] p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-[#121212] border border-emerald-500/40 rounded-2xl p-5 shadow-2xl relative text-slate-200 font-sans text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowApkDownloadInstructionModal(false)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
+              title="Close"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+              <div className="p-2.5 bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 rounded-xl flex items-center justify-center animate-bounce shrink-0">
+                <Download size={20} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Downloading LooseBudget...</h3>
+                <p className="text-[10px] text-emerald-400 font-bold mt-0.5 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                  Downloading loosebudget.apk to phone
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <p className="text-gray-200 font-extrabold text-[11px] uppercase tracking-wide text-emerald-400">
+                Finish Setup in 2 Easy Steps:
+              </p>
+
+              {/* Step 1 */}
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-xs shrink-0 mt-0.5">
+                  1
+                </div>
+                <div>
+                  <p className="font-extrabold text-white text-xs">Tap "OPEN" on Download Popup</p>
+                  <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
+                    Look at the popup at the bottom of Chrome or swipe down your phone's top notification bar, then tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> (or <strong className="text-white font-semibold">loosebudget.apk</strong>).
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-xs shrink-0 mt-0.5">
+                  2
+                </div>
+                <div>
+                  <p className="font-extrabold text-white text-xs">Tap "INSTALL"</p>
+                  <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
+                    The Android Installer will launch. If asked for permission, select <strong className="text-white font-semibold">Allow / Settings $\rightarrow$ Allow from this source</strong>, then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={handleAndroidApkDownload}
+                className="flex-1 py-2.5 px-3 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <RefreshCw size={13} />
+                <span>Re-download</span>
+              </button>
+              <button
+                onClick={() => setShowApkDownloadInstructionModal(false)}
+                className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-lg shadow-emerald-950/50"
+              >
+                Got It 👍
+              </button>
+            </div>
           </div>
         </div>,
         document.body
