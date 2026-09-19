@@ -1387,12 +1387,7 @@ Date: ${new Date().toLocaleString()}
   const handleAndroidApkDownload = () => {
     setShowApkDownloadInstructionModal(true);
     try {
-      const link = document.createElement('a');
-      link.href = 'https://app.loosebudget.com/loosebudget.apk';
-      link.download = 'LooseBudget.apk';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.location.href = 'https://app.loosebudget.com/loosebudget.apk';
     } catch (e) {
       console.error('Error triggering APK download:', e);
     }
@@ -5276,7 +5271,7 @@ Date: ${new Date().toLocaleString()}
 
             <div className="space-y-3 text-xs">
               <p className="text-gray-200 font-extrabold text-[11px] uppercase tracking-wide text-emerald-400">
-                Finish Setup in 2 Easy Steps:
+                To Install on your phone:
               </p>
 
               {/* Step 1 */}
@@ -5285,9 +5280,12 @@ Date: ${new Date().toLocaleString()}
                   1
                 </div>
                 <div>
-                  <p className="font-extrabold text-white text-xs">Tap "OPEN" on Download Popup</p>
+                  <p className="font-extrabold text-white text-xs">Open the downloaded file</p>
                   <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
-                    Look at the popup at the bottom of Chrome or swipe down your phone's top notification bar, then tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> (or <strong className="text-white font-semibold">loosebudget.apk</strong>).
+                    Swipe down your phone's <strong className="text-white font-semibold">Top Notification Bar</strong> and tap <strong className="text-emerald-400 font-extrabold">loosebudget.apk</strong>.
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    (Or open Chrome menu <strong className="text-white font-semibold">⋮</strong> $\rightarrow$ <strong className="text-white font-semibold">Downloads</strong> $\rightarrow$ tap <strong className="text-emerald-400 font-semibold">loosebudget.apk</strong>).
                   </p>
                 </div>
               </div>
@@ -5300,25 +5298,27 @@ Date: ${new Date().toLocaleString()}
                 <div>
                   <p className="font-extrabold text-white text-xs">Tap "INSTALL"</p>
                   <p className="text-[10.5px] text-gray-300 mt-1 leading-relaxed">
-                    The Android Installer will launch. If asked for permission, select <strong className="text-white font-semibold">Allow / Settings $\rightarrow$ Allow from this source</strong>, then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
+                    Android Installer will pop up. If prompted, select <strong className="text-white font-semibold">Allow from this source / Settings</strong>, then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 flex items-center gap-2">
-              <button
-                onClick={handleAndroidApkDownload}
-                className="flex-1 py-2.5 px-3 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href="https://app.loosebudget.com/loosebudget.apk"
+                download="LooseBudget.apk"
+                onClick={() => setShowApkDownloadInstructionModal(false)}
+                className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl font-extrabold text-xs transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 no-underline"
               >
-                <RefreshCw size={13} />
-                <span>Re-download</span>
-              </button>
+                <Download size={15} className="stroke-[3]" />
+                <span>Tap Here to Download & Open APK 📲</span>
+              </a>
               <button
                 onClick={() => setShowApkDownloadInstructionModal(false)}
-                className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-lg shadow-emerald-950/50"
+                className="w-full py-2 px-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-medium text-xs transition-all cursor-pointer border-0 text-center font-sans"
               >
-                Got It 👍
+                Dismiss
               </button>
             </div>
           </div>
