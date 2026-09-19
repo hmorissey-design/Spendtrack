@@ -30,6 +30,15 @@ export function isNativeApp(): boolean {
 }
 
 /**
+ * Helper to determine if visiting on an Android mobile device (and not Chromebook/Desktop)
+ */
+export function isAndroidMobile(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Android/i.test(ua) && !/CrOS|Ubuntu|X11/i.test(ua);
+}
+
+/**
  * Checks GitHub Releases or local version endpoint for new APK updates
  */
 export async function checkForAppUpdates(repoOwner = 'hmorissey-design', repoName = 'Spendtrack'): Promise<VersionInfo | null> {

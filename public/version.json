@@ -6,5 +6,5 @@
     "Dedicated Release APK build pipeline configuration",
     "Updated Savings Goal allocation messaging and terminology"
   ],
-  "apkDownloadUrl": "https://github.com/hmorissey-design/Spendtrack/releases/latest"
+  "apkDownloadUrl": "https://app.loosebudget.com/loosebudget.apk"
 }

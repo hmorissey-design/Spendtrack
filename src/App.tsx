@@ -56,7 +56,7 @@ import { ActiveTab, Expense, Category, MonthlyBudget, SubscriptionState, VendorR
 import { LocalDb, DEFAULT_CATEGORIES, DEFAULT_INCOME_STREAMS, DEFAULT_FIXED_EXPENSES, DEFAULT_SAVINGS_GOALS } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { SubscriptionManager } from './utils/subscription';
-import { APP_VERSION, checkForAppUpdates, isNativeApp, VersionInfo } from './utils/version';
+import { APP_VERSION, checkForAppUpdates, isNativeApp, isAndroidMobile, VersionInfo } from './utils/version';
 import { AndroidFrame } from './components/AndroidFrame';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
@@ -2559,17 +2559,16 @@ Date: ${new Date().toLocaleString()}
 
 
 
-            {/* Download APK Link for Web Visitors */}
-            {!isNativeApp() && (
+            {/* Direct 1-Tap APK Download Link exclusively for Android Mobile Web Visitors */}
+            {isAndroidMobile() && !isNativeApp() && (
               <a
-                href="https://github.com/hmorissey-design/Spendtrack/releases/latest"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0 no-underline"
+                href="https://app.loosebudget.com/loosebudget.apk"
+                download="LooseBudget.apk"
+                className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-extrabold bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0 shadow-md shadow-emerald-950/40 shrink-0 no-underline animate-pulse"
                 title="Download official Android APK for Home Screen Voice Widgets"
               >
                 <Download size={12} className="stroke-[3] shrink-0" />
-                <span>Download APK 🤖</span>
+                <span>Install App on Phone 📲</span>
               </a>
             )}
             {showGlobalMenu && (
@@ -2745,17 +2744,18 @@ Date: ${new Date().toLocaleString()}
                     <span>Help & Guide</span>
                   </button>
 
-                  {/* Direct Android APK Download */}
-                  <a
-                    href="https://github.com/hmorissey-design/Spendtrack/releases/latest"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setShowGlobalMenu(false)}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all no-underline"
-                  >
-                    <Download size={14} className="stroke-[2] text-emerald-400" />
-                    <span>Download Android APK 🤖</span>
-                  </a>
+                  {/* Direct Android APK Download - Exclusive for Android Mobile Browsers */}
+                  {isAndroidMobile() && !isNativeApp() && (
+                    <a
+                      href="https://app.loosebudget.com/loosebudget.apk"
+                      download="LooseBudget.apk"
+                      onClick={() => setShowGlobalMenu(false)}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all no-underline"
+                    >
+                      <Download size={14} className="stroke-[2] text-emerald-400" />
+                      <span>Install App on Phone 📲</span>
+                    </a>
+                  )}
 
                   {/* Web Shortcuts & Bookmarks Guide Link */}
                   <button
@@ -5204,13 +5204,12 @@ Date: ${new Date().toLocaleString()}
                   Download and install the official <strong className="text-white font-semibold">LooseBudget APK</strong> to enable native 1x1 Voice Quick-Add Home Screen Widgets.
                 </p>
                 <a
-                  href="https://github.com/hmorissey-design/Spendtrack/releases/latest"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="https://app.loosebudget.com/loosebudget.apk"
+                  download="LooseBudget.apk"
                   className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 no-underline cursor-pointer mt-1"
                 >
                   <Download size={13} className="stroke-[2.5]" />
-                  <span>Download LooseBudget APK 🤖</span>
+                  <span>Download Phone App (APK) 📲</span>
                 </a>
               </div>
 

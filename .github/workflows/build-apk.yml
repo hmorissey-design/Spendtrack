@@ -64,17 +64,14 @@ jobs:
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Deploy loosebudget.apk to repository
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        with:
-          tag_name: v1.2.3
-          name: LooseBudget v1.2.3
-          body: "Latest release build of LooseBudget Android APK with 1x1 Voice Widget support."
-          draft: false
-          prerelease: false
-          files: |
-            android/app/build/outputs/apk/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p public
+          cp android/app/build/outputs/apk/release/*.apk public/loosebudget.apk
+          git add public/loosebudget.apk
+          git commit -m "Auto-update public/loosebudget.apk [skip ci]" || true
+          git push
 
