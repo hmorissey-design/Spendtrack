@@ -21,14 +21,28 @@ export interface VersionInfo {
  */
 export async function checkForAppUpdates(repoOwner = 'hmorissey-design', repoName = 'Spendtrack'): Promise<VersionInfo | null> {
   try {
-    // 1. First check local live endpoint on app.loosebudget.com/version.json if present
-    const localRes = await fetch('/version.json', { cache: 'no-store' }).catch(() => null);
-    if (localRes && localRes.ok) {
-      const data: VersionInfo = await localRes.json();
-      if (data.buildNumber > APP_BUILD_NUMBER || isNewerVersion(data.version, APP_VERSION)) {
-        return data;
+    // 1. First check live absolute endpoint on app.loosebudget.com/version.json
+    // Note: In Capacitor APKs, window.location.origin is 'https://localhost' or 'capacitor://localhost',
+    // so we must explicitly query the live production URL https://app.loosebudget.com/version.json
+    const remoteEndpoints = [
+      'https://app.loosebudget.com/version.json',
+      '/version.json'
+    ];
+
+    for (const endpoint of remoteEndpoints) {
+      try {
+        const localRes = await fetch(endpoint, { cache: 'no-store' }).catch(() => null);
+        if (localRes && localRes.ok) {
+          const data: VersionInfo = await localRes.json();
+          if (data && (data.buildNumber > APP_BUILD_NUMBER || isNewerVersion(data.version, APP_VERSION))) {
+            return data;
+          }
+          // If we successfully fetched the live file and we are already at latest, return null
+          return null;
+        }
+      } catch (e) {
+        // Try next endpoint
       }
-      return null;
     }
 
     // 2. Fallback to GitHub Releases API
