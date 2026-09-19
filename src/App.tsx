@@ -5292,7 +5292,7 @@ Date: ${new Date().toLocaleString()}
                   <p className="font-extrabold text-white text-xs">Tap "OPEN" to Install</p>
                 </div>
                 <p className="text-[10.5px] text-gray-300 leading-relaxed pl-7">
-                  When Chrome finishes downloading, tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> on Chrome's bottom popup (or swipe down top notification bar and tap <strong className="text-white font-semibold">loosebudget.apk</strong>), then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
+                  When Chrome finishes downloading, tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> on Chrome's download popup at the top of your screen (or swipe down the top notification bar and tap <strong className="text-white font-semibold">loosebudget.apk</strong>), then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
                 </p>
               </div>
             </div>
