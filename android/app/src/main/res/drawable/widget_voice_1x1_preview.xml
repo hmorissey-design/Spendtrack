@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="70dp"
+    android:height="70dp"
+    android:viewportWidth="70"
+    android:viewportHeight="70">
+
+    <!-- Emerald Circle Background -->
+    <path
+        android:fillColor="#10B981"
+        android:strokeColor="#34D399"
+        android:strokeWidth="1.5"
+        android:pathData="M35,4 a31,31 0 1 0 0.1,0 Z" />
+
+    <!-- Mic Icon in Center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M35,32 c2.2,0 4,-1.8 4,-4 v-12 c0,-2.2 -1.8,-4 -4,-4 s-4,1.8 -4,4 v12 c0,2.2 1.8,4 4,4 z m7,-4 c0,3.9 -3.1,7 -7,7 s-7,-3.1 -7,-7 h-3 c0,5 3.7,9.1 8.5,9.8 v4.2 h3 v-4.2 c4.8,-0.7 8.5,-4.8 8.5,-9.8 z" />
+
+    <!-- VOICE mini text block mock -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,53 h22 v4 h-22 z" />
+</vector>

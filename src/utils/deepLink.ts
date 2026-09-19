@@ -32,6 +32,19 @@ class DeepLinkManagerService {
 
   private setupCapacitorListener() {
     try {
+      // Expose native bridge hook for Android MainActivity deep link intents
+      if (typeof window !== 'undefined') {
+        (window as any).__handleNativeDeepLink = (urlStr: string) => {
+          if (urlStr) {
+            console.log('Received native deep link from Android Bridge:', urlStr);
+            const parsed = this.parseUrl(urlStr);
+            if (parsed) {
+              this.emit(parsed);
+            }
+          }
+        };
+      }
+
       // Listen for Android deep links when app is running or opened from background
       CapApp.addListener('appUrlOpen', (event) => {
         if (event && event.url) {

@@ -64,7 +64,7 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- Home Screen Widget: Remaining Budget & 1-Tap Voice Entry -->
+        <!-- Home Screen Widget: Remaining Budget & 1-Tap Voice Entry (3x1) -->
         <receiver
             android:name=".BudgetVoiceWidgetProvider"
             android:label="@string/widget_name"
@@ -75,6 +75,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_budget_voice_info" />
+        </receiver>
+
+        <!-- Home Screen Widget: 1-Tap Voice Quick-Add (1x1) -->
+        <receiver
+            android:name=".VoiceWidgetProvider"
+            android:label="@string/widget_voice_1x1_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_voice_1x1_info" />
         </receiver>
     </application>
 

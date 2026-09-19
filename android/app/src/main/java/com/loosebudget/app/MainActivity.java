@@ -57,6 +57,21 @@ public class MainActivity extends BridgeActivity {
                 intent.setData(deepLink);
                 intent.setAction(Intent.ACTION_VIEW);
             }
+        } else if (Intent.ACTION_VIEW.equals(action) && intent.getData() != null) {
+            Uri data = intent.getData();
+            if ("expensetrack".equalsIgnoreCase(data.getScheme())) {
+                if (bridge != null && bridge.getWebView() != null) {
+                    bridge.getWebView().post(() -> {
+                        try {
+                            String urlStr = data.toString();
+                            bridge.getWebView().evaluateJavascript(
+                                "if (typeof window.__handleNativeDeepLink === 'function') { window.__handleNativeDeepLink('" + urlStr + "'); }",
+                                null
+                            );
+                        } catch (Exception ignored) {}
+                    });
+                }
+            }
         }
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_voice_1x1_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <LinearLayout
+        android:id="@+id/widget_voice_1x1_button"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/widget_voice_1x1_bg"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:elevation="4dp"
+        android:contentDescription="Voice Expense Quick Add">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:src="@drawable/ic_widget_mic"
+            android:tint="#FFFFFF"
+            android:contentDescription="Voice Mic" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VOICE"
+            android:textColor="#FFFFFF"
+            android:textSize="8sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:layout_marginTop="1dp"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+</LinearLayout>

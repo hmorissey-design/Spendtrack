@@ -10,4 +10,6 @@
     <string name="shortcut_voice_long">Dictate and log expense with 1-tap voice</string>
     <string name="widget_name">LooseBudget (3x1) Budget &amp; Voice</string>
     <string name="widget_description">Glance remaining budget and 1-tap voice expense entry</string>
+    <string name="widget_voice_1x1_name">LooseBudget (1x1) Voice Quick-Add</string>
+    <string name="widget_voice_1x1_description">1-Tap Voice Expense Dictation and Quick-Log</string>
 </resources>
