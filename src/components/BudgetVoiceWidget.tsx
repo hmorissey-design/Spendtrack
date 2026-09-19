@@ -131,9 +131,8 @@ export const BudgetVoiceWidget: React.FC<BudgetVoiceWidgetProps> = ({
       <div className="flex items-center justify-between gap-2 mb-3 relative z-10">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-gray-300 flex items-center gap-1">
-            <Zap size={12} className="text-emerald-400" />
-            Budget & Voice Quick Widget
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">
+            {monthName}
           </span>
         </div>
 
