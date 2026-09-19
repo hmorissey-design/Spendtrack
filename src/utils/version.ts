@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const APP_VERSION = '1.2.0';
-export const APP_BUILD_NUMBER = 2;
+export const APP_VERSION = '1.2.1';
+export const APP_BUILD_NUMBER = 3;
 
 export interface VersionInfo {
   version: string;
@@ -17,9 +17,27 @@ export interface VersionInfo {
 }
 
 /**
+ * Helper to determine if running inside native Android/iOS Capacitor shell
+ */
+export function isNativeApp(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    Boolean((window as any).Capacitor?.isNativePlatform?.()) ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.hostname === 'localhost' ||
+    /Capacitor|AndroidNative/i.test(navigator.userAgent)
+  );
+}
+
+/**
  * Checks GitHub Releases or local version endpoint for new APK updates
  */
 export async function checkForAppUpdates(repoOwner = 'hmorissey-design', repoName = 'Spendtrack'): Promise<VersionInfo | null> {
+  // If running in a standard web browser / PWA, automatic updates are already handled by web deployments
+  if (!isNativeApp()) {
+    return null;
+  }
+
   try {
     // 1. First check live absolute endpoint on app.loosebudget.com/version.json
     // Note: In Capacitor APKs, window.location.origin is 'https://localhost' or 'capacitor://localhost',
@@ -58,7 +76,7 @@ export async function checkForAppUpdates(repoOwner = 'hmorissey-design', repoNam
       if (isNewerVersion(tagName, APP_VERSION)) {
         // Find attached APK asset if any, or default to direct release link
         const apkAsset = release.assets?.find((a: any) => a.name.endsWith('.apk'));
-        const downloadUrl = apkAsset ? apkAsset.browser_download_url : release.html_url;
+        const downloadUrl = apkAsset ? apkAsset.browser_download_url : (release.html_url || `https://github.com/${repoOwner}/${repoName}/releases`);
 
         return {
           version: tagName,
