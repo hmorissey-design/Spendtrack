@@ -52,17 +52,15 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
-import { ActiveTab, Expense, Category, MonthlyBudget, SubscriptionState, VendorRule } from './types';
+import { ActiveTab, Expense, Category, MonthlyBudget, VendorRule } from './types';
 import { LocalDb, DEFAULT_CATEGORIES, DEFAULT_INCOME_STREAMS, DEFAULT_FIXED_EXPENSES, DEFAULT_SAVINGS_GOALS } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
-import { SubscriptionManager } from './utils/subscription';
 import { APP_VERSION, checkForAppUpdates, isNativeApp, isAndroidMobile, VersionInfo } from './utils/version';
 import { AndroidFrame } from './components/AndroidFrame';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
 import { CategoryManager } from './components/CategoryManager';
 import { AuthModal } from './components/AuthModal';
-import { SubscriptionModal } from './components/SubscriptionModal';
 import { VoiceExpenseModal } from './components/VoiceExpenseModal';
 import { BudgetVoiceWidget } from './components/BudgetVoiceWidget';
 import { 
@@ -332,12 +330,6 @@ export default function App() {
     }
   }, []);
 
-  // Subscription & Paywall state management
-  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(() => {
-    return SubscriptionManager.getSubscriptionState();
-  });
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-
   // Initialize active tab - default to 'dashboard' (Daily Overview)
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [accentThemeId, setAccentThemeId] = useState<string>(getLoadedAccentThemeId);
@@ -351,7 +343,7 @@ export default function App() {
   // Voice Modal state
   const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
 
-  // Developer Secret Shortcut: 5 quick taps on logo toggles PRO / Trial state & Dev Mode
+  // Developer Secret Shortcut: 5 quick taps on logo toggles Dev Mode
   const logoTapCountRef = useRef<number>(0);
   const logoTapTimerRef = useRef<any>(null);
   const [devNotice, setDevNotice] = useState<string | null>(null);
@@ -368,17 +360,7 @@ export default function App() {
       logoTapCountRef.current = 0;
       const nextDevState = !isDevMode;
       setIsDevMode(nextDevState);
-      if (subscriptionState.isSubscribed && !nextDevState) {
-        // Toggle OFF Dev Pro -> Reset to standard trial
-        const updated = SubscriptionManager.startTrial();
-        setSubscriptionState(updated);
-        setDevNotice('🔒 Developer Mode Deactivated');
-      } else {
-        // Toggle ON Dev Pro -> Activate Pro membership
-        const updated = SubscriptionManager.activatePlan('yearly');
-        setSubscriptionState(updated);
-        setDevNotice('🔓 Developer PRO & Cloud Options Unlocked');
-      }
+      setDevNotice(nextDevState ? '🔓 Developer Mode Activated' : '🔒 Developer Mode Deactivated');
       setTimeout(() => setDevNotice(null), 3500);
     } else {
       logoTapTimerRef.current = setTimeout(() => {
@@ -387,39 +369,8 @@ export default function App() {
     }
   };
 
-  // Derived Demo Mode flag (active when trial expired and unsubscribed)
-  const isDemoMode = !subscriptionState.isSubscribed && SubscriptionManager.isPaywalled(subscriptionState);
-
-  // Auto-check trial expiration on app boot & handle payment redirect back from Lemon Squeezy
   useEffect(() => {
-    // 1. Check for payment return query params
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const payment = params.get('payment');
-      const success = params.get('success');
-      const status = params.get('status');
-      const plan = params.get('plan');
-      const action = params.get('action');
-
-      const isSuccessSignal = payment === 'success' || success === 'true' || status === 'success' || Boolean(plan);
-
-      if (isSuccessSignal) {
-        const activePlan = (plan === 'monthly' || plan === 'yearly') ? (plan as 'monthly' | 'yearly') : 'yearly';
-        const updated = SubscriptionManager.activatePlan(activePlan);
-        setSubscriptionState(updated);
-        // Clean URL query params without triggering page reload
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    } catch (e) {
-      console.warn('Error processing payment redirect:', e);
-    }
-
-    // 2. Check if user is paywalled (trial expired and unsubscribed)
-    if (SubscriptionManager.isPaywalled(subscriptionState)) {
-      setShowSubscriptionModal(true);
-    }
-
-    // 3. Custom event listener for opening cloud sync auth modal
+    // Custom event listener for opening cloud sync auth modal
     const handleOpenCloudSync = () => {
       setShowAuthModal(true);
     };
@@ -784,10 +735,6 @@ export default function App() {
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     return tomorrow.getDate() === 1;
   }, []);
-
-  const isTrialActive = useMemo(() => {
-    return !subscriptionState.isSubscribed && subscriptionState.tier === 'trial' && SubscriptionManager.getTrialDaysRemaining(subscriptionState) > 0;
-  }, [subscriptionState]);
 
   const hasEnteredBudgetData = useMemo(() => {
     const hasCategoryLimits = categories.some(c => (c.limit || 0) > 0);
@@ -1194,20 +1141,6 @@ export default function App() {
   const [showGlobalMenu, setShowGlobalMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  // PWA Prompt State inside App.tsx
-  const [pwaDeferredPrompt, setPwaDeferredPrompt] = useState<any>(null);
-  const [pwaInstallable, setPwaInstallable] = useState<boolean>(false);
-  const [showPwaGuide, setShowPwaGuide] = useState<boolean>(false);
-  const [isPwaInstalled, setIsPwaInstalled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return Capacitor.isNativePlatform() ||
-             window.matchMedia('(display-mode: standalone)').matches || 
-             (navigator as any).standalone === true ||
-             document.referrer.includes('android-app://');
-    }
-    return false;
-  });
-
   const [lastBackupTime, setLastBackupTime] = useState<number>(() => {
     try {
       const stored = localStorage.getItem('expensetrack_last_backup_time');
@@ -1224,41 +1157,6 @@ export default function App() {
     }
   });
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setPwaDeferredPrompt(e);
-      if (!isPwaInstalled) {
-        setPwaInstallable(true);
-      }
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setIsPwaInstalled(true);
-      setPwaInstallable(false);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, [isPwaInstalled]);
-
-  const triggerNativeInstall = async () => {
-    if (!pwaDeferredPrompt) return;
-    pwaDeferredPrompt.prompt();
-    const { outcome } = await pwaDeferredPrompt.userChoice;
-    console.log(`User responded to PWA install: ${outcome}`);
-    setPwaDeferredPrompt(null);
-    setPwaInstallable(false);
-  };
-
-  const triggerOpenInstallGuide = () => {
-    setShowPwaGuide(true);
-  };
   const [feedbackType, setFeedbackType] = useState<'bug' | 'enhancement'>('bug');
   const [feedbackTitle, setFeedbackTitle] = useState('');
   const [feedbackDescription, setFeedbackDescription] = useState('');
@@ -2086,21 +1984,11 @@ Date: ${new Date().toLocaleString()}
   };
 
   const handleResetDatabase = async () => {
-    // Capture active subscription state so paid account access / renewal status is preserved
-    const savedSubState = SubscriptionManager.getSubscriptionState();
-
     // Clear LocalStorage and SessionStorage (local cache only)
     try {
       window.localStorage.clear();
       window.sessionStorage.clear();
     } catch (e) {}
-
-    // Restore subscription state locally and to cloud profile
-    if (savedSubState) {
-      try {
-        SubscriptionManager.saveSubscriptionState(savedSubState);
-      } catch (e) {}
-    }
 
     // Purge IndexedDB databases (local app offline cache)
     try {
@@ -2518,51 +2406,27 @@ Date: ${new Date().toLocaleString()}
               <span className="font-sans">Voice</span>
             </button>
 
-            {/* Membership / Trial Status Badge */}
+            {/* Firebase Cloud Sync Button */}
             <button
-              onClick={() => setShowSubscriptionModal(true)}
-              className="px-2 py-1 text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0"
-              title="View Membership & Subscription Details"
+              onClick={() => {
+                setShowAuthModal(true);
+              }}
+              className={`px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0 active:scale-95 ${
+                currentUser
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
+              title={
+                currentUser
+                  ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}`
+                  : 'Sign in for Firebase Cloud Sync'
+              }
             >
-              <Sparkles size={12} className="text-amber-300 shrink-0" />
-              <span className="font-sans">
-                {subscriptionState.isSubscribed ? (
-                  'PRO'
-                ) : SubscriptionManager.getTrialHoursRemaining(subscriptionState) > 0 ? (
-                  <>
-                    <span className="sm:hidden">Preview ({SubscriptionManager.getTrialTimeRemainingText(subscriptionState)})</span>
-                    <span className="hidden sm:inline">2-Day Preview ({SubscriptionManager.getTrialTimeRemainingText(subscriptionState)} left)</span>
-                  </>
-                ) : (
-                  'Demo Mode'
-                )}
+              <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse shrink-0' : 'text-gray-400 shrink-0'} />
+              <span className="hidden sm:inline font-sans">
+                {currentUser ? 'Cloud Synced' : 'Cloud Sync'}
               </span>
             </button>
-
-            {/* Firebase Cloud Sync Button */}
-            {/* Cloud Sync Status/Trigger Button (Hidden in Demo Mode) */}
-            {!isDemoMode && (
-              <button
-                onClick={() => {
-                  setShowAuthModal(true);
-                }}
-                className={`px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold border rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0 active:scale-95 ${
-                  currentUser
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                    : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
-                }`}
-                title={
-                  currentUser
-                    ? `Signed in as ${currentUser.displayName || currentUser.email || 'Cloud User'}`
-                    : 'Sign in for Firebase Cloud Sync'
-                }
-              >
-                <Cloud size={13} className={currentUser ? 'text-emerald-400 animate-pulse shrink-0' : 'text-gray-400 shrink-0'} />
-                <span className="hidden sm:inline font-sans">
-                  {currentUser ? 'Cloud Synced' : 'Cloud Sync'}
-                </span>
-              </button>
-            )}
 
 
 
@@ -2701,40 +2565,13 @@ Date: ${new Date().toLocaleString()}
                   {/* Firebase Cloud Sync link */}
                   <button
                     onClick={() => {
-                      if (isDemoMode) {
-                        setShowSubscriptionModal(true);
-                      } else {
-                        setShowAuthModal(true);
-                      }
+                      setShowAuthModal(true);
                       setShowGlobalMenu(false);
                     }}
-                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all border-0 bg-transparent cursor-pointer ${
-                      isDemoMode
-                        ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                        : 'text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10'
-                    }`}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 transition-all border-0 bg-transparent cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Cloud size={14} className={`stroke-[2.5] ${isDemoMode ? 'text-gray-400' : 'text-emerald-400'}`} />
-                      <span>Firebase Cloud Sync ☁️</span>
-                    </div>
-                    {isDemoMode && (
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
-                        Requires Subscription / Trial
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Subscription & Billing link */}
-                  <button
-                    onClick={() => {
-                      setShowSubscriptionModal(true);
-                      setShowGlobalMenu(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 transition-all border-0 bg-transparent cursor-pointer"
-                  >
-                    <Sparkles size={14} className="stroke-[2.5] text-amber-300" />
-                    <span>Membership & Billing 💳</span>
+                    <Cloud size={14} className="stroke-[2.5] text-emerald-400" />
+                    <span>Firebase Cloud Sync ☁️</span>
                   </button>
 
                   {/* Help & Guide link */}
@@ -2763,15 +2600,6 @@ Date: ${new Date().toLocaleString()}
                       <span>Install App on Phone 📲</span>
                     </button>
                   )}
-
-                  {/* Web Shortcuts & Bookmarks Guide Link */}
-                  <button
-                    onClick={() => { triggerOpenInstallGuide(); setShowGlobalMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all border-0 bg-transparent cursor-pointer"
-                  >
-                    <Bookmark size={14} className="stroke-[2] text-gray-400" />
-                    <span>Web Shortcuts & Guide 🔖</span>
-                  </button>
 
 
 
@@ -2850,38 +2678,6 @@ Date: ${new Date().toLocaleString()}
                     <X size={15} />
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Demo Mode Announcement Banner (Hidden when subscribed to maximize space) */}
-        {!subscriptionState.isSubscribed && (
-          <div className="px-3 pt-1.5 pb-0.5 shrink-0">
-            <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-amber-500/10 border border-amber-500/30 rounded-2xl p-3 sm:p-3.5 shadow-lg backdrop-blur-md">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-300 mt-0.5">
-                    <Sparkles size={18} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        Demo / Preview Mode ({SubscriptionManager.getTrialHoursRemaining(subscriptionState) > 0 ? `${SubscriptionManager.getTrialTimeRemainingText(subscriptionState)} Preview` : 'Preview Expired'})
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      👋 <strong>You're in Demo / Preview Mode</strong> — explore freely! Feel free to click around, view reports, and test every feature. Ready to save changes & sync across devices? Start your 5-day bonus free trial with any plan!
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowSubscriptionModal(true)}
-                  className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Sparkles size={14} className="fill-slate-950" />
-                  <span>Start 5-Day Free Trial</span>
-                </button>
               </div>
             </div>
           </div>
@@ -3216,8 +3012,8 @@ Date: ${new Date().toLocaleString()}
                 </div>
               )}
 
-              {/* Reconciliation Reminder Banner (Only on last day of month, not during 3-day trial, and only if user has entered budget data) */}
-              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && isLastDayOfMonth && !isTrialActive && hasEnteredBudgetData && (
+              {/* Reconciliation Reminder Banner (Only on last day of month and only if user has entered budget data) */}
+              {!hasRunReconciliationThisMonth && !dismissedReconciliationBanner && isLastDayOfMonth && hasEnteredBudgetData && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 font-sans animate-in zoom-in-95 duration-250 shadow-lg">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
@@ -4067,8 +3863,6 @@ Date: ${new Date().toLocaleString()}
                 onShowSimulatedAdsChange={handleShowSimulatedAdsChange}
                 onLoadDemoData={handleLoadDemoData}
                 onBackupCompleted={() => setLastBackupTime(Date.now())}
-                subscriptionState={subscriptionState}
-                onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
                 isCloudSynced={!!currentUser}
                 onWipeCloudDatabase={handleWipeCloudDatabase}
                 onOpenCategoryManager={() => setShowCategoryManager(true)}
@@ -4634,10 +4428,8 @@ Date: ${new Date().toLocaleString()}
             <div className="space-y-3">
               <HelpSection
                 setActiveTab={setActiveTab}
-                onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
                 onOpenAuthModal={() => setShowAuthModal(true)}
                 user={currentUser}
-                subscriptionState={subscriptionState}
               />
             </div>
           )}
@@ -5156,93 +4948,10 @@ Date: ${new Date().toLocaleString()}
         </div>
       </div>
 
-      {/* Robust PWA Install Guide Modal rendered outside of any parent transforms or clipping contexts via React Portal */}
-      {showPwaGuide && createPortal(
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200 text-slate-200 font-sans">
-            <button
-              onClick={() => setShowPwaGuide(false)}
-              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
-              title="Close Guide"
-            >
-              <X size={16} />
-            </button>
-
-            <div className="flex items-center gap-2.5 border-b border-white/5 pb-3 mb-4">
-              <div className="p-2 bg-emerald-950/20 border border-emerald-500/20 text-[#10b981] rounded-xl flex items-center justify-center">
-                <Bookmark size={18} />
-              </div>
-              <div className="text-left">
-                <h3 className="font-extrabold text-white text-sm uppercase tracking-wider">Web Shortcuts & Bookmarks</h3>
-                <p className="text-[10px] text-gray-400 mt-0.5">Quick access to app.loosebudget.com with live automatic updates.</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 font-sans text-xs text-left">
-              {/* Chromebook & Desktop */}
-              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                  💻 Chromebook & Desktop (Chrome / Edge)
-                </p>
-                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
-                  <li>Click the <strong className="text-white font-semibold">Star icon ⭐️</strong> in the URL bar to bookmark.</li>
-                  <li>Or open menu (3 dots) $\rightarrow$ <strong className="text-white font-semibold">Save and share $\rightarrow$ Create shortcut...</strong></li>
-                  <li>Opening the web shortcut always loads the latest version live from the server automatically!</li>
-                </ol>
-              </div>
-
-              {/* iOS Guide */}
-              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-1.5">
-                <p className="font-extrabold text-emerald-400 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                  📱 iPhone & iPad (Safari)
-                </p>
-                <ol className="text-[10.5px] text-gray-300 list-decimal list-inside space-y-1 pl-1">
-                  <li>Tap the <strong className="text-white font-semibold">Share button</strong> (square with up arrow).</li>
-                  <li>Tap <strong className="text-white font-semibold">Add Bookmark</strong> or <strong className="text-white font-semibold">Add to Home Screen</strong>.</li>
-                </ol>
-              </div>
-
-              {/* Android Guide */}
-              <div className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2">
-                <p className="font-extrabold text-[#10b981] text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                  🤖 Android (Native App with Voice Widgets)
-                </p>
-                <p className="text-[10.5px] text-gray-300 leading-relaxed">
-                  Download and install the official <strong className="text-white font-semibold">LooseBudget APK</strong> to enable native 1x1 Voice Quick-Add Home Screen Widgets.
-                </p>
-                <button
-                  onClick={() => {
-                    setShowPwaGuide(false);
-                    handleAndroidApkDownload();
-                  }}
-                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer border-0 mt-1 font-sans"
-                >
-                  <Download size={13} className="stroke-[2.5]" />
-                  <span>Download Phone App (APK) 📲</span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-[#161616] p-2.5 border border-white/5 rounded-xl">
-                <CheckCircle size={14} className="text-emerald-400 shrink-0" />
-                <span>Web shortcuts load live directly from app.loosebudget.com, so you never have to reinstall when updates release.</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowPwaGuide(false)}
-              className="mt-5 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 active:scale-95 text-center font-sans"
-            >
-              Got It
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-
       {/* APK Download & Installation Guide Portal Modal for Android Users */}
       {showApkDownloadInstructionModal && createPortal(
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[99999] p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-[#121212] border border-emerald-500/40 rounded-2xl p-5 shadow-2xl relative text-slate-200 font-sans text-left space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#121212] border border-emerald-500/40 rounded-2xl p-5 shadow-2xl relative text-slate-200 font-sans text-left space-y-3.5 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowApkDownloadInstructionModal(false)}
               className="absolute top-4 right-4 p-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
@@ -5263,7 +4972,7 @@ Date: ${new Date().toLocaleString()}
               </div>
             </div>
 
-            <div className="space-y-3.5 text-xs">
+            <div className="space-y-3 text-xs">
               {/* Step 1 */}
               <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
                 <div className="flex items-center gap-2">
@@ -5294,6 +5003,23 @@ Date: ${new Date().toLocaleString()}
                 <p className="text-[10.5px] text-gray-300 leading-relaxed pl-7">
                   When Chrome finishes downloading, tap <strong className="text-emerald-400 font-extrabold">OPEN</strong> on Chrome's download popup at the top of your screen (or swipe down the top notification bar and tap <strong className="text-white font-semibold">loosebudget.apk</strong>), then tap <strong className="text-emerald-400 font-extrabold">INSTALL</strong>.
                 </p>
+              </div>
+
+              {/* Android Security & Unknown Source Notice */}
+              <div className="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 font-extrabold text-[11px]">
+                  <ShieldCheck size={15} className="shrink-0 text-amber-400" />
+                  <span>If Android asks for Permission:</span>
+                </div>
+                <p className="text-[10.5px] text-gray-300 leading-relaxed">
+                  Because this is downloaded directly from our site, Android may display its standard security prompt:
+                </p>
+                <div className="space-y-1.5 text-[10.5px] text-gray-300">
+                  <div className="flex items-start gap-2 bg-black/40 p-2 rounded-lg border border-white/5">
+                    <span className="font-bold text-amber-400 shrink-0">•</span>
+                    <span>If Android says <strong className="text-white">"Install unknown apps"</strong>: tap <strong className="text-emerald-400 font-bold">Settings</strong> $\rightarrow$ toggle ON <strong className="text-white font-bold">Allow from this source</strong> $\rightarrow$ tap <strong className="text-emerald-400 font-bold">Install</strong>.</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -5913,17 +5639,6 @@ Date: ${new Date().toLocaleString()}
         onClose={() => setShowAuthModal(false)}
         currentUser={currentUser}
         onDataSynced={() => loadDatabaseState(selectedMonth)}
-      />
-
-      {/* Subscription & Paywall Modal */}
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        subscriptionState={subscriptionState}
-        onSubscriptionUpdate={(newState) => {
-          setSubscriptionState(newState);
-          SubscriptionManager.saveSubscriptionState(newState);
-        }}
       />
 
       {/* 1-Tap Voice Expense Modal */}

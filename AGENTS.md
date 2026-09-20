@@ -5,5 +5,5 @@ Key decisions and hosting/monetization strategies for ExpenseTrack are documente
 
 * **Hosting:** GitHub source connected to Vercel or Google Cloud Run.
 * **DNS:** DreamHost CNAME record (`app.yourdomain.com`).
-* **Monetization & Taxes:** Lemon Squeezy as Merchant of Record (handles Canadian GST/HST and global VAT).
+* **Monetization:** Digistore24 (marketed alongside PDF course; app has no in-app paywalls, trials, or subscriptions).
 * **PWA:** Web-based PWA distribution bypassing app store API compliance requirements.

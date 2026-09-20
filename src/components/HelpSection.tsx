@@ -27,17 +27,15 @@ import {
   Clock,
   Coins
 } from 'lucide-react';
-import { ActiveTab, SubscriptionState } from '../types';
+import { ActiveTab } from '../types';
 
 interface HelpSectionProps {
   setActiveTab: (tab: ActiveTab) => void;
-  onOpenSubscriptionModal?: () => void;
   onOpenAuthModal?: () => void;
   user?: any;
-  subscriptionState?: SubscriptionState;
 }
 
-type CategoryFilter = 'all' | 'getting_started' | 'budgeting' | 'reconciliation' | 'expenses' | 'cloud' | 'subscription' | 'support';
+type CategoryFilter = 'all' | 'getting_started' | 'budgeting' | 'reconciliation' | 'expenses' | 'cloud' | 'support';
 
 interface FAQItem {
   id: string;
@@ -49,10 +47,8 @@ interface FAQItem {
 
 export const HelpSection: React.FC<HelpSectionProps> = ({
   setActiveTab,
-  onOpenSubscriptionModal,
   onOpenAuthModal,
   user,
-  subscriptionState,
 }) => {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +66,6 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
     { id: 'reconciliation', label: 'Reconciliation', icon: <RefreshCw size={14} /> },
     { id: 'expenses', label: 'Expenses & Business', icon: <Receipt size={14} /> },
     { id: 'cloud', label: 'Cloud Sync & Privacy', icon: <Cloud size={14} /> },
-    { id: 'subscription', label: 'Subscription & Trial', icon: <Zap size={14} /> },
     { id: 'support', label: 'Contact Support', icon: <Mail size={14} /> },
   ];
 
@@ -308,40 +303,6 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
         </div>
       ),
     },
-
-    // SUBSCRIPTION & TRIAL
-    {
-      id: 'faq_sub_1',
-      category: 'subscription',
-      question: 'How does the 2-Day Preview and 5-Day Bonus Free Trial work?',
-      tags: ['trial', 'preview', 'subscription', 'price', 'lemon squeezy'],
-      answer: (
-        <div className="space-y-2 text-xs leading-relaxed text-slate-300">
-          <p>
-            Every new install starts with a <strong>2-Day Full Access Preview</strong> requiring $0 and no credit card.
-          </p>
-          <p>
-            When you subscribe to Monthly ($1.99 CAD/mo) or Yearly ($14.99 CAD/yr), you automatically unlock an additional <strong>5-Day Bonus Free Trial</strong>. You won't be charged anything until Day 6, and you can cancel anytime with 1 click.
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: 'faq_sub_2',
-      category: 'subscription',
-      question: 'What happens when my preview expires?',
-      tags: ['expired', 'demo mode', 'action gated', 'paywall'],
-      answer: (
-        <div className="space-y-2 text-xs leading-relaxed text-slate-300">
-          <p>
-            If your initial preview expires, the app enters <strong>Demo / Action-Gated Mode</strong>.
-          </p>
-          <p>
-            You can still browse your reports, view past transactions, and test calculations freely. To save new edits, add expenses, or sync across devices, simply choose a Monthly or Yearly plan to start your 5-day bonus trial.
-          </p>
-        </div>
-      ),
-    },
   ];
 
   // Filter FAQs based on active category and search query
@@ -365,7 +326,7 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
     if (!feedbackBody.trim()) return;
 
     const subject = encodeURIComponent(feedbackSubject.trim() || 'LooseBudget Feedback / Help Inquiry');
-    const systemInfo = `\n\n--- App System Info ---\nApp Version: LooseBudget v2.4 (React)\nTimestamp: ${new Date().toISOString()}\nUser: ${user ? user.email || user.uid : 'Guest / Local'}\nTrial State: ${subscriptionState?.tier || 'trial'}\nBrowser: ${navigator.userAgent}`;
+    const systemInfo = `\n\n--- App System Info ---\nApp Version: LooseBudget v2.4 (React)\nTimestamp: ${new Date().toISOString()}\nUser: ${user ? user.email || user.uid : 'Guest / Local'}\nBrowser: ${navigator.userAgent}`;
     const body = encodeURIComponent(feedbackBody.trim() + systemInfo);
 
     window.open(`mailto:Hmorissey@gmail.com?subject=${subject}&body=${body}`, '_blank');
@@ -393,15 +354,6 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {onOpenSubscriptionModal && (
-              <button
-                onClick={onOpenSubscriptionModal}
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
-              >
-                <Zap size={14} className="fill-current" />
-                <span>Plans & Trial</span>
-              </button>
-            )}
             {onOpenAuthModal && (
               <button
                 onClick={onOpenAuthModal}
@@ -421,7 +373,7 @@ export const HelpSection: React.FC<HelpSectionProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search questions, features, or keywords (e.g. savings goals, hide, reconciliation, trial)..."
+            placeholder="Search questions, features, or keywords (e.g. savings goals, hide, reconciliation)..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
           />
           {searchQuery && (

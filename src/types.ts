@@ -51,11 +51,9 @@ export interface SubscriptionState {
   tier: PlanTier;
   status: SubscriptionStatus;
   trialStartDate?: number; // timestamp in ms
-  trialDaysTotal: number; // 30
+  trialDaysTotal: number;
   subscriptionEndDate?: number; // timestamp in ms
   isSubscribed: boolean;
-  lemonSqueezyCustomerId?: string;
-  lemonSqueezySubscriptionId?: string;
 }
 
 export interface AccentTheme {

@@ -1,6 +1,6 @@
 /**
- * Subscription & Trial Management Utility for ExpenseTrack
- * Handles 5-day free trial tracking, Lemon Squeezy subscription integration, and Cloud sync state.
+ * Lifetime Access Management Utility for ExpenseTrack / LooseBudget
+ * Provides unlocked lifetime access (marketed via Digistore24 course bundle).
  */
 
 import { SubscriptionState, PlanTier } from '../types';
@@ -10,37 +10,25 @@ import { CloudDb } from './cloudDb';
 const SUBSCRIPTION_STORAGE_KEY = 'expensetrack_subscription_state';
 
 export const DEFAULT_SUBSCRIPTION_STATE: SubscriptionState = {
-  tier: 'trial',
-  status: 'trialing',
-  trialDaysTotal: 2,
-  isSubscribed: false,
+  tier: 'yearly',
+  status: 'active',
+  trialDaysTotal: 0,
+  isSubscribed: true,
 };
 
 export const SubscriptionManager = {
   /**
-   * Retrieves the current subscription state from localStorage or defaults
+   * Retrieves the current state from localStorage or returns active lifetime access
    */
   getSubscriptionState(): SubscriptionState {
     try {
       const saved = localStorage.getItem(SUBSCRIPTION_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.tier) {
-          let needsSave = false;
-          if (parsed.tier === 'free_preview' || parsed.status === 'preview' || !parsed.trialStartDate) {
-            parsed.tier = 'trial';
-            parsed.status = 'trialing';
-            parsed.trialStartDate = parsed.trialStartDate || Date.now();
-            parsed.trialDaysTotal = 2;
-            parsed.isSubscribed = false;
-            needsSave = true;
-          } else if (!parsed.isSubscribed && parsed.trialDaysTotal !== 2) {
-            parsed.trialDaysTotal = 2;
-            needsSave = true;
-          }
-          if (needsSave) {
-            this.saveSubscriptionState(parsed);
-          }
+        if (parsed) {
+          // Always ensure full active status
+          parsed.isSubscribed = true;
+          parsed.status = 'active';
           return parsed;
         }
       }
@@ -48,173 +36,72 @@ export const SubscriptionManager = {
       console.error('Error reading subscription state:', e);
     }
 
-    // Default: initialize 2-day full access preview trial starting now
-    const initialState: SubscriptionState = {
-      ...DEFAULT_SUBSCRIPTION_STATE,
-      trialStartDate: Date.now(),
-      trialDaysTotal: 2,
-    };
+    const initialState: SubscriptionState = { ...DEFAULT_SUBSCRIPTION_STATE };
     this.saveSubscriptionState(initialState);
     return initialState;
   },
 
   /**
-   * Saves subscription state locally and syncs to Firestore if user is authenticated
+   * Saves state locally and syncs to Firestore if user is authenticated
    */
   saveSubscriptionState(state: SubscriptionState): void {
     try {
       localStorage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(state));
       if (auth.currentUser) {
         CloudDb.saveUserProfileToCloud(auth.currentUser.uid, { subscription: state }).catch(err => {
-          console.warn('Could not sync subscription to cloud profile:', err);
+          console.warn('Could not sync state to cloud profile:', err);
         });
       }
     } catch (e) {
-      console.error('Error saving subscription state:', e);
+      console.error('Error saving state:', e);
     }
   },
 
-  /**
-   * Calculates remaining trial hours based on trialStartDate and total trialDays (48 hours = 2 days)
-   */
-  getTrialHoursRemaining(state?: SubscriptionState): number {
-    const sub = state || this.getSubscriptionState();
-    if (sub.isSubscribed || sub.status === 'active') {
-      return 120; // Active subscriber
-    }
-    if (!sub.trialStartDate) return 0;
+  getTrialHoursRemaining(_state?: SubscriptionState): number {
+    return 999999;
+  },
 
-    const totalDays = !sub.isSubscribed ? Math.min(2, sub.trialDaysTotal || 2) : 2;
-    const totalMs = totalDays * 24 * 60 * 60 * 1000; // 48 hours = 172,800,000 ms
-    const elapsedMs = Math.max(0, Date.now() - sub.trialStartDate);
-    const remainingMs = Math.max(0, totalMs - elapsedMs);
+  getTrialDaysRemaining(_state?: SubscriptionState): number {
+    return 999999;
+  },
 
-    return remainingMs / (1000 * 60 * 60);
+  getTrialTimeRemainingText(_state?: SubscriptionState): string {
+    return 'Active';
   },
 
   /**
-   * Calculates remaining trial days based on trialHoursRemaining
+   * Always false — app is completely unlocked
    */
-  getTrialDaysRemaining(state?: SubscriptionState): number {
-    const hours = this.getTrialHoursRemaining(state);
-    return Math.ceil(hours / 24);
+  isPaywalled(_state?: SubscriptionState): boolean {
+    return false;
   },
 
-  /**
-   * Returns human-friendly remaining trial time (e.g. "48h left", "1d 12h left", "5h left")
-   */
-  getTrialTimeRemainingText(state?: SubscriptionState): string {
-    const sub = state || this.getSubscriptionState();
-    if (sub.isSubscribed || sub.status === 'active') return 'Active';
-
-    const hoursLeft = this.getTrialHoursRemaining(sub);
-    if (hoursLeft <= 0) return 'Expired';
-
-    if (hoursLeft >= 24) {
-      const days = Math.floor(hoursLeft / 24);
-      const hours = Math.round(hoursLeft % 24);
-      return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
-    } else {
-      const hours = Math.ceil(hoursLeft);
-      return `${hours}h`;
-    }
-  },
-
-  /**
-   * Checks if user trial has expired (48 hours from trialStartDate) and user is not subscribed
-   */
-  isPaywalled(state?: SubscriptionState): boolean {
-    const sub = state || this.getSubscriptionState();
-    if (sub.isSubscribed || sub.status === 'active') return false;
-    return this.getTrialHoursRemaining(sub) <= 0;
-  },
-
-  /**
-   * Start or reset the 2-Day Preview Trial
-   */
-  startTrial(days = 2): SubscriptionState {
-    const newState: SubscriptionState = {
-      tier: 'trial',
-      status: 'trialing',
-      trialStartDate: Date.now(),
-      trialDaysTotal: days,
-      isSubscribed: false,
-    };
+  startTrial(): SubscriptionState {
+    const newState: SubscriptionState = { ...DEFAULT_SUBSCRIPTION_STATE };
     this.saveSubscriptionState(newState);
     return newState;
   },
 
-  /**
-   * Activate or upgrade subscription plan
-   */
-  activatePlan(tier: PlanTier, details?: { customerId?: string; subscriptionId?: string }): SubscriptionState {
+  activatePlan(tier: PlanTier = 'yearly'): SubscriptionState {
     const newState: SubscriptionState = {
       tier,
       status: 'active',
       isSubscribed: true,
-      trialDaysTotal: 5,
-      subscriptionEndDate: Date.now() + (tier === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000,
-      lemonSqueezyCustomerId: details?.customerId,
-      lemonSqueezySubscriptionId: details?.subscriptionId,
+      trialDaysTotal: 0,
     };
     this.saveSubscriptionState(newState);
     return newState;
   },
 
-  /**
-   * Cancel or reset subscription state
-   */
   cancelSubscription(): SubscriptionState {
-    const newState: SubscriptionState = {
-      tier: 'trial',
-      status: 'canceled',
-      trialDaysTotal: 2,
-      isSubscribed: false,
-    };
-    this.saveSubscriptionState(newState);
-    return newState;
+    return this.getSubscriptionState();
   },
 
-  /**
-   * Query backend webhook database to restore PRO status by purchase email
-   */
-  async checkSubscriptionByEmail(email: string): Promise<{ success: boolean; tier?: PlanTier; message?: string }> {
-    try {
-      const res = await fetch('/api/check-subscription-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (data.found && data.isSubscribed) {
-        const activeTier: PlanTier = data.tier === 'monthly' ? 'monthly' : 'yearly';
-        this.activatePlan(activeTier);
-        return { success: true, tier: activeTier };
-      }
-      return { success: false, message: 'No active subscription record found for this email.' };
-    } catch (err) {
-      console.error('Failed to verify subscription email:', err);
-      return { success: false, message: 'Unable to reach verification server. Please try again or use receipt link.' };
-    }
+  async checkSubscriptionByEmail(_email: string): Promise<{ success: boolean; tier?: PlanTier; message?: string }> {
+    return { success: true, tier: 'yearly', message: 'Account is active.' };
   },
 
-  /**
-   * Get Lemon Squeezy Checkout URL based on environment variable or fallback configuration
-   */
-  getCheckoutUrl(tier: 'trial' | 'monthly' | 'yearly'): string {
-    const env = import.meta.env;
-    if (tier === 'monthly') {
-      return env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243';
-    }
-    if (tier === 'yearly') {
-      return env.VITE_LEMON_SQUEEZY_YEARLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/31565abb-965a-45f7-9ab5-14ed83529fd4';
-    }
-    if (tier === 'trial') {
-      return env.VITE_LEMON_SQUEEZY_TRIAL_URL || env.VITE_LEMON_SQUEEZY_MONTHLY_URL || 'https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243';
-    }
-    if (env.VITE_LEMON_SQUEEZY_STORE_URL) {
-      return env.VITE_LEMON_SQUEEZY_STORE_URL;
-    }
-    return ''; // empty means simulation or manual trigger
+  getCheckoutUrl(_tier?: string): string {
+    return '';
   }
 };
