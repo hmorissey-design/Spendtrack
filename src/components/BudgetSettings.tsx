@@ -801,6 +801,7 @@ export function BudgetSettings({
             )}
             <a
               href={availableUpdate.apkDownloadUrl}
+              download="loosebudget.apk"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center no-underline cursor-pointer"

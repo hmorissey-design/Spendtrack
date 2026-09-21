@@ -2662,6 +2662,7 @@ Date: ${new Date().toLocaleString()}
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <a
                     href={appUpdateNotice.apkDownloadUrl}
+                    download="loosebudget.apk"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer no-underline"
