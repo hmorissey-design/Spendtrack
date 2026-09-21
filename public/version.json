@@ -1,10 +1,11 @@
 {
-  "version": "1.2.3",
-  "buildNumber": 5,
-  "releaseDate": "2026-09-19",
+  "version": "1.2.31",
+  "buildNumber": 6,
+  "releaseDate": "2026-09-21",
   "releaseNotes": [
-    "Dedicated Release APK build pipeline configuration",
-    "Updated Savings Goal allocation messaging and terminology"
+    "Refined voice transaction parsing and accuracy",
+    "Transitioned to unpaywalled distribution model",
+    "General performance improvements"
   ],
   "apkDownloadUrl": "https://app.loosebudget.com/loosebudget.apk"
 }
