@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -117,6 +118,42 @@ app.post("/api/check-subscription-email", async (req: any, res: any) => {
     console.error("❌ Error checking subscription by email:", error);
     return res.status(500).json({ error: "Failed to query subscription status" });
   }
+});
+
+// Dedicated route for downloading the Android APK with proper MIME type and versioned filename
+app.get(["/loosebudget.apk", "/loosebudget-*.apk", "/api/download-apk"], (req, res) => {
+  const publicPath = path.join(process.cwd(), "public", "loosebudget.apk");
+  const distPath = path.join(process.cwd(), "dist", "loosebudget.apk");
+  const filePath = fs.existsSync(distPath) ? distPath : publicPath;
+
+  if (fs.existsSync(filePath)) {
+    const reqFilename = path.basename(req.path);
+    let downloadFilename = reqFilename.startsWith("loosebudget-v") && reqFilename.endsWith(".apk")
+      ? reqFilename
+      : null;
+
+    if (!downloadFilename) {
+      try {
+        const vJsonPath = path.join(process.cwd(), "public", "version.json");
+        if (fs.existsSync(vJsonPath)) {
+          const vData = JSON.parse(fs.readFileSync(vJsonPath, "utf-8"));
+          if (vData.version) {
+            downloadFilename = `loosebudget-v${vData.version}.apk`;
+          }
+        }
+      } catch (e) {
+        // fallback
+      }
+    }
+    if (!downloadFilename) {
+      downloadFilename = "loosebudget-v1.2.32.apk";
+    }
+
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename}"`);
+    return res.sendFile(filePath);
+  }
+  return res.status(404).send("APK file not found");
 });
 
 // Vite Middleware & Static File Handling

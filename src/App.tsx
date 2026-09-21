@@ -577,7 +577,7 @@ export default function App() {
 
   const [savingsGoals, setSavingsGoals] = useState<{ id: string; label: string; amount: number; targetAmount?: number; currentAmount?: number; allocationPercent?: number; isHidden?: boolean }[]>(() => {
     const defaultList = [
-      { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+      { id: 'emergency_fund', label: 'Reserve in Chequing', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
       { id: 'clothes_fund', label: 'Clothes', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
       { id: 'auto_maint_fund', label: 'Auto Maintenance', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
       { id: 'income_tax_fund', label: 'Income Tax', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 }
@@ -611,7 +611,7 @@ export default function App() {
           if (existingMap.has(defGoal.id)) {
             const existing = existingMap.get(defGoal.id)!;
             let updated = { ...existing };
-            if (!updated.label) {
+            if (!updated.label || (defGoal.id === 'emergency_fund' && updated.label === 'Reserve')) {
               updated.label = defGoal.label;
               modified = true;
             }
@@ -1186,7 +1186,7 @@ export default function App() {
 DIAGNOSTIC SYSTEM METADATA:
 Device/User Agent: ${navigator.userAgent}
 Screen Resolution: ${window.screen.width}x${window.screen.height}
-App Version: 1.0.0 (Closed Beta Track)
+App Version: ${APP_VERSION}
 Date: ${new Date().toLocaleString()}
 -----------------------------------------
 `;
@@ -2465,9 +2465,6 @@ Date: ${new Date().toLocaleString()}
               <div className="absolute top-full right-0 mt-2.5 w-56 bg-[#111111] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-2.5 py-1.5 border-b border-white/5 mb-1.5 flex items-center justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest font-mono">Navigation Menu</span>
-                  <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/5 text-gray-400">
-                    Beta v1.0
-                  </span>
                 </div>
 
                 <div className="space-y-1">
@@ -2655,7 +2652,10 @@ Date: ${new Date().toLocaleString()}
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      A new native update is ready! Tap below to download and install the latest features and widgets.
+                      A new native update is ready! Tap below to download.
+                    </p>
+                    <p className="text-[10px] text-emerald-300/90 mt-0.5">
+                      Tip: If prompted &quot;Download file again?&quot;, tap <strong>Download again</strong>, then tap <strong>Open</strong> to install.
                     </p>
                   </div>
                 </div>
@@ -4667,7 +4667,7 @@ Date: ${new Date().toLocaleString()}
                                       finalVal = Math.max(0, parseFloat(item.allocationPercent as any) || 0);
                                     }
                                     if (item.id === 'emergency_fund' && finalVal > 0 && finalVal < 10) {
-                                      alert("The Reserve goal must have a minimum allocation percentage of 10% (or 0% to disable).");
+                                      alert("The Reserve in Chequing goal must have a minimum allocation percentage of 10% (or 0% to disable).");
                                       finalVal = 10;
                                     }
                                     handleUpdateSavingsGoal(item.id, { allocationPercent: finalVal });

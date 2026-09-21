@@ -89,7 +89,7 @@ export const DEFAULT_FIXED_EXPENSES = [
 ];
 
 export const DEFAULT_SAVINGS_GOALS = [
-  { id: 'emergency_fund', label: 'Reserve', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
+  { id: 'emergency_fund', label: 'Reserve in Chequing', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
   { id: 'clothes_fund', label: 'Clothes', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
   { id: 'auto_maint_fund', label: 'Auto Maintenance', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 },
   { id: 'income_tax_fund', label: 'Income Tax', amount: 0, targetAmount: 1, currentAmount: 0, allocationPercent: 25 }
@@ -560,7 +560,7 @@ export const LocalDb = {
         if (!alreadyExists) {
           // Fallback for deleted goals
           let label = goalId;
-          if (goalId === 'emergency_fund') label = 'Reserve';
+          if (goalId === 'emergency_fund') label = 'Reserve in Chequing';
           else if (goalId === 'vacation_fund') label = 'Vacation Goal';
           else if (goalId.startsWith('savings_')) {
             label = 'Deleted Goal';

@@ -1,11 +1,11 @@
 {
-  "version": "1.2.31",
-  "buildNumber": 6,
+  "version": "1.2.32",
+  "buildNumber": 7,
   "releaseDate": "2026-09-21",
   "releaseNotes": [
     "Refined voice transaction parsing and accuracy",
-    "Transitioned to unpaywalled distribution model",
-    "General performance improvements"
+    "Enhanced APK direct download reliability",
+    "General performance and interface refinements"
   ],
-  "apkDownloadUrl": "https://app.loosebudget.com/loosebudget.apk"
+  "apkDownloadUrl": "https://app.loosebudget.com/loosebudget-v1.2.32.apk"
 }

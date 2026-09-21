@@ -807,6 +807,9 @@ export function BudgetSettings({
             >
               <DownloadCloud size={14} /> Download & Install APK Update
             </a>
+            <p className="text-[10px] text-gray-400 mt-1">
+              Note: If prompted &quot;Download file again?&quot;, tap <strong>Download again</strong>, then tap <strong>Open</strong> when finished.
+            </p>
           </div>
         )}
       </div>
