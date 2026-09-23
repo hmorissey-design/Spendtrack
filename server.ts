@@ -138,7 +138,7 @@ app.get(["/loosebudget.apk", "/loosebudget-*.apk", "/api/download-apk"], (req, r
         if (fs.existsSync(vJsonPath)) {
           const vData = JSON.parse(fs.readFileSync(vJsonPath, "utf-8"));
           if (vData.version) {
-            downloadFilename = `loosebudget-v${vData.version}.apk`;
+            downloadFilename = `loosebudget-v${vData.version}${vData.buildNumber ? `-b${vData.buildNumber}` : ''}.apk`;
           }
         }
       } catch (e) {
@@ -146,7 +146,7 @@ app.get(["/loosebudget.apk", "/loosebudget-*.apk", "/api/download-apk"], (req, r
       }
     }
     if (!downloadFilename) {
-      downloadFilename = "loosebudget-v1.2.32.apk";
+      downloadFilename = "loosebudget-v1.2.32-b9.apk";
     }
 
     res.setHeader("Content-Type", "application/vnd.android.package-archive");

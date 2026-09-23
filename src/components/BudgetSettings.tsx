@@ -801,7 +801,7 @@ export function BudgetSettings({
             )}
             <a
               href={availableUpdate.apkDownloadUrl}
-              download="loosebudget.apk"
+              download={availableUpdate.apkDownloadUrl ? availableUpdate.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center no-underline cursor-pointer"
@@ -809,7 +809,7 @@ export function BudgetSettings({
               <DownloadCloud size={14} /> Download & Install APK Update
             </a>
             <p className="text-[10px] text-gray-400 mt-1">
-              Note: If prompted &quot;Download file again?&quot;, tap <strong>Download again</strong>, then tap <strong>Open</strong> when finished.
+              Note: Tap <strong>Download & Install APK Update</strong>, then tap <strong>Open</strong> when finished.
             </p>
           </div>
         )}

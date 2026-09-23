@@ -2644,14 +2644,14 @@ Date: ${new Date().toLocaleString()}
                       A new native update is ready! Tap below to download.
                     </p>
                     <p className="text-[10px] text-emerald-300/90 mt-0.5">
-                      Tip: If prompted &quot;Download file again?&quot;, tap <strong>Download again</strong>, then tap <strong>Open</strong> to install.
+                      Tip: Tap <strong>Install Update</strong>, then tap <strong>Open</strong> when download completes.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <a
                     href={appUpdateNotice.apkDownloadUrl}
-                    download="loosebudget.apk"
+                    download={appUpdateNotice.apkDownloadUrl ? appUpdateNotice.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer no-underline"
@@ -4438,34 +4438,42 @@ Date: ${new Date().toLocaleString()}
             return (
               <div className="space-y-4 animate-in fade-in duration-200" id="tab_savings">
                 {/* Visual Header / Dashboard summary card */}
-                <div className="bg-[#111111] rounded-2xl p-4 border border-white/5 relative overflow-hidden shadow-md">
+                <div className="bg-[#111111] rounded-2xl p-3 sm:p-3.5 border border-white/5 relative overflow-hidden shadow-md">
                   <div className="absolute right-0 top-0 translate-x-3 -translate-y-3 opacity-[0.03] select-none pointer-events-none">
-                    <PiggyBank size={140} className="text-pink-400" />
+                    <PiggyBank size={110} className="text-pink-400" />
                   </div>
                   
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="p-1.5 bg-pink-500/15 border border-pink-500/25 rounded-xl text-pink-400">
-                      <PiggyBank size={18} />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-[#eeeeee] text-xs uppercase tracking-wider">Savings Dashboard</h3>
-                      <p className="text-[9px] text-gray-400 mt-0.5">Emergency funds, investing & milestones</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3.5 pt-1">
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-left">
-                      <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Total Saved</span>
-                      <span className="text-base font-extrabold text-pink-400 tnum block">{currencySymbol}{totalSavedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="block text-[10.5px] text-gray-400 mt-1">Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)</span>
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 relative z-10">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="p-1.5 bg-pink-500/15 border border-pink-500/25 rounded-xl text-pink-400">
+                        <PiggyBank size={18} />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-[#eeeeee] text-xs uppercase tracking-wider">Savings Dashboard</h3>
+                        <p className="text-[8.5px] text-gray-400 mt-0.5">Emergency funds & milestones</p>
+                      </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-left">
-                      <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Combined Allocations</span>
-                      <span className={`text-base font-extrabold tnum block ${totalAllocationPercent === 100 ? "text-emerald-400" : "text-rose-400"}`}>{totalAllocationPercent}%</span>
-                      <span className="block text-[10.5px] text-gray-400 mt-1">
-                        {totalAllocationPercent === 100 ? "✅ Balanced" : "⚠️ Must equal 100%"}
-                      </span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+                      <div className="px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 text-right">
+                        <span className="block text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Total Saved</span>
+                        <span className="text-xs sm:text-sm font-extrabold text-pink-400 tnum block leading-tight">
+                          {currencySymbol}{totalSavedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="block text-[8px] text-gray-500 leading-none mt-0.5">
+                          Target: {currencySymbol}{totalTargetAmt.toLocaleString()} ({overallSavingsPercent}%)
+                        </span>
+                      </div>
+
+                      <div className="px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 text-right">
+                        <span className="block text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">Combined Allocations</span>
+                        <span className={`text-xs sm:text-sm font-extrabold tnum block leading-tight ${totalAllocationPercent === 100 ? "text-emerald-400" : "text-rose-400"}`}>
+                          {totalAllocationPercent}%
+                        </span>
+                        <span className="block text-[8px] text-gray-400 leading-none mt-0.5">
+                          {totalAllocationPercent === 100 ? "✅ Balanced" : "⚠️ Needs 100%"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

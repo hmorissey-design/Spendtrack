@@ -70,8 +70,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p public
+          VERSION=$(node -p "require('./public/version.json').version")
+          BUILD=$(node -p "require('./public/version.json').buildNumber")
+          FILENAME="loosebudget-v${VERSION}-b${BUILD}.apk"
+          rm -f public/loosebudget-v*.apk
           cp android/app/build/outputs/apk/release/*.apk public/loosebudget.apk
-          git add public/loosebudget.apk
-          git commit -m "Auto-update public/loosebudget.apk [skip ci]" || true
+          cp android/app/build/outputs/apk/release/*.apk "public/${FILENAME}"
+          git add public/loosebudget.apk "public/${FILENAME}"
+          git commit -m "Auto-update public/loosebudget.apk and ${FILENAME} [skip ci]" || true
           git push
 
