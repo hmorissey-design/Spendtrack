@@ -1,18 +1,13 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/loosebudget-*.apk",
-      "destination": "/loosebudget.apk"
-    },
-    {
-      "source": "/((?!.*\\.).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*).apk",
+      "source": "/loosebudget.apk",
       "headers": [
         {
           "key": "Content-Type",
