@@ -2395,17 +2395,6 @@ Date: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 relative z-50 shrink-0">
-            {/* Quick 1-Tap Voice Log Trigger */}
-            <button
-              onClick={() => setShowVoiceModal(true)}
-              className="px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 active:scale-95 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0 shadow-sm"
-              title="Quick Voice Log (Speak to record expense)"
-              id="btn_voice_log_header"
-            >
-              <Mic size={12} className="text-indigo-400 stroke-[2.5] shrink-0" />
-              <span className="font-sans">Voice</span>
-            </button>
-
             {/* Firebase Cloud Sync Button */}
             <button
               onClick={() => {
@@ -3092,7 +3081,7 @@ Date: ${new Date().toLocaleString()}
                   </div>
                 ) : (
                   <div className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-5 h-[110px] w-full text-[9px] relative flex items-center justify-center">
+                    <div className="col-span-5 h-[240px] w-full text-[9px] relative flex items-center justify-center">
                       {renderCharts ? (
                         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                           <RePieChart>
@@ -3100,8 +3089,8 @@ Date: ${new Date().toLocaleString()}
                               data={categoryPieData}
                               cx="50%"
                               cy="50%"
-                              innerRadius={24}
-                              outerRadius={40}
+                              innerRadius={32}
+                              outerRadius={52}
                               paddingAngle={3}
                               dataKey="value"
                             >
@@ -3121,7 +3110,7 @@ Date: ${new Date().toLocaleString()}
                           </RePieChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="h-[110px] w-full" />
+                        <div className="h-[240px] w-full" />
                       )}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-xs font-extrabold text-white leading-none tnum">{currencySymbol}{totals.totalSpent.toFixed(2)}</span>
@@ -3129,7 +3118,7 @@ Date: ${new Date().toLocaleString()}
                       </div>
                     </div>
 
-                    <div className="col-span-7 flex flex-col h-[110px]">
+                    <div className="col-span-7 flex flex-col h-[240px]">
                       <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wide block mb-1 shrink-0">Click to filter:</span>
                       <div className="space-y-1 overflow-y-auto pr-1 flex-1 scrollbar-thin">
                         {categoryStats.map((stat) => (

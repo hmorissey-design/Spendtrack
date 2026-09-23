@@ -4,7 +4,7 @@
  */
 
 export const APP_VERSION = '1.2.32';
-export const APP_BUILD_NUMBER = 7;
+export const APP_BUILD_NUMBER = 8;
 
 export interface VersionInfo {
   version: string;
