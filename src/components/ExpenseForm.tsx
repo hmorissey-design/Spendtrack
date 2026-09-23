@@ -91,11 +91,43 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
       ? expenseToEdit.note 
       : (initialPrefill?.note || '')
   );
-  const [date, setDate] = useState<string>(
-    expenseToEdit 
-      ? expenseToEdit.date 
-      : (initialPrefill?.date || getLocalYYYYMMDD())
+  const initialDateStr = expenseToEdit 
+    ? expenseToEdit.date 
+    : (initialPrefill?.date || getLocalYYYYMMDD());
+  const initialDateParts = (initialDateStr || '').split('-');
+  const [date, setDate] = useState<string>(initialDateStr);
+  const [inputMonth, setInputMonth] = useState<string>(
+    initialDateParts[1] ? String(parseInt(initialDateParts[1], 10)) : String(new Date().getMonth() + 1)
   );
+  const [inputDay, setInputDay] = useState<string>(
+    initialDateParts[2] ? String(parseInt(initialDateParts[2], 10)) : String(new Date().getDate())
+  );
+  const [inputYear, setInputYear] = useState<string>(
+    initialDateParts[0] || String(new Date().getFullYear())
+  );
+
+  // Sync inputs whenever date changes programmatically
+  useEffect(() => {
+    if (date) {
+      const parts = date.split('-');
+      if (parts.length === 3) {
+        setInputYear(parts[0]);
+        setInputMonth(String(parseInt(parts[1], 10)));
+        setInputDay(String(parseInt(parts[2], 10)));
+      }
+    }
+  }, [date]);
+
+  const updateDateFromInputs = (m: string, d: string, y: string) => {
+    const parsedM = parseInt(m, 10);
+    const parsedD = parseInt(d, 10);
+    const parsedY = parseInt(y, 10);
+    if (!isNaN(parsedM) && !isNaN(parsedD) && !isNaN(parsedY) && parsedM >= 1 && parsedM <= 12 && parsedD >= 1 && parsedD <= 31 && parsedY >= 2000) {
+      const formatted = `${parsedY}-${String(parsedM).padStart(2, '0')}-${String(parsedD).padStart(2, '0')}`;
+      setDate(formatted);
+    }
+  };
+
   const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>(
     expenseToEdit 
       ? expenseToEdit.paymentMethod 
@@ -103,17 +135,6 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
   );
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [showBusinessPopup, setShowBusinessPopup] = useState<boolean>(false);
-
-  // Custom Calendar Popover States
-  const [showCalendar, setShowCalendar] = useState<boolean>(false);
-  const [calendarYear, setCalendarYear] = useState<number>(() => {
-    const d = new Date(expenseToEdit ? expenseToEdit.date : new Date());
-    return isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear();
-  });
-  const [calendarMonth, setCalendarMonth] = useState<number>(() => {
-    const d = new Date(expenseToEdit ? expenseToEdit.date : new Date());
-    return isNaN(d.getTime()) ? new Date().getMonth() : d.getMonth(); // 0-indexed
-  });
 
   // Category Reordering states
   const [categoryOrder, setCategoryOrder] = useState<string[]>(() => {
@@ -133,39 +154,6 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
   // Autofocus input ref
   const amountInputRef = useRef<HTMLInputElement>(null);
   const noteInputRef = useRef<HTMLInputElement>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
-
-  // Sync calendar's year and month whenever the popover is opened
-  useEffect(() => {
-    if (showCalendar && date) {
-      const parts = date.split('-');
-      if (parts.length === 3) {
-        const y = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10) - 1; // 0-indexed
-        if (!isNaN(y) && !isNaN(m) && m >= 0 && m <= 11) {
-          setCalendarYear(y);
-          setCalendarMonth(m);
-        }
-      }
-    }
-  }, [showCalendar]);
-
-  // Click Outside to close custom calendar drop down
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setShowCalendar(false);
-      }
-    }
-    if (showCalendar) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [showCalendar]);
 
   // Sync category ordering on initial render
   useEffect(() => {
@@ -352,10 +340,15 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
       return;
     }
 
+    const finalYear = parseInt(inputYear, 10) || new Date().getFullYear();
+    const finalMonth = Math.min(12, Math.max(1, parseInt(inputMonth, 10) || (new Date().getMonth() + 1)));
+    const finalDay = Math.min(31, Math.max(1, parseInt(inputDay, 10) || new Date().getDate()));
+    const finalDate = `${finalYear}-${String(finalMonth).padStart(2, '0')}-${String(finalDay).padStart(2, '0')}`;
+
     onSubmit({
       amount: parsedAmount,
       category: selectedCategory,
-      date,
+      date: finalDate,
       note: note.trim(),
       paymentMethod
     });
@@ -591,151 +584,117 @@ export function ExpenseForm({ categories, savingsGoals, onSubmit, onClose, defau
           </div>
         </div>
 
-        {/* Two-Column Date & Payment Method */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="relative" ref={calendarRef}>
-            <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest mb-1">DATE</label>
-            <div className="relative">
-              <input
-                type="text"
-                readOnly
-                value={date}
-                onClick={() => setShowCalendar(!showCalendar)}
-                className="w-full pl-3 pr-8 py-2 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden cursor-pointer select-none transition-all font-mono"
-                required
-                placeholder="YYYY-MM-DD"
-              />
-              {/* Dropdown Calendar Toggle Button */}
+        {/* Date Section with Direct Number Inputs */}
+        <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+              <Calendar size={13} className="text-emerald-400" />
+              <span>Date (Month / Day / Year)</span>
+            </label>
+            <div className="flex items-center gap-2 text-[10px]">
               <button
                 type="button"
-                onClick={() => setShowCalendar(!showCalendar)}
-                className="absolute right-2.5 top-2.5 text-slate-200 hover:text-emerald-400 transition-all cursor-pointer bg-transparent border-0"
-                title="Open Calendar drop down"
+                onClick={() => setDate(getLocalYYYYMMDD())}
+                className="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition-all bg-transparent border-0 cursor-pointer p-0"
               >
-                <Calendar size={14} className={showCalendar ? "text-emerald-400 scale-110 transition-all" : "transition-all"} />
+                Today
+              </button>
+              <span className="text-gray-500">•</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() - 1);
+                  const y = d.getFullYear();
+                  const m = String(d.getMonth() + 1).padStart(2, '0');
+                  const day = String(d.getDate()).padStart(2, '0');
+                  setDate(`${y}-${m}-${day}`);
+                }}
+                className="text-gray-400 hover:text-white font-medium uppercase transition-all bg-transparent border-0 cursor-pointer p-0"
+              >
+                Yesterday
               </button>
             </div>
-
-            {/* Custom Interactive Floating Calendar Drop Down */}
-            {showCalendar && (
-              <div 
-                className="absolute left-0 mt-1.5 p-3 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 text-white text-xs w-64 select-none animate-in fade-in zoom-in-95 duration-150"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-2 font-sans">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (calendarMonth === 0) {
-                        setCalendarMonth(11);
-                        setCalendarYear(y => y - 1);
-                      } else {
-                        setCalendarMonth(m => m - 1);
-                      }
-                    }}
-                    className="p-1 px-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-md cursor-pointer border-0 bg-transparent text-[10px]"
-                  >
-                    ◀
-                  </button>
-                  <span className="font-bold text-[9px] uppercase tracking-widest text-[#eeeeee]">
-                    {new Date(calendarYear, calendarMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (calendarMonth === 11) {
-                          setCalendarMonth(0);
-                          setCalendarYear(y => y + 1);
-                        } else {
-                          setCalendarMonth(m => m + 1);
-                        }
-                      }}
-                      className="p-1 px-1.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-md cursor-pointer border-0 bg-transparent text-[10px]"
-                    >
-                      ▶
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowCalendar(false);
-                      }}
-                      className="p-1 hover:bg-white/10 text-gray-400 hover:text-rose-400 rounded-md cursor-pointer border-0 bg-transparent text-[10px] ml-1"
-                      title="Close Calendar"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                {/* Day headers */}
-                <div className="grid grid-cols-7 text-center text-[8px] font-bold uppercase text-slate-350 mb-1">
-                  <span>S</span>
-                  <span>M</span>
-                  <span>T</span>
-                  <span>W</span>
-                  <span>T</span>
-                  <span>F</span>
-                  <span>S</span>
-                </div>
-
-                {/* Days Grid */}
-                <div className="grid grid-cols-7 gap-1 text-center font-mono">
-                  {/* Empty pads representing align-offset of start of active month */}
-                  {Array.from({ length: new Date(calendarYear, calendarMonth, 1).getDay() }).map((_, idx) => (
-                    <span key={`empty-${idx}`} />
-                  ))}
-
-                  {/* Day numbers */}
-                  {Array.from({ length: new Date(calendarYear, calendarMonth + 1, 0).getDate() }).map((_, idx) => {
-                    const dayNum = idx + 1;
-                    const thisDateString = `${calendarYear}-${(calendarMonth + 1).toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
-                    const isSelected = thisDateString === date;
-
-                    return (
-                      <button
-                        key={dayNum}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDate(thisDateString);
-                          setShowCalendar(false);
-                        }}
-                        className={`p-1 text-[10px] rounded-md transition-colors cursor-pointer border-0 active:scale-95 ${
-                          isSelected 
-                            ? 'bg-emerald-600 text-white font-bold' 
-                            : 'text-gray-300 hover:bg-white/5 hover:text-white bg-transparent'
-                        }`}
-                      >
-                        {dayNum}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Payment Method</label>
-            <div className="relative">
-              <span className="absolute left-2.5 top-2.5 text-slate-300">
-                <CreditCard size={13} />
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <span className="block text-[8.5px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center font-sans">
+                Month (1-12)
               </span>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as Expense['paymentMethod'])}
-                className="w-full pl-8 pr-2 py-2 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden tracking-tight transition-all cursor-pointer"
-              >
-                <option value="card" className="bg-[#111111] text-white">💳 Card</option>
-                <option value="digital_wallet" className="bg-[#111111] text-white">📱 Digital Wallet</option>
-                <option value="cash" className="bg-[#111111] text-white">💵 Cash</option>
-                <option value="other" className="bg-[#111111] text-white">⚙️ Other</option>
-              </select>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={12}
+                value={inputMonth}
+                onChange={(e) => {
+                  setInputMonth(e.target.value);
+                  updateDateFromInputs(e.target.value, inputDay, inputYear);
+                }}
+                placeholder="MM"
+                className="w-full py-2 text-center bg-black/50 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white font-mono font-bold outline-hidden transition-all"
+                required
+              />
             </div>
+            <div>
+              <span className="block text-[8.5px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center font-sans">
+                Day (1-31)
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={31}
+                value={inputDay}
+                onChange={(e) => {
+                  setInputDay(e.target.value);
+                  updateDateFromInputs(inputMonth, e.target.value, inputYear);
+                }}
+                placeholder="DD"
+                className="w-full py-2 text-center bg-black/50 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white font-mono font-bold outline-hidden transition-all"
+                required
+              />
+            </div>
+            <div>
+              <span className="block text-[8.5px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center font-sans">
+                Year
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={2000}
+                max={2099}
+                value={inputYear}
+                onChange={(e) => {
+                  setInputYear(e.target.value);
+                  updateDateFromInputs(inputMonth, inputDay, e.target.value);
+                }}
+                placeholder="YYYY"
+                className="w-full py-2 text-center bg-black/50 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white font-mono font-bold outline-hidden transition-all"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div>
+          <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Payment Method</label>
+          <div className="relative">
+            <span className="absolute left-2.5 top-2.5 text-slate-300">
+              <CreditCard size={13} />
+            </span>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as Expense['paymentMethod'])}
+              className="w-full pl-8 pr-2 py-2 bg-black/40 border border-white/10 focus:border-emerald-500 focus:bg-[#0A0A0A] focus:ring-1 focus:ring-emerald-500 rounded-xl text-xs text-white outline-hidden tracking-tight transition-all cursor-pointer"
+            >
+              <option value="card" className="bg-[#111111] text-white">💳 Card</option>
+              <option value="digital_wallet" className="bg-[#111111] text-white">📱 Digital Wallet</option>
+              <option value="cash" className="bg-[#111111] text-white">💵 Cash</option>
+              <option value="other" className="bg-[#111111] text-white">⚙️ Other</option>
+            </select>
           </div>
         </div>
 

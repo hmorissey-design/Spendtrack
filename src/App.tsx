@@ -1278,6 +1278,7 @@ Date: ${new Date().toLocaleString()}
   // Automatic In-App APK Update Check State
   const [appUpdateNotice, setAppUpdateNotice] = useState<VersionInfo | null>(null);
   const [dismissedUpdateNotice, setDismissedUpdateNotice] = useState<boolean>(false);
+  const [showAppUpdateModal, setShowAppUpdateModal] = useState<boolean>(false);
 
   // APK Download Instruction Modal state & launcher
   const [showApkDownloadInstructionModal, setShowApkDownloadInstructionModal] = useState<boolean>(false);
@@ -1293,6 +1294,7 @@ Date: ${new Date().toLocaleString()}
         const update = await checkForAppUpdates();
         if (update) {
           setAppUpdateNotice(update);
+          setShowAppUpdateModal(true);
         }
       } catch (err) {
         // Silently fail if offline
@@ -2641,24 +2643,19 @@ Date: ${new Date().toLocaleString()}
                       </span>
                     </div>
                     <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      A new native update is ready! Tap below to download.
-                    </p>
-                    <p className="text-[10px] text-emerald-300/90 mt-0.5">
-                      Tip: Tap <strong>Install Update</strong>, then tap <strong>Open</strong> when download completes.
+                      A new native update is ready! Tap below for step-by-step installation instructions.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <a
-                    href={appUpdateNotice.apkDownloadUrl}
-                    download={appUpdateNotice.apkDownloadUrl ? appUpdateNotice.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                  <button
+                    type="button"
+                    onClick={() => setShowAppUpdateModal(true)}
+                    className="flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer border-0 font-sans"
                   >
-                    <DownloadCloud size={14} />
-                    <span>Install Update</span>
-                  </a>
+                    <DownloadCloud size={14} className="stroke-[2.5]" />
+                    <span>View &amp; Install Update</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setDismissedUpdateNotice(true)}
@@ -3856,6 +3853,10 @@ Date: ${new Date().toLocaleString()}
                 isCloudSynced={!!currentUser}
                 onWipeCloudDatabase={handleWipeCloudDatabase}
                 onOpenCategoryManager={() => setShowCategoryManager(true)}
+                onOpenUpdateModal={(upd) => {
+                  if (upd) setAppUpdateNotice(upd);
+                  setShowAppUpdateModal(true);
+                }}
               />
             </div>
           )}
@@ -5033,6 +5034,136 @@ Date: ${new Date().toLocaleString()}
         </div>,
         document.body
       ) /* End APK Instruction Modal */}
+
+      {/* APK Update Available Pop-up Modal with Step-by-Step Instructions */}
+      {showAppUpdateModal && appUpdateNotice && createPortal(
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[99999] p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm max-h-[92vh] overflow-y-auto bg-[#121212] border border-emerald-500/40 rounded-2xl p-5 shadow-2xl relative text-slate-200 font-sans text-left space-y-3.5 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowAppUpdateModal(false)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg cursor-pointer border-0 bg-transparent flex items-center justify-center"
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3 pr-8">
+              <div className="p-2.5 bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 rounded-xl flex items-center justify-center shrink-0">
+                <Sparkles size={20} className="stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                  Update Available
+                </span>
+                <h3 className="font-extrabold text-white text-base mt-1">
+                  LooseBudget v{appUpdateNotice.version}
+                </h3>
+                <p className="text-[10.5px] text-gray-400 font-medium">
+                  {appUpdateNotice.buildNumber ? `Build #${appUpdateNotice.buildNumber} • ` : ''}{appUpdateNotice.releaseDate || 'Latest Release'}
+                </p>
+              </div>
+            </div>
+
+            {/* What's New if present */}
+            {appUpdateNotice.releaseNotes && appUpdateNotice.releaseNotes.length > 0 && (
+              <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3 space-y-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                  What&apos;s New:
+                </span>
+                <ul className="text-[11px] text-gray-300 space-y-1 list-disc list-inside leading-snug">
+                  {appUpdateNotice.releaseNotes.map((note, idx) => (
+                    <li key={idx}>{note}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 3-Step Clear Guide */}
+            <div className="space-y-2.5 text-xs">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                3 Simple Steps to Install:
+              </span>
+
+              {/* Step 1 */}
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-[11px] shrink-0">
+                    1
+                  </span>
+                  <p className="font-extrabold text-white text-xs">Tap the Green Download Button</p>
+                </div>
+                <p className="text-[11px] text-gray-300 leading-relaxed pl-7">
+                  Tap the button below to download the latest update package to your phone.
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-extrabold flex items-center justify-center text-[11px] shrink-0">
+                    2
+                  </span>
+                  <p className="font-extrabold text-white text-xs">Tap &quot;Download anyway&quot;</p>
+                </div>
+                <p className="text-[11px] text-gray-300 leading-relaxed pl-7">
+                  If Android warns <strong className="text-amber-300 font-bold">&quot;File might be harmful&quot;</strong>, tap <strong className="text-white bg-white/10 px-1.5 py-0.5 rounded font-bold">Download anyway</strong>.
+                </p>
+                <p className="text-[10px] text-amber-300/80 leading-snug pl-7">
+                  (Google displays this standard security notice for any app downloaded directly from a website. LooseBudget is completely safe &amp; verified.)
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold flex items-center justify-center text-[11px] shrink-0">
+                    3
+                  </span>
+                  <p className="font-extrabold text-white text-xs">Tap &quot;OPEN&quot; &rarr; &quot;Update&quot;</p>
+                </div>
+                <p className="text-[11px] text-gray-300 leading-relaxed pl-7">
+                  When the download finishes (approx. 2-3 seconds), tap <strong className="text-emerald-400 font-bold">OPEN</strong> on your screen (or swipe down your top notifications and tap the file), then tap <strong className="text-white font-bold">Update</strong>.
+                </p>
+              </div>
+
+              {/* Permission Note */}
+              <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl text-[10px] text-gray-400 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-gray-300">
+                  <ShieldCheck size={13} className="text-emerald-400 shrink-0" />
+                  <span>First time updating?</span>
+                </div>
+                <p className="leading-snug">
+                  If Android asks to &quot;Install unknown apps&quot;, simply tap <strong>Settings</strong> &rarr; enable <strong>Allow from this source</strong> &rarr; tap <strong>Update</strong>.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-1">
+              <a
+                href={appUpdateNotice.apkDownloadUrl}
+                download={appUpdateNotice.apkDownloadUrl ? appUpdateNotice.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-0 active:scale-95 text-center font-sans shadow-lg shadow-emerald-950/60 flex items-center justify-center gap-2 no-underline"
+              >
+                <DownloadCloud size={16} className="stroke-[3]" />
+                <span>Download &amp; Install Update</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowAppUpdateModal(false)}
+                className="w-full py-2 px-3 text-gray-400 hover:text-white rounded-xl font-medium text-xs transition-all cursor-pointer border-0 bg-transparent text-center font-sans"
+              >
+                Remind Me Later
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {itemToDelete && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-in fade-in duration-200">

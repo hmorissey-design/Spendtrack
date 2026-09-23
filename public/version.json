@@ -1,11 +1,11 @@
 {
   "version": "1.2.32",
-  "buildNumber": 9,
+  "buildNumber": 10,
   "releaseDate": "2026-09-23",
   "releaseNotes": [
-    "Streamlined Savings Dashboard header with inline Total Saved and Combined Allocations",
-    "Expanded Spending by Category to display up to 8 categories without scrolling",
-    "Enhanced APK direct download reliability"
+    "Added direct Month, Day, and Year number inputs for fast, easy date editing in transactions",
+    "Interactive step-by-step update installation guide pop-up",
+    "Streamlined Savings Dashboard layout and enhanced APK updates"
   ],
-  "apkDownloadUrl": "https://app.loosebudget.com/loosebudget-v1.2.32-b9.apk"
+  "apkDownloadUrl": "https://app.loosebudget.com/loosebudget-v1.2.32-b10.apk"
 }

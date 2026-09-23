@@ -58,6 +58,7 @@ interface BudgetSettingsProps {
   isCloudSynced?: boolean;
   onWipeCloudDatabase?: () => Promise<void>;
   onOpenCategoryManager?: () => void;
+  onOpenUpdateModal?: (update?: VersionInfo) => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -143,7 +144,8 @@ export function BudgetSettings({
   onBackupCompleted,
   isCloudSynced = false,
   onWipeCloudDatabase,
-  onOpenCategoryManager
+  onOpenCategoryManager,
+  onOpenUpdateModal
  }: BudgetSettingsProps) {
   const isMobile = useIsMobileDevice();
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
@@ -799,17 +801,27 @@ export function BudgetSettings({
                 ))}
               </ul>
             )}
-            <a
-              href={availableUpdate.apkDownloadUrl}
-              download={availableUpdate.apkDownloadUrl ? availableUpdate.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center no-underline cursor-pointer"
-            >
-              <DownloadCloud size={14} /> Download & Install APK Update
-            </a>
-            <p className="text-[10px] text-gray-400 mt-1">
-              Note: Tap <strong>Download & Install APK Update</strong>, then tap <strong>Open</strong> when finished.
+            {onOpenUpdateModal ? (
+              <button
+                type="button"
+                onClick={() => onOpenUpdateModal(availableUpdate)}
+                className="mt-2 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center cursor-pointer border-0"
+              >
+                <Sparkles size={14} className="stroke-[2.5]" /> View Step-by-Step Guide &amp; Install
+              </button>
+            ) : (
+              <a
+                href={availableUpdate.apkDownloadUrl}
+                download={availableUpdate.apkDownloadUrl ? availableUpdate.apkDownloadUrl.split('/').pop() : 'loosebudget.apk'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 text-center no-underline cursor-pointer"
+              >
+                <DownloadCloud size={14} /> Download & Install APK Update
+              </a>
+            )}
+            <p className="text-[10px] text-gray-400 mt-1 leading-snug">
+              Tip: If Android warns &quot;File might be harmful&quot;, tap <strong>Download anyway</strong>, then tap <strong>Open</strong> to finish.
             </p>
           </div>
         )}
