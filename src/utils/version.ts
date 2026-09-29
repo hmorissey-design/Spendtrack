@@ -58,7 +58,8 @@ export async function checkForAppUpdates(repoOwner = 'hmorissey-design', repoNam
 
     for (const endpoint of remoteEndpoints) {
       try {
-        const localRes = await fetch(endpoint, { cache: 'no-store' }).catch(() => null);
+        const cacheBuster = `?t=${Date.now()}`;
+        const localRes = await fetch(`${endpoint}${cacheBuster}`, { cache: 'no-store' }).catch(() => null);
         if (localRes && localRes.ok) {
           const data: VersionInfo = await localRes.json();
           if (data && (data.buildNumber > APP_BUILD_NUMBER || isNewerVersion(data.version, APP_VERSION))) {

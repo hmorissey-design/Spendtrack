@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Category, MonthlyBudget } from '../types';
+import { Category, MonthlyBudget, SubscriptionState } from '../types';
 import { 
   DollarSign, Save, Download, Upload, AlertTriangle, CheckCircle, Shield,
   Plus, PlusCircle, Edit, Trash2, Check, Utensils, ShoppingBag, Film, Car, Sparkles, Coffee,
@@ -14,6 +14,7 @@ import {
   DownloadCloud, Key
 } from 'lucide-react';
 import { APP_VERSION, APP_BUILD_NUMBER, checkForAppUpdates, VersionInfo } from '../utils/version';
+import { SubscriptionManager, LEMON_SQUEEZY_URLS } from '../utils/subscription';
 
 import {
   ResponsiveContainer,
@@ -59,6 +60,9 @@ interface BudgetSettingsProps {
   onWipeCloudDatabase?: () => Promise<void>;
   onOpenCategoryManager?: () => void;
   onOpenUpdateModal?: (update?: VersionInfo) => void;
+  subscriptionState?: SubscriptionState;
+  onSubscriptionStateChange?: (state: SubscriptionState) => void;
+  onOpenSubscriptionModal?: () => void;
 }
 
 // Preset color themes mapping named choices to background text pairings
@@ -145,7 +149,10 @@ export function BudgetSettings({
   isCloudSynced = false,
   onWipeCloudDatabase,
   onOpenCategoryManager,
-  onOpenUpdateModal
+  onOpenUpdateModal,
+  subscriptionState,
+  onSubscriptionStateChange,
+  onOpenSubscriptionModal
  }: BudgetSettingsProps) {
   const isMobile = useIsMobileDevice();
   const [previewAsset, setPreviewAsset] = useState<{ name: string; url: string } | null>(null);
@@ -827,6 +834,54 @@ export function BudgetSettings({
         )}
       </div>
 
+      {/* Subscription & Plan Status Card */}
+      <div className="bg-[#121413] border border-white/10 rounded-xl p-3.5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <Sparkles size={14} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-sans">
+                Subscription &amp; Access Plan
+              </h4>
+              <p className="text-[11px] text-gray-400">
+                {subscriptionState?.isSubscribed 
+                  ? `Active Plan (${subscriptionState.tier === 'yearly' ? 'Annual Plan $14.99 CAD/yr' : 'Monthly Plan $1.99 CAD/mo'})`
+                  : `16-Day Free Trial (${SubscriptionManager.getTrialTimeRemainingText(subscriptionState)})`}
+              </p>
+            </div>
+          </div>
+
+          {subscriptionState?.isSubscribed && (
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-extrabold uppercase">
+              ACTIVE
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/5 flex-wrap">
+          <button
+            type="button"
+            onClick={onOpenSubscriptionModal}
+            className="flex-1 py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[11px] uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 flex items-center justify-center gap-1.5 font-sans"
+          >
+            <span>{subscriptionState?.isSubscribed ? 'Change Plan' : 'Subscribe / View Plans'}</span>
+            <ExternalLink size={12} className="stroke-[2.5]" />
+          </button>
+
+          <a
+            href={LEMON_SQUEEZY_URLS.orders}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-300 text-[11px] font-semibold rounded-lg border border-white/10 transition-all flex items-center gap-1.5 no-underline"
+          >
+            <span>Customer Portal</span>
+            <ExternalLink size={11} className="opacity-60" />
+          </a>
+        </div>
+      </div>
+
       {/* Database Purge Options (Hidden for Cloud-synced users) */}
       {!isCloudSynced && (
         <div className="bg-rose-950/10 border border-rose-500/10 rounded-xl p-3">
@@ -864,6 +919,142 @@ export function BudgetSettings({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Developer Secret Cloud Database Wipe Option (Visible only in Developer Mode) */}
+      {isDevMode && (
+        <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider font-sans">
+              <Sparkles size={15} /> Developer Mode: Subscription &amp; Trial Simulator
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+              5-Tap Active
+            </span>
+          </div>
+
+          <p className="text-[11px] text-gray-300 leading-normal">
+            Easily simulate any stage of the 14-day silent period, the 2-day warning banner, and paywall expiration without waiting.
+          </p>
+
+          <div className="bg-black/40 p-2.5 rounded-lg border border-white/5 text-[11px] text-gray-300 space-y-1">
+            <div><strong>Current Status:</strong> <span className="text-emerald-400 font-mono font-bold">{subscriptionState?.status || 'trialing'}</span> ({subscriptionState?.isSubscribed ? 'Subscribed' : 'Unsubscribed'})</div>
+            <div><strong>Days Elapsed:</strong> <span className="text-white font-mono">{SubscriptionManager.getTrialDaysElapsed(subscriptionState).toFixed(1)} days</span></div>
+            <div><strong>Days Remaining:</strong> <span className="text-white font-mono">{SubscriptionManager.getTrialDaysRemaining(subscriptionState)} days</span></div>
+            <div><strong>Top Banner Visible?</strong> <span className={
+              SubscriptionManager.isTrialWarningPhase(subscriptionState) || SubscriptionManager.isTrialExpired(subscriptionState) || SubscriptionManager.isSubscriptionExpired(subscriptionState)
+                ? 'text-amber-400 font-bold' 
+                : 'text-gray-500'
+            }>
+              {SubscriptionManager.isSubscriptionExpired(subscriptionState)
+                ? 'YES (Subscription Expired notice)'
+                : SubscriptionManager.isTrialExpired(subscriptionState)
+                  ? 'YES (Trial Expired notice)'
+                  : SubscriptionManager.isTrialWarningPhase(subscriptionState)
+                    ? 'YES (Days 15-16 trial ending notice)'
+                    : 'NO (Silent trial or Subscribed)'}
+            </span></div>
+            <div><strong>Account Expired?</strong> <span className={
+              SubscriptionManager.isTrialExpired(subscriptionState) || SubscriptionManager.isSubscriptionExpired(subscriptionState)
+                ? 'text-rose-400 font-bold' 
+                : 'text-gray-500'
+            }>
+              {SubscriptionManager.isSubscriptionExpired(subscriptionState)
+                ? 'YES (Paid subscription ended)'
+                : SubscriptionManager.isTrialExpired(subscriptionState)
+                  ? 'YES (Trial expired — Paywall active)'
+                  : 'NO'}
+            </span></div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.simulateTrialDay(1);
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+              }}
+              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-gray-200 text-[10px] font-bold rounded-lg border border-white/10 cursor-pointer text-left"
+            >
+              1️⃣ Simulate Day 1<br/>
+              <span className="text-[9px] font-normal text-gray-400">Silent trial, no banner</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.simulateTrialDay(15);
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+              }}
+              className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-[10px] font-bold rounded-lg border border-amber-500/30 cursor-pointer text-left"
+            >
+              2️⃣ Simulate Day 15<br/>
+              <span className="text-[9px] font-normal text-amber-200/80">Banner visible (2 days left)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.simulateTrialDay(16);
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+              }}
+              className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-[10px] font-bold rounded-lg border border-amber-500/30 cursor-pointer text-left"
+            >
+              3️⃣ Simulate Day 16<br/>
+              <span className="text-[9px] font-normal text-amber-200/80">Banner visible (1 day left)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.simulateTrialDay(17);
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+                if (onOpenSubscriptionModal) onOpenSubscriptionModal();
+              }}
+              className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] font-bold rounded-lg border border-rose-500/30 cursor-pointer text-left"
+            >
+              4️⃣ Simulate Day 17<br/>
+              <span className="text-[9px] font-normal text-rose-200/80">Trial expired (Paywall + Banner)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.simulateSubscriptionExpired('monthly');
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+                if (onOpenSubscriptionModal) onOpenSubscriptionModal();
+              }}
+              className="px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[10px] font-bold rounded-lg border border-purple-500/30 cursor-pointer text-left"
+            >
+              5️⃣ Simulate Sub Expired<br/>
+              <span className="text-[9px] font-normal text-purple-200/80">Paid plan ended (Reminder)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.activatePlan('yearly');
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+              }}
+              className="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-lg border border-emerald-500/30 cursor-pointer text-left"
+            >
+              ⭐ Simulate Subscribed<br/>
+              <span className="text-[9px] font-normal text-emerald-200/80">Active Annual Plan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const s = SubscriptionManager.resetTrial();
+                if (onSubscriptionStateChange) onSubscriptionStateChange(s);
+              }}
+              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 text-[10px] font-bold rounded-lg border border-white/10 cursor-pointer text-left col-span-2 sm:col-span-1"
+            >
+              🔄 Reset to Today<br/>
+              <span className="text-[9px] font-normal text-gray-400">Fresh Day 1 trial</span>
+            </button>
           </div>
         </div>
       )}

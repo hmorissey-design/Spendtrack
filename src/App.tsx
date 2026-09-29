@@ -52,10 +52,11 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
-import { ActiveTab, Expense, Category, MonthlyBudget, VendorRule } from './types';
+import { ActiveTab, Expense, Category, MonthlyBudget, VendorRule, SubscriptionState, PlanTier } from './types';
 import { LocalDb, DEFAULT_CATEGORIES, DEFAULT_INCOME_STREAMS, DEFAULT_FIXED_EXPENSES, DEFAULT_SAVINGS_GOALS } from './utils/db';
 import { getLoadedAccentThemeId, applyAccentTheme } from './utils/theme';
 import { APP_VERSION, checkForAppUpdates, isNativeApp, isAndroidMobile, VersionInfo } from './utils/version';
+import { SubscriptionManager } from './utils/subscription';
 import { AndroidFrame } from './components/AndroidFrame';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BudgetSettings, renderCategoryIcon } from './components/BudgetSettings';
@@ -63,6 +64,8 @@ import { CategoryManager } from './components/CategoryManager';
 import { AuthModal } from './components/AuthModal';
 import { VoiceExpenseModal } from './components/VoiceExpenseModal';
 import { BudgetVoiceWidget } from './components/BudgetVoiceWidget';
+import { SubscriptionBanner } from './components/SubscriptionBanner';
+import { SubscriptionModal } from './components/SubscriptionModal';
 import { 
   suggestCategoryForVendor, 
   cleanVendorName 
@@ -347,8 +350,42 @@ export default function App() {
   const logoTapCountRef = useRef<number>(0);
   const logoTapTimerRef = useRef<any>(null);
   const [devNotice, setDevNotice] = useState<string | null>(null);
-  const [isDevMode, setIsDevMode] = useState<boolean>(false);
+  const [isDevMode, setIsDevMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('loosebudget_dev_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const unsubRealtimeRef = useRef<(() => void) | null>(null);
+
+  // Subscription state (14-day silent trial, 2-day warning banner, paywall if expired & not bypassed)
+  const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(() => SubscriptionManager.getSubscriptionState());
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState<boolean>(false);
+  const [dismissedTrialBanner, setDismissedTrialBanner] = useState<boolean>(false);
+  const [devPaywallBypassed, setDevPaywallBypassed] = useState<boolean>(false);
+  const [paymentToast, setPaymentToast] = useState<string | null>(null);
+
+  // Check for Lemon Squeezy payment redirect query params: ?payment=success&plan=monthly|yearly
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const payment = url.searchParams.get('payment');
+      const plan = url.searchParams.get('plan') as PlanTier | null;
+      if (payment === 'success') {
+        const selectedPlan = plan === 'monthly' ? 'monthly' : 'yearly';
+        const updated = SubscriptionManager.activatePlan(selectedPlan);
+        setSubscriptionState(updated);
+        setPaymentToast(`🎉 Subscription Active! Thank you for subscribing to LooseBudget (${selectedPlan === 'yearly' ? 'Annual Plan' : 'Monthly Plan'}).`);
+        setTimeout(() => setPaymentToast(null), 6000);
+        url.searchParams.delete('payment');
+        url.searchParams.delete('plan');
+        window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + url.hash);
+      }
+    } catch (e) {
+      console.warn('Payment URL check error:', e);
+    }
+  }, []);
 
   const handleLogoTap = () => {
     logoTapCountRef.current += 1;
@@ -360,7 +397,10 @@ export default function App() {
       logoTapCountRef.current = 0;
       const nextDevState = !isDevMode;
       setIsDevMode(nextDevState);
-      setDevNotice(nextDevState ? '🔓 Developer Mode Activated' : '🔒 Developer Mode Deactivated');
+      try {
+        localStorage.setItem('loosebudget_dev_mode', String(nextDevState));
+      } catch (e) {}
+      setDevNotice(nextDevState ? '🔓 Developer Mode Activated (Paywall Bypassed)' : '🔒 Developer Mode Deactivated');
       setTimeout(() => setDevNotice(null), 3500);
     } else {
       logoTapTimerRef.current = setTimeout(() => {
@@ -2370,6 +2410,20 @@ Date: ${new Date().toLocaleString()}
 
   const showAds = showSimulatedAds && expenses.length > 0 && activeTab !== 'help' && (activeTab as string) !== 'budget' && activeTab !== 'budget_plan';
 
+  const isTrialExpired = SubscriptionManager.isTrialExpired(subscriptionState);
+  const isSubExpired = SubscriptionManager.isSubscriptionExpired(subscriptionState);
+  const isAccountExpired = isTrialExpired || isSubExpired;
+
+  // Paywalled if trial or subscription has expired and developer has not bypassed in current session
+  const isPaywalled = isAccountExpired && (!isDevMode || !devPaywallBypassed);
+
+  // Top banner appears if not subscribed and either in warning phase, trial expired, or subscription expired
+  const showTrialBanner = !subscriptionState.isSubscribed && (
+    SubscriptionManager.isTrialWarningPhase(subscriptionState) ||
+    isTrialExpired ||
+    isSubExpired
+  ) && !dismissedTrialBanner;
+
   return (
     <AndroidFrame 
       currentTime="01:15" 
@@ -2394,6 +2448,11 @@ Date: ${new Date().toLocaleString()}
             <div className="hidden xs:block">
               <h1 className="text-xs sm:text-sm font-extrabold tracking-tight uppercase tracking-widest text-[#eeeeee]">Loose<span className="text-emerald-400">Budget</span></h1>
             </div>
+            {isDevMode && (
+              <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1 shadow-sm">
+                🔓 Dev
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 relative z-50 shrink-0">
@@ -2562,6 +2621,18 @@ Date: ${new Date().toLocaleString()}
                     <span>Firebase Cloud Sync ☁️</span>
                   </button>
 
+                  {/* Subscription & Plans link */}
+                  <button
+                    onClick={() => {
+                      setShowSubscriptionModal(true);
+                      setShowGlobalMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all border-0 bg-transparent cursor-pointer"
+                  >
+                    <Sparkles size={14} className="stroke-[2.5] text-amber-400" />
+                    <span>Subscription Plans ⭐</span>
+                  </button>
+
                   {/* Help & Guide link */}
                   <button
                     onClick={() => { setActiveTab('help'); setShowGlobalMenu(false); }}
@@ -2625,6 +2696,22 @@ Date: ${new Date().toLocaleString()}
           <div className="bg-emerald-600/90 backdrop-blur-md text-white text-xs font-black py-2 px-4 text-center shadow-xl border-b border-emerald-400/40 animate-in slide-in-from-top duration-200 z-[100] flex items-center justify-center gap-2">
             <span>{devNotice}</span>
           </div>
+        )}
+
+        {/* Payment Confirmation Toast */}
+        {paymentToast && (
+          <div className="bg-emerald-600/95 backdrop-blur-md text-white text-xs font-black py-2.5 px-4 text-center shadow-xl border-b border-emerald-400/50 animate-in slide-in-from-top duration-200 z-[100] flex items-center justify-center gap-2">
+            <span>{paymentToast}</span>
+          </div>
+        )}
+
+        {/* 14-Day Free Trial Notice Banner (Appears on Days 15 & 16) */}
+        {showTrialBanner && (
+          <SubscriptionBanner
+            subscriptionState={subscriptionState}
+            onOpenPlansModal={() => setShowSubscriptionModal(true)}
+            onDismiss={() => setDismissedTrialBanner(true)}
+          />
         )}
 
         {/* Automatic In-App APK Update Notification Banner */}
@@ -3856,6 +3943,15 @@ Date: ${new Date().toLocaleString()}
                 onOpenUpdateModal={(upd) => {
                   if (upd) setAppUpdateNotice(upd);
                   setShowAppUpdateModal(true);
+                }}
+                subscriptionState={subscriptionState}
+                onSubscriptionStateChange={(newState) => {
+                  setSubscriptionState(newState);
+                  setDismissedTrialBanner(false);
+                }}
+                onOpenSubscriptionModal={() => {
+                  setDevPaywallBypassed(false);
+                  setShowSubscriptionModal(true);
                 }}
               />
             </div>
@@ -5792,6 +5888,28 @@ Date: ${new Date().toLocaleString()}
           }}
         />
       )}
+
+      {/* Subscription & Paywall Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal || isPaywalled}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          if (isDevMode) {
+            setDevPaywallBypassed(true);
+          }
+        }}
+        subscriptionState={subscriptionState}
+        onSubscriptionUpdated={(s) => setSubscriptionState(s)}
+        isDevMode={isDevMode}
+        onDevBypass={() => {
+          setIsDevMode(true);
+          setDevPaywallBypassed(true);
+          try {
+            localStorage.setItem('loosebudget_dev_mode', 'true');
+          } catch (e) {}
+        }}
+        isPaywallMode={isAccountExpired}
+      />
     </AndroidFrame>
   );
 }

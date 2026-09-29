@@ -146,7 +146,7 @@ app.get(["/loosebudget.apk", "/loosebudget-*.apk", "/api/download-apk"], (req, r
       }
     }
     if (!downloadFilename) {
-      downloadFilename = "loosebudget-v1.2.32-b9.apk";
+      downloadFilename = "loosebudget-v1.2.32-b10.apk";
     }
 
     res.setHeader("Content-Type", "application/vnd.android.package-archive");
