@@ -27,8 +27,8 @@ export const TRIAL_TOTAL_DAYS = 16;    // 16 days total (14 silent + 2 days with
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const LEMON_SQUEEZY_URLS = {
-  monthly: (import.meta.env.VITE_LEMON_SQUEEZY_MONTHLY_URL as string) || 'https://loosebudget.lemonsqueezy.com/checkout/buy/82e0d56b-82f8-42d5-88c4-44c547f540d6',
-  yearly: (import.meta.env.VITE_LEMON_SQUEEZY_YEARLY_URL as string) || 'https://loosebudget.lemonsqueezy.com/checkout/buy/0be2aa11-aecf-4a78-8d2c-9e66317ab504',
+  monthly: (import.meta.env.VITE_LEMON_SQUEEZY_MONTHLY_URL as string) || 'https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243',
+  yearly: (import.meta.env.VITE_LEMON_SQUEEZY_YEARLY_URL as string) || 'https://loosebudget.lemonsqueezy.com/checkout/buy/31565abb-965a-45f7-9ab5-14ed83529fd4',
   trial: (import.meta.env.VITE_LEMON_SQUEEZY_TRIAL_URL as string) || 'https://loosebudget.lemonsqueezy.com/checkout/buy/6a55af9b-b545-40bd-a55d-9e55022abc6b',
   orders: (import.meta.env.VITE_LEMON_SQUEEZY_STORE_URL as string) || 'https://loosebudget.lemonsqueezy.com/my-orders',
 };

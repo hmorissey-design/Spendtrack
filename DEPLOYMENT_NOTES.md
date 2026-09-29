@@ -80,16 +80,16 @@ All 3 products are now created in Lemon Squeezy and linked to the app:
    * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/6a55af9b-b545-40bd-a55d-9e55022abc6b`
    * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=trial`
 
-2. **Product 2: $1.99 / Month Subscription (CREATED & LINKED)**
+2. **Product 2: $1.99 CAD / Month Subscription (CREATED & LINKED)**
    * **Name:** `Regular MonthlySubscription to LooseBudget`
-   * **Pricing:** **$1.99 USD** / month (Recurring subscription).
-   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/82e0d56b-82f8-42d5-88c4-44c547f540d6`
+   * **Pricing:** **$1.99 CAD** / month (Recurring subscription).
+   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/3d9f4b1d-c0db-48d7-b694-7dbf0f11d243`
    * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=monthly`
 
-3. **Product 3: $14.99 / Year Subscription (CREATED & LINKED)**
+3. **Product 3: $14.99 CAD / Year Subscription (CREATED & LINKED)**
    * **Name:** `37% discount - Annual subscription to LooseBudget`
-   * **Pricing:** **$14.99 USD** / year (Recurring subscription).
-   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/0be2aa11-aecf-4a78-8d2c-9e66317ab504`
+   * **Pricing:** **$14.99 CAD** / year (Recurring subscription).
+   * **Checkout URL:** `https://loosebudget.lemonsqueezy.com/checkout/buy/31565abb-965a-45f7-9ab5-14ed83529fd4`
    * **Redirect URL:** `https://app.loosebudget.com/?payment=success&plan=yearly`
 
 ---
